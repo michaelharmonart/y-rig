@@ -1,0 +1,17 @@
+[project]
+name = "y-rig"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "debugpy>=1.8.19",
+    "maya-stubs>=0.4.2",
+    "ruff>=0.14.14",
+]
+
+[tool.ruff]
+line-length = 100
