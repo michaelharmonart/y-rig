@@ -38,7 +38,7 @@ During development if you have made changes to the yrig library, you can re-impo
 import sys
 modules = [name for name in sys.modules.keys() if name.startswith("yrig")]
 for name in modules:
-del sys.modules[name]
+    del sys.modules[name]
 import yrig
 ```
 
