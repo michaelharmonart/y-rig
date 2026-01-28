@@ -10,8 +10,17 @@ dependencies = []
 dev = [
     "debugpy>=1.8.19",
     "maya-stubs>=0.4.2",
+    "numpy>=2.4.1",
     "ruff>=0.14.14",
 ]
+
+[tool.pyright]
+extraPaths = [
+    "./.stubs/",
+    "/usr/autodesk/ApplicationPlugins/ngskintools2/Contents/scripts"
+]
+typeCheckingMode = "standard"
+reportMissingModuleSource = "information"
 
 [tool.ruff]
 line-length = 100

@@ -14,11 +14,12 @@ os.environ["MGEAR_SHIFTER_COMPONENT_PATH"] = str(component_path)
 modules = [name for name in sys.modules.keys() if name.startswith("yrig")]
 for name in modules:
     del sys.modules[name]
-import yrig 
+import yrig
 
 # Run to open debug port
 
 import debugpy
-maya_location = os.path.join(os.environ.get("MAYA_LOCATION"), "bin", "mayapy") # find the mayapy interpeter
-debugpy.configure({'python': maya_location})
-debugpy.listen(5678) # 5678 is the default attach port in the VS Code debug configurations. Unless a host and port are specified, host defaults to 127.0.0.1
+maya_path = Path(os.environ.get("MAYA_LOCATION")) # type:ignore
+mayapy_path = maya_path / Path("bin/mayapy")
+debugpy.configure({'python': mayapy_path})
+debugpy.listen(5678) # 5678 is the default attach port in the VS Code debug configurations. Host defaults to 127.0.0.1

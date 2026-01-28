@@ -15,7 +15,7 @@ without needing the high maintanence burden of a fork.
 After cloning this repo to a convenient place, run `uv sync` to set up the virtual environment and install the needed dependencies.  
 You'll also need to install mGear. See [mGear Website](https://mgear-framework.com/).
 
-After opening Maya you can configure import y-rig for use with the following script (you can find it in `maya-setup.py`)
+After opening Maya you can configure maya and import y-rig for use with the following script (you can find it in `maya-setup.py`)
 
 ```
 # Run to import yrig and its components
@@ -47,8 +47,12 @@ You can also open a debug port to set breakpoints and test yrig library code.
 ```
 # Run to open debug port
 import os
+from pathlib import Path
 import debugpy
-maya_location = os.path.join(os.environ.get("MAYA_LOCATION"), "bin", "mayapy") # find the mayapy interpeter
-debugpy.configure({'python': maya_location})
+maya_location_env_var =
+maya_path = Path(os.environ.get("MAYA_LOCATION")) # type:ignore
+mayapy_path = maya_path / Path("bin/mayapy")
+debugpy.configure({'python': mayapy_path})
 debugpy.listen(5678) # 5678 is the default attach port in the VS Code debug configurations. Unless a host and port are specified, host defaults to 127.0.0.1
+
 ```
