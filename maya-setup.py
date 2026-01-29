@@ -6,7 +6,7 @@ dev_path = Path("~/maya-python/y-rig").expanduser() # Replace with the path to y
 yrig_path = (dev_path / Path("src")).resolve()
 venv_path = (dev_path / Path(".venv/lib/python3.11/site-packages")).resolve()
 component_path = (dev_path / Path("shifter/components")).resolve()
-sys.path.insert(0, str(dev_path))
+sys.path.insert(0, str(yrig_path))
 sys.path.insert(0, str(venv_path))
 import yrig
 os.environ["MGEAR_SHIFTER_COMPONENT_PATH"] = str(component_path)
