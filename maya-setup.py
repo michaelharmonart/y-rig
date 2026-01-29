@@ -20,5 +20,5 @@ import yrig
 import debugpy
 maya_path = Path(os.environ.get("MAYA_LOCATION")) # type:ignore
 mayapy_path = maya_path / Path("bin/mayapy")
-debugpy.configure({'python': mayapy_path})
+debugpy.configure({'python': str(mayapy_path)})
 debugpy.listen(5678) # 5678 is the default attach port in the VS Code debug configurations. Host defaults to 127.0.0.1
