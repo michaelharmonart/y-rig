@@ -21,12 +21,13 @@ After opening Maya you can configure maya and import y-rig for use with the foll
 ```
 # Run to import yrig and its components
 import sys
-from pathlib import Path
 import os
+from pathlib import Path
 dev_path = Path("~/maya-python/y-rig").expanduser() # Replace with the path to your y-rig repo
+yrig_path = (dev_path / Path("src")).resolve()
 venv_path = (dev_path / Path(".venv/lib/python3.11/site-packages")).resolve()
-component_path = (dev_path / Path("components")).resolve()
-sys.path.insert(0, str(dev_path))
+component_path = (dev_path / Path("shifter/components")).resolve()
+sys.path.insert(0, str(yrig_path))
 sys.path.insert(0, str(venv_path))
 import yrig
 os.environ["MGEAR_SHIFTER_COMPONENT_PATH"] = str(component_path)
@@ -50,10 +51,8 @@ You can also open a debug port to set breakpoints and test yrig library code.
 import os
 from pathlib import Path
 import debugpy
-maya_location_env_var =
 maya_path = Path(os.environ.get("MAYA_LOCATION")) # type:ignore
-mayapy_path = maya_path / Path("bin/mayapy")
-debugpy.configure({'python': mayapy_path})
-debugpy.listen(5678) # 5678 is the default attach port in the VS Code debug configurations. Unless a host and port are specified, host defaults to 127.0.0.1
-
+mayapy_path = (maya_path / Path("bin/mayapy")).resolve()
+debugpy.configure({'python': str(mayapy_path)})
+debugpy.listen(5678) # 5678 is the default attach port in the VS Code debug configurations. Host defaults to 127.0.0.1
 ```
