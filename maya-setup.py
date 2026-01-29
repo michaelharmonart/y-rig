@@ -3,8 +3,9 @@ import sys
 import os
 from pathlib import Path
 dev_path = Path("~/maya-python/y-rig").expanduser() # Replace with the path to your y-rig repo
+yrig_path = (dev_path / Path("src")).resolve()
 venv_path = (dev_path / Path(".venv/lib/python3.11/site-packages")).resolve()
-component_path = (dev_path / Path("components")).resolve()
+component_path = (dev_path / Path("shifter/components")).resolve()
 sys.path.insert(0, str(dev_path))
 sys.path.insert(0, str(venv_path))
 import yrig
