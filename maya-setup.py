@@ -17,8 +17,6 @@ for name in modules:
 import yrig
 
 # Run to open debug port
-
-
 import debugpy
 maya_path = Path(os.environ.get("MAYA_LOCATION")) # type:ignore
 mayapy_path = maya_path / Path("bin/mayapy")
