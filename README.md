@@ -14,6 +14,7 @@ without needing the high maintanence burden of a fork.
 
 After cloning this repo to a convenient place, run `uv sync` to set up the virtual environment and install the needed dependencies.  
 You'll also need to install mGear. See [mGear Website](https://mgear-framework.com/).
+To have LSP support for the mgear module make sure to pull the submodule as well: `git submodule update --init --recursive`
 
 After opening Maya you can configure maya and import y-rig for use with the following script (you can find it in `maya-setup.py`)
 

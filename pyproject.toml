@@ -17,7 +17,8 @@ dev = [
 [tool.pyright]
 extraPaths = [
     "./.stubs/",
-    "/usr/autodesk/ApplicationPlugins/ngskintools2/Contents/scripts"
+    "/usr/autodesk/ApplicationPlugins/ngskintools2/Contents/scripts",
+    "third_party/mgear/release/scripts/"
 ]
 typeCheckingMode = "standard"
 reportMissingModuleSource = "information"
