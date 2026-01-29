@@ -1,5 +1,4 @@
 from typing import Sequence, TypeVar
-
 import numpy as np
 
 from yrig.structs.transform import Vector3
