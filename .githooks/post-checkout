@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -e
+
+LOCAL_DIR=$(git rev-parse --show-toplevel)
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+# Update the venv and set it up if it doesn't exist
+source "${LOCAL_DIR}/.githooks/update-venv"

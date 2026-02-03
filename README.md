@@ -12,7 +12,7 @@ without needing the high maintanence burden of a fork.
 
 ## Developing/Using y-rig
 
-After cloning this repo to a convenient place, run `uv sync` to set up the virtual environment and install the needed dependencies.  
+After cloning this repo to a convenient place, run `git config --local core.hooksPath .githooks/` to set up the githooks, these will then install the needed dependencies.  
 You'll also need to install mGear. See [mGear Website](https://mgear-framework.com/).
 To have LSP support for the mgear module make sure to pull the submodule as well: `git submodule update --init --recursive`
 

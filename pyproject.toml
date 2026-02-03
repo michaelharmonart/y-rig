@@ -12,6 +12,7 @@ dev = [
     "maya-stubs>=0.4.2",
     "numpy>=2.4.1",
     "ruff>=0.14.14",
+    "ty>=0.0.14",
 ]
 
 [tool.pyright]
@@ -20,6 +21,7 @@ extraPaths = [
     "third_party/mgear/release/scripts/",
     "src"
 ]
+ignore = ["third_party"]
 typeCheckingMode = "standard"
 reportMissingModuleSource = "information"
 
@@ -30,6 +32,12 @@ extra-paths = [
     "src"
 ]
 
+[tool.ty.src]
+exclude = ["third_party"]
+
+[tool.ty.rules]
+unused-ignore-comment = "ignore"
 
 [tool.ruff]
 line-length = 100
+exclude = ["third_party", "maya-setup.py"]

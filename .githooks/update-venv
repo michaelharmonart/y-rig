@@ -1,0 +1,14 @@
+#!/bin/bash
+echo "Updating dev environment..."
+
+command -v uv >/dev/null 2>&1 || {
+    command -v pipx >/dev/null 2>&1 || {
+        python3 -m pip install --user pipx
+        python3 -m pipx ensurepath
+    }
+    pipx install uv
+}
+uv sync
+
+LOCAL_DIR=$(git rev-parse --show-toplevel)
+source "${LOCAL_DIR}/.venv/bin/activate"
