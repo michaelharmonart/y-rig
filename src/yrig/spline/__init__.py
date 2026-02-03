@@ -15,6 +15,11 @@ from .math import (
     resample,
     tangent_on_spline_weights,
 )
+from .matrix_spline import (
+    MatrixSpline,
+    closest_point_on_matrix_spline,
+    pin_to_matrix_spline,
+)
 from .maya_query import get_cv_weights, get_cvs, get_knots, maya_to_standard_knots
 
 __all__ = [
@@ -27,6 +32,10 @@ __all__ = [
     "get_point_on_spline",
     "get_tangent_on_spline",
     "resample",
+    # Matrix Spline
+    "MatrixSpline",
+    "closest_point_on_matrix_spline",
+    "pin_to_matrix_spline",
     # Maya Query
     "get_knots",
     "maya_to_standard_knots",

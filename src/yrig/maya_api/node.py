@@ -277,6 +277,19 @@ class MultiplyNode(Node):
         self.output: ScalarAttribute = ScalarAttribute(f"{self.name}.output")
 
 
+class MultiplyDivideNode(Node):
+    """Maya multiplyDivide node with enhanced interface."""
+
+    def __init__(self, name: str = "multiplyDivide") -> None:
+        super().__init__("multiplyDivide", name)
+
+    def _setup_attributes(self) -> None:
+        self.input1 = Vector3Attribute(f"{self.name}.input1")
+        self.input2 = Vector3Attribute(f"{self.name}.input2")
+        self.operation = EnumAttribute(f"{self.name}.operation")
+        self.output = Vector3Attribute(f"{self.name}.output")
+
+
 class MultiplyPointByMatrixNode(Node):
     """Maya multiplyPointByMatrix node with enhanced interface."""
 
