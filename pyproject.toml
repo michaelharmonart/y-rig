@@ -18,7 +18,8 @@ dev = [
 extraPaths = [
     "./.stubs/",
     "/usr/autodesk/ApplicationPlugins/ngskintools2/Contents/scripts",
-    "third_party/mgear/release/scripts/"
+    "third_party/mgear/release/scripts/",
+    "src"
 ]
 typeCheckingMode = "standard"
 reportMissingModuleSource = "information"
