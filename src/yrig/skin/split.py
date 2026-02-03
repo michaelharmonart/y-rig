@@ -15,7 +15,7 @@ from maya.api.OpenMaya import (
 
 from yrig import spline
 from yrig.math import remap
-from yrig.skin.core import get_mesh_points
+from yrig.skin.core import get_mesh_points, get_skin_cluster, get_weights, set_weights
 
 # CV can be anything: a Vector3, a transform name, etc.
 CV = TypeVar("CV")
@@ -176,3 +176,86 @@ def get_mesh_surface_weights(
     )
 
     return spline_weights_per_vertex
+
+
+def split_weights(
+    mesh: str,
+    joint_split_dict: dict[str, list[str]],
+    degree: int = 2,
+    periodic: bool = False,
+) -> None:
+    """
+    Redistributes skin weights from specified original joints to sets of split joints using spline-based falloff.
+
+    This function is designed to reassign weights from a set of original joints (e.g., proxy drivers)
+    across multiple split joints (e.g., spline-based deformation chains like ribbons or bendy limbs).
+    The redistribution is done by computing falloff weights along a spline built from the split joints'
+    world positions and distributing the original joint's influence accordingly.
+
+    Args:
+        mesh: The transform node of the skinned mesh.
+        joint_split_dict (dict[str, list[str]]): A mapping of original joint names to a list of split joints
+            that will receive the redistributed weights. Each key-value pair is one redistribution group.
+        degree: Degree of the spline used for spatial weight interpolation. Defaults to 2.
+        periodic: If True the curve generated to split the weights will be a periodic one.
+    """
+    # get the shape node
+    mesh_shape: str = cmds.listRelatives(mesh, shapes=True)[0]
+
+    # get the skinCluster and weights
+    skin_cluster: str | None = get_skin_cluster(mesh)
+    original_weights: dict[int, dict[str, float]] = get_weights(
+        shape=mesh_shape, skin_cluster=skin_cluster
+    )
+
+    # Copy the original weights for modification.
+    new_weights: dict[int, dict[str, float]] = {
+        vtx: weights.copy() for vtx, weights in original_weights.items()
+    }
+
+    # Organize weights by influence rather than vertex
+    weights_by_influence: dict[str, dict[int, float]] = {}
+    for vertex, influence_weights in original_weights.items():
+        for influence, weight in influence_weights.items():
+            if influence in weights_by_influence:
+                weights_by_influence[influence][vertex] = weight
+            else:
+                weights_by_influence[influence] = {vertex: weight}
+
+    # Process each original joint → split joints mapping
+    for original_joint, split_joints_list in joint_split_dict.items():
+        vertex_weights: dict[int, float] = {}
+        if original_joint in weights_by_influence:
+            vertex_weights = weights_by_influence[original_joint]
+
+        # Filter for vertices actually influenced by this joint (less inputs for the spline weight algorithm)
+        influenced_vertex_weights: list[tuple[int, float]] = []
+        influenced_vertices: list[int] = []
+        for vertex, weight in vertex_weights.items():
+            if weight > 0:
+                influenced_vertex_weights.append((vertex, weight))
+                influenced_vertices.append(vertex)
+
+        # Get spline-based weights for each influenced vertex
+        spline_weights: list[list[tuple[str, float]]] = get_mesh_spline_weights(
+            mesh_shape=mesh_shape,
+            cv_transforms=split_joints_list,
+            degree=degree,
+            periodic=periodic,
+            vertex_indices=influenced_vertices,
+        )
+
+        # Redistribute the weights
+        for i, (vertex, original_weight) in enumerate(influenced_vertex_weights):
+            # Remove original joint weight
+            new_weights[vertex][original_joint] = 0.0
+
+            # Add redistributed weights to split joints
+            for influence, spline_weight in spline_weights[i]:
+                if influence not in new_weights[vertex]:
+                    new_weights[vertex][influence] = 0.0
+                new_weights[vertex][influence] += spline_weight * original_weight
+
+    set_weights(
+        shape=mesh_shape, new_weights=new_weights, skin_cluster=skin_cluster, normalize=True
+    )
