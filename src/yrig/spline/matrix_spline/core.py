@@ -46,7 +46,7 @@ class MatrixSpline:
             knots (list[float] | None, optional): Knot vector. If None, a suitable vector
                 is generated from the CV count, degree, and periodic setting.
             periodic (bool, optional): Whether the spline is periodic (closed). Defaults to False.
-            name (str | None, optional): Base name for created scene nodes. Defaults to "MatrixSpline".
+            name (str | None, optional): Base name for created scene nodes. Defaults to "matrix_spline".
         """
         self.pinned_transforms: list[str] = []
         self.pinned_drivers: list[str] = []
@@ -60,14 +60,14 @@ class MatrixSpline:
             if knots is not None
             else generate_knots(count=number_of_cvs, degree=degree, periodic=periodic)
         )
-        self.name: str = name if name is not None else "MatrixSpline"
+        self.name: str = name if name is not None else "matrix_spline"
 
         cv_matrices: list[str] = []
         cv_position_attrs: list[tuple[str, str, str]] = []
         for index, cv_transform in enumerate(cv_transforms):
             # Remove scale and shear from matrix since they will interfere with the
             # linear interpolation of the basis vectors (causing flipping)
-            pick_matrix = node.PickMatrixNode(name=f"{cv_transform}_PickMatrix")
+            pick_matrix = node.PickMatrixNode(name=f"{cv_transform}_pick_matrix")
             pick_matrix.input_matrix.connect_from(f"{cv_transform}.matrix")
             pick_matrix.use_shear.set(False)
             pick_matrix.use_scale.set(False)
@@ -89,7 +89,7 @@ class MatrixSpline:
 
             # Rebuild the matrix but encode the scale into the empty values in the matrix
             # (this needs to be extracted after the weighted matrix sum)
-            cv_matrix = node.FourByFourMatrixNode(name=f"{cv_transform}_CvMatrix")
+            cv_matrix = node.FourByFourMatrixNode(name=f"{cv_transform}_cv_matrix")
             row1.output.x.connect_to(cv_matrix.in_00)
             row1.output.y.connect_to(cv_matrix.in_01)
             row1.output.z.connect_to(cv_matrix.in_02)
@@ -148,7 +148,7 @@ def bound_curve_from_matrix_spline(
         else matrix_spline.cv_transforms
     )
     curve_transform: str = cmds.curve(
-        name=f"{matrix_spline.name}_Curve",
+        name=f"{matrix_spline.name}_curve",
         point=[
             cmds.xform(cv, query=True, worldSpace=True, translation=True)
             for cv in extended_cvs  # type: ignore
@@ -263,7 +263,7 @@ def pin_to_matrix_spline(
     segment_name: str = pinned_transform
 
     # Create node that blends the matrices based on the calculated DeBoor weights.
-    blended_matrix = node.WtAddMatrixNode(name=f"{segment_name}_BaseMatrix")
+    blended_matrix = node.WtAddMatrixNode(name=f"{segment_name}_base_matrix")
     point_weights = point_on_spline_weights(
         cvs=cv_matrices, t=parameter, degree=degree, knots=knots, normalize=normalize_parameter
     )
@@ -301,7 +301,7 @@ def pin_to_matrix_spline(
     tangent_vector_node: node.MultiplyPointByMatrixNode | None = None
     rigid_matrix_output: MatrixAttribute
     if align_tangent:
-        blended_tangent_matrix = node.WtAddMatrixNode(name=f"{segment_name}_TangentMatrix")
+        blended_tangent_matrix = node.WtAddMatrixNode(name=f"{segment_name}_tangent_matrix")
         tangent_weights = tangent_on_spline_weights(
             cvs=cv_matrices, t=parameter, degree=degree, knots=knots, normalize=normalize_parameter
         )
@@ -310,12 +310,12 @@ def pin_to_matrix_spline(
             blended_tangent_matrix.weight_matrix[index].matrix_in.connect_from(tangent_weight[0])
 
         tangent_vector_node = node.MultiplyPointByMatrixNode(
-            name=f"{blended_tangent_matrix}_TangentVector"
+            name=f"{blended_tangent_matrix}_tangent_vector"
         )
         blended_tangent_matrix.matrix_sum.connect_to(tangent_vector_node.input_matrix)
 
         # Create aim matrix node.
-        aim_matrix = node.AimMatrixNode(name=f"{segment_name}_AimMatrix")
+        aim_matrix = node.AimMatrixNode(name=f"{segment_name}_aim_matrix")
         aim_matrix.primary.mode.set(2)
         aim_matrix.primary.input_axis.set(primary_axis)
         tangent_vector_node.output.connect_to(aim_matrix.primary.target_vector)
@@ -332,7 +332,7 @@ def pin_to_matrix_spline(
         rigid_matrix = aim_matrix
         rigid_matrix_output = aim_matrix.output_matrix
     else:
-        pick_matrix = node.PickMatrixNode(name=f"{segment_name}_Ortho")
+        pick_matrix = node.PickMatrixNode(name=f"{segment_name}_ortho")
         pick_matrix.use_translate.set(True)
         pick_matrix.use_rotate.set(True)
         pick_matrix.use_scale.set(False)
@@ -357,10 +357,10 @@ def pin_to_matrix_spline(
     tangent_scale_attr: ScalarAttribute | None = None
     if align_tangent and stretch and tangent_vector_node is not None:
         # Get tangent vector magnitude
-        tangent_vector_length = node.LengthNode(name=f"{segment_name}_tangentVectorLength")
+        tangent_vector_length = node.LengthNode(name=f"{segment_name}_tangent_vector_length")
         tangent_vector_node.output.connect_to(tangent_vector_length.input)
         tangent_vector_length_scaled: node.MultiplyNode = node.MultiplyNode(
-            name=f"{segment_name}_tangentVectorLengthScaled"
+            name=f"{segment_name}_tangent_vector_length_scaled"
         )
         tangent_vector_length.output.connect_to(tangent_vector_length_scaled.input[0])
         tangent_sample = tangent_vector_node.output.get()
@@ -424,7 +424,7 @@ def pin_to_matrix_spline(
     )
 
     # Rebuild the matrix
-    output_matrix = node.FourByFourMatrixNode(name=f"{segment_name}_OutputMatrix")
+    output_matrix = node.FourByFourMatrixNode(name=f"{segment_name}_output_matrix")
     x_scaled.output.x.connect_to(output_matrix.in_00)
     x_scaled.output.y.connect_to(output_matrix.in_01)
     x_scaled.output.z.connect_to(output_matrix.in_02)
