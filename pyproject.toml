@@ -16,13 +16,20 @@ dev = [
 
 [tool.pyright]
 extraPaths = [
-    "./.stubs/",
     "/usr/autodesk/ApplicationPlugins/ngskintools2/Contents/scripts",
     "third_party/mgear/release/scripts/",
     "src"
 ]
 typeCheckingMode = "standard"
 reportMissingModuleSource = "information"
+
+[tool.ty.environment]
+extra-paths = [
+    "/usr/autodesk/ApplicationPlugins/ngskintools2/Contents/scripts",
+    "third_party/mgear/release/scripts/",
+    "src"
+]
+
 
 [tool.ruff]
 line-length = 100

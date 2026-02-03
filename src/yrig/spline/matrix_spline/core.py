@@ -39,7 +39,6 @@ class MatrixSpline:
             name (str | None, optional): Base name for created scene nodes. Defaults to "matrix_spline".
         """
         self.pinned_transforms: list[str] = []
-        self.pinned_drivers: list[str] = []
         self.curve: str | None = None
         self.periodic: bool = periodic
         self.degree: int = degree
@@ -139,9 +138,8 @@ def bound_curve_from_matrix_spline(
     )
     curve_transform: str = cmds.curve(
         name=f"{matrix_spline.name}_curve",
-        point=[
-            cmds.xform(cv, query=True, worldSpace=True, translation=True)
-            for cv in extended_cvs  # type: ignore
+        point=[  # type: ignore
+            cmds.xform(cv, query=True, worldSpace=True, translation=True) for cv in extended_cvs
         ],
         periodic=matrix_spline.periodic,
         knot=maya_knots,
