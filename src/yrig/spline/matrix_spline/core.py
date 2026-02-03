@@ -111,7 +111,7 @@ class MatrixSpline:
             row4.output.w.connect_to(cv_matrix.in_33)
 
             cv_matrices.append(str(cv_matrix.output))
-            cv_position_attrs.append((str({row4.output.x}), str(row4.output.y), str(row4.output.z)))
+            cv_position_attrs.append((str(row4.output.x), str(row4.output.y), str(row4.output.z)))
 
         # If the curve is periodic there are we need to re-add CVs that move together.
         if periodic:
@@ -405,19 +405,19 @@ def pin_to_matrix_spline(
     Z_AXIS = (0, 0, 1)
 
     x_scaled = scale_vector(
-        node_name=f"{segment_name}_xScale",
+        node_name=f"{segment_name}_x_scale",
         vector_attr=rigid_matrix_row1.output,
         scale_attr=blended_matrix_row1.output.w,
         axis=X_AXIS,
     )
     y_scaled = scale_vector(
-        node_name=f"{segment_name}_yScale",
+        node_name=f"{segment_name}_y_scale",
         vector_attr=rigid_matrix_row2.output,
         scale_attr=blended_matrix_row2.output.w,
         axis=Y_AXIS,
     )
     z_scaled = scale_vector(
-        node_name=f"{segment_name}_zScale",
+        node_name=f"{segment_name}_z_scale",
         vector_attr=rigid_matrix_row3.output,
         scale_attr=blended_matrix_row3.output.w,
         axis=Z_AXIS,
@@ -433,9 +433,13 @@ def pin_to_matrix_spline(
     y_scaled.output.y.connect_to(output_matrix.in_11)
     y_scaled.output.z.connect_to(output_matrix.in_12)
 
-    z_scaled.output.x.connect_to(output_matrix.in_30)
-    z_scaled.output.y.connect_to(output_matrix.in_31)
-    z_scaled.output.z.connect_to(output_matrix.in_32)
+    z_scaled.output.x.connect_to(output_matrix.in_20)
+    z_scaled.output.y.connect_to(output_matrix.in_21)
+    z_scaled.output.z.connect_to(output_matrix.in_22)
+
+    blended_matrix_row4.output.x.connect_to(output_matrix.in_30)
+    blended_matrix_row4.output.y.connect_to(output_matrix.in_31)
+    blended_matrix_row4.output.z.connect_to(output_matrix.in_32)
 
     output_matrix.output.connect_to(f"{pinned_transform}.offsetParentMatrix")
     matrix_spline.pinned_transforms.append(pinned_transform)
