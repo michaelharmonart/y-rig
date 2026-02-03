@@ -285,5 +285,5 @@ class AimMatrixAxisAttribute(Attribute):
 
         self.input_axis = Vector3Attribute(f"{attr_path}.{axis_name}InputAxis")
         self.mode = EnumAttribute(f"{attr_path}.{axis_name}Mode")
-        self.target_vector = EnumAttribute(f"{attr_path}.{axis_name}TargetVector")
+        self.target_vector = Vector3Attribute(f"{attr_path}.{axis_name}TargetVector")
         self.target_matrix = MatrixAttribute(f"{attr_path}.{axis_name}TargetMatrix")
