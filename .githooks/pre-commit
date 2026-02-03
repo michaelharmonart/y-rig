@@ -6,7 +6,6 @@ LOCAL_DIR=$(git rev-parse --show-toplevel)
 
 source "${LOCAL_DIR}/.githooks/update-venv"
 
-
 echo "Static type checking (ty)..."
 ty check "${LOCAL_DIR}"
 echo "Linting (ruff)..."
