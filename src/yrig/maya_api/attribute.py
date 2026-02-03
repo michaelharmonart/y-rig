@@ -1,0 +1,289 @@
+from __future__ import annotations
+
+from abc import abstractmethod
+from typing import Any, Generic, Iterator, TypeVar, cast
+
+import maya.cmds as cmds
+
+AttributeType = TypeVar("AttributeType", bound="Attribute")
+
+
+class Attribute:
+    """Base class for all Maya attributes."""
+
+    def __init__(self, attr_path: str):
+        self.attr_path = attr_path
+
+    def __str__(self) -> str:
+        """Return the attribute path when used as a string."""
+        return self.attr_path
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}('{self.attr_path}')"
+
+    def get(self) -> Any:
+        """Get the value of this attribute."""
+        return cmds.getAttr(self.attr_path)
+
+    def set(self, value: Any) -> None:
+        """Set the value of this attribute."""
+        cmds.setAttr(self.attr_path, value)
+
+    @property
+    def value(self) -> Any:
+        """Get the value of this attribute."""
+        return self.get()
+
+    @value.setter
+    def value(self, val: Any) -> None:
+        """Set the value of this attribute."""
+        self.set(val)
+
+    def connect_from(self, source_attr: str | Attribute) -> None:
+        """Connect another attribute to this one."""
+        source = str(source_attr)  # Works with both strings and Attribute objects
+        cmds.connectAttr(source, self.attr_path)
+
+    def connect_to(self, dest_attr: str | Attribute) -> None:
+        """Connect this attribute to another one."""
+        dest = str(dest_attr)
+        cmds.connectAttr(self.attr_path, dest)
+
+    def exists(self) -> bool:
+        """Check if this attribute exists."""
+        return cmds.objExists(self.attr_path)
+
+
+class ScalarAttribute(Attribute):
+    """A Maya attribute of a scalar type."""
+
+    def __init__(self, attr_path: str):
+        super().__init__(attr_path)
+
+    def get(self) -> float:
+        """Get the value of this attribute."""
+        return cmds.getAttr(self.attr_path)
+
+    def set(self, value: float | int) -> None:
+        """Set the value of this attribute."""
+        cmds.setAttr(self.attr_path, cast(Any, value))
+
+    @property
+    def value(self) -> float:
+        """Get the value of this attribute."""
+        return self.get()
+
+    @value.setter
+    def value(self, val: float | int) -> None:
+        """Set the value of this attribute."""
+        self.set(val)
+
+
+class IntegerAttribute(ScalarAttribute):
+    """A Maya attribute of an integer type."""
+
+    def __init__(self, attr_path: str):
+        super().__init__(attr_path)
+
+    def get(self) -> int:
+        """Get the value of this attribute."""
+        return int(cmds.getAttr(self.attr_path))
+
+    def set(self, value: float | int) -> None:
+        """Set the value of this attribute."""
+        cmds.setAttr(self.attr_path, cast(Any, int(value)))
+
+    @property
+    def value(self) -> int:
+        """Get the value of this attribute."""
+        return self.get()
+
+    @value.setter
+    def value(self, val: float | int) -> None:
+        """Set the value of this attribute."""
+        self.set(val)
+
+
+class EnumAttribute(IntegerAttribute):
+    """A Maya attribute of the enum type."""
+
+    def __init__(self, attr_path: str):
+        super().__init__(attr_path)
+
+
+class BooleanAttribute(Attribute):
+    """A Maya attribute of a bool type."""
+
+    def __init__(self, attr_path: str):
+        super().__init__(attr_path)
+
+    def get(self) -> bool:
+        """Get the value of this attribute."""
+        return bool(cmds.getAttr(self.attr_path))
+
+    def set(self, value: bool) -> None:
+        """Set the value of this attribute."""
+        cmds.setAttr(self.attr_path, cast(Any, 1 if value else 0))
+
+    @property
+    def value(self) -> bool:
+        """Get the value of this attribute."""
+        return self.get()
+
+    @value.setter
+    def value(self, val: bool) -> None:
+        """Set the value of this attribute."""
+        self.set(val)
+
+
+class MatrixAttribute(Attribute):
+    """A Maya attribute of the matrix type."""
+
+    def __init__(self, attr_path: str):
+        super().__init__(attr_path)
+
+
+class Vector3Attribute(Attribute):
+    """A Maya attribute of the type double3 (XYZ)"""
+
+    def __init__(self, attr_path: str):
+        super().__init__(attr_path)
+
+        self.x = ScalarAttribute(f"{attr_path}X")
+        self.y = ScalarAttribute(f"{attr_path}Y")
+        self.z = ScalarAttribute(f"{attr_path}Z")
+
+    def get(self) -> tuple[float, float, float]:
+        """Get the value of this attribute."""
+        return_list = cmds.getAttr(self.attr_path)
+        tuple = return_list[0]
+        return tuple
+
+    def set(self, value: tuple[float, float, float]) -> None:
+        """Set the value of this attribute."""
+        cmds.setAttr(self.attr_path, *value)  # type: ignore
+
+    @property
+    def value(self) -> tuple[float, float, float]:
+        """Get the value of this attribute."""
+        return self.get()
+
+    @value.setter
+    def value(self, val: tuple[float, float, float]) -> None:
+        """Set the value of this attribute."""
+        self.set(val)
+
+
+class Vector4Attribute(Attribute):
+    """A Maya attribute of the type double4 (XYZW)"""
+
+    def __init__(self, attr_path: str):
+        super().__init__(attr_path)
+
+        self.x = ScalarAttribute(f"{attr_path}X")
+        self.y = ScalarAttribute(f"{attr_path}Y")
+        self.z = ScalarAttribute(f"{attr_path}Z")
+        self.w = ScalarAttribute(f"{attr_path}W")
+
+
+class QuatAttribute(Attribute):
+    """A Maya attribute of the compound Quaternion type (XYZW)"""
+
+    def __init__(self, attr_path: str):
+        super().__init__(attr_path)
+
+        self.x = ScalarAttribute(f"{attr_path}X")
+        self.y = ScalarAttribute(f"{attr_path}Y")
+        self.z = ScalarAttribute(f"{attr_path}Z")
+        self.w = ScalarAttribute(f"{attr_path}W")
+
+
+class IndexableAttribute(Attribute, Generic[AttributeType]):
+    """A Maya attribute that supports indexing with bracket notation."""
+
+    @abstractmethod
+    def __getitem__(self, index: int) -> AttributeType:
+        """Return the indexed attribute path: attr.input[0], attr.input[1], etc."""
+
+    def __len__(self) -> int:
+        """Get the number of elements in this array."""
+        return cmds.getAttr(self.attr_path, size=True)
+
+    def get_indices(self) -> list[int]:
+        """Get all existing indices in this array."""
+        return cmds.getAttr(self.attr_path, multiIndices=True) or []
+
+    def __iter__(self) -> Iterator[AttributeType]:
+        """Iterate over all existing, non-sparse elements in the array."""
+        # This allows for loop iteration: for item in my_attr:
+        for index in self.get_indices():
+            yield self[index]
+
+
+class IndexableScalarAttribute(IndexableAttribute[ScalarAttribute]):
+    """A Maya attribute that supports indexing matrix attributes with bracket notation."""
+
+    def __getitem__(self, index: int) -> ScalarAttribute:
+        """Return the indexed attribute path: attr.input[0], attr.input[1], etc."""
+        return ScalarAttribute(attr_path=f"{self.attr_path}[{index}]")
+
+
+class IndexableMatrixAttribute(IndexableAttribute[MatrixAttribute]):
+    """A Maya attribute that supports indexing matrix attributes with bracket notation."""
+
+    def __getitem__(self, index: int) -> MatrixAttribute:
+        """Return the indexed attribute path: attr.input[0], attr.input[1], etc."""
+        return MatrixAttribute(attr_path=f"{self.attr_path}[{index}]")
+
+
+class BlendMatrixTargetAttribute(Attribute):
+    """A Maya attribute of the same compound type as the targets in a blendMatrix node."""
+
+    def __init__(self, attr_path: str):
+        super().__init__(attr_path)
+
+        self.target_matrix = MatrixAttribute(f"{attr_path}.targetMatrix")
+        self.use_matrix = BooleanAttribute(f"{attr_path}.useMatrix")
+        self.weight = ScalarAttribute(f"{attr_path}.weight")
+        self.scale_weight = ScalarAttribute(f"{attr_path}.scaleWeight")
+        self.translate_weight = ScalarAttribute(f"{attr_path}.translateWeight")
+        self.rotate_weight = ScalarAttribute(f"{attr_path}.rotateWeight")
+        self.shear_weight = ScalarAttribute(f"{attr_path}.shearWeight")
+
+
+class IndexableBlendMatrixTargetAttribute(IndexableAttribute[BlendMatrixTargetAttribute]):
+    """A Maya attribute that supports indexing targets in a blendMatrix with bracket notation."""
+
+    def __getitem__(self, index: int) -> BlendMatrixTargetAttribute:
+        """Return the indexed attribute path: attr.input[0], attr.input[1], etc."""
+        return BlendMatrixTargetAttribute(attr_path=f"{self.attr_path}[{index}]")
+
+
+class WtMatrixAttribute(Attribute):
+    """A Maya attribute of the same compound type as the wtMatrix elements in a wrAddMatrix node."""
+
+    def __init__(self, attr_path: str):
+        super().__init__(attr_path)
+
+        self.matrix_in = MatrixAttribute(f"{attr_path}.matrixIn")
+        self.weight_in = ScalarAttribute(f"{attr_path}.weightIn")
+
+
+class IndexableWtMatrixAttribute(IndexableAttribute[WtMatrixAttribute]):
+    """A Maya attribute that supports indexing elements in a wtAddMatrix with bracket notation."""
+
+    def __getitem__(self, index: int) -> WtMatrixAttribute:
+        """Return the indexed attribute path: attr.input[0], attr.input[1], etc."""
+        return WtMatrixAttribute(attr_path=f"{self.attr_path}[{index}]")
+
+
+class AimMatrixAxisAttribute(Attribute):
+    """A Maya attribute of the same compound type as the aimMatrix axes."""
+
+    def __init__(self, attr_path: str, axis_name: str):
+        super().__init__(attr_path)
+
+        self.input_axis = Vector3Attribute(f"{attr_path}.{axis_name}InputAxis")
+        self.mode = EnumAttribute(f"{attr_path}.{axis_name}Mode")
+        self.target_vector = EnumAttribute(f"{attr_path}.{axis_name}TargetVector")
+        self.target_matrix = MatrixAttribute(f"{attr_path}.{axis_name}TargetMatrix")
