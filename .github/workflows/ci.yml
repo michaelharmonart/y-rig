@@ -25,7 +25,7 @@ jobs:
           enable-cache: true
 
       - name: Install dependencies
-        run: uv sync
+        run: uv sync --only-group lint
 
       # Run type checking with ty
       - name: Type Check (Ty)

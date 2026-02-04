@@ -8,12 +8,12 @@ dependencies = []
 
 [dependency-groups]
 dev = [
-    "debugpy>=1.8.19",
-    "maya-stubs>=0.4.2",
-    "numpy>=2.4.1",
-    "ruff>=0.14.14",
-    "ty>=0.0.14",
+    {include-group = "lint"},
+    {include-group = "debug"}
 ]
+lint = ["ty>=0.0.14", "ruff>=0.14.14", "maya-stubs>=0.4.2", "numpy>=2.4.1"]
+debug = ["debugpy>=1.8.19"]
+
 
 [tool.pyright]
 extraPaths = [
