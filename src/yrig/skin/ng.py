@@ -5,8 +5,11 @@ from typing import TYPE_CHECKING
 import maya.cmds as cmds
 
 if TYPE_CHECKING:
-    from ngSkinTools2 import api as ng
-    from ngSkinTools2.api.plugin import is_plugin_loaded, load_plugin
+    from ngSkinTools2 import api as ng  # ty: ignore[unresolved-import]
+    from ngSkinTools2.api.plugin import (  # ty: ignore[unresolved-import]
+        is_plugin_loaded,
+        load_plugin,
+    )
 else:
     ng = None
     is_plugin_loaded = None
