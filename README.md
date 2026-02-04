@@ -1,6 +1,6 @@
 # y-rig: BYU Animation Program Rigging Framework
 
----
+![y-rig logo](docs/images/y-rig_logo.png)
 
 This repository contains two main pieces:
 
