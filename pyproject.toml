@@ -13,6 +13,9 @@ dev = [
 ]
 lint = ["ty>=0.0.14", "ruff>=0.14.14", "maya-stubs>=0.4.2", "numpy>=2.4.1"]
 debug = ["debugpy>=1.8.19"]
+maya = [
+    {include-group = "debug"}
+]
 
 
 [tool.pyright]
