@@ -29,7 +29,9 @@ jobs:
 
       # Run type checking with ty
       - name: Run Ty
-        run: uv run ty check
+        run: |
+          mkdir -p /usr/autodesk/ApplicationPlugins/ngskintools2/Contents/scripts
+          uv run ty check
 
       # Run ruff lint checks
       - name: Run Ruff lint
