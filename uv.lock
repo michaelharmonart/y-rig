@@ -115,6 +115,18 @@ wheels = [
 ]
 
 [[package]]
+name = "qt-py"
+version = "2.0.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "types-pyside2" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/91/c5/30c27e199370f86b527ae254e8b3428063610ab12458f9293898c23ee163/qt_py-2.0.2.tar.gz", hash = "sha256:c6240e1b9bc6f79f3867585fe9298fba941191c45aaf4c0d1260b498ab9d93dd", size = 63511 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5a/3e/ab4d04ff7227c4c10e57af28a50fca7b280b002a84d5851696a0cf3f6458/qt_py-2.0.2-py3-none-any.whl", hash = "sha256:57067dec618bcb95f5ee90760d807c2d6ea6f2db43b88796410df5ba365a3d3d", size = 45668 },
+]
+
+[[package]]
 name = "ruff"
 version = "0.14.14"
 source = { registry = "https://pypi.org/simple" }
@@ -165,6 +177,14 @@ wheels = [
 ]
 
 [[package]]
+name = "types-pyside2"
+version = "5.15.2.1.8"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0f/13/d22cdd7bd73908767ae96572852b4d77afaaccbfd88357fa153a2e6b13c4/types_pyside2-5.15.2.1.8-py2.py3-none-any.whl", hash = "sha256:8d2d9e506b6db88d8ea6f04c56051d7567203ba630122e41de3b52e4842e6474", size = 576975 },
+]
+
+[[package]]
 name = "y-rig"
 version = "0.1.0"
 source = { virtual = "." }
@@ -177,12 +197,14 @@ dev = [
     { name = "debugpy" },
     { name = "maya-stubs" },
     { name = "numpy" },
+    { name = "qt-py" },
     { name = "ruff" },
     { name = "ty" },
 ]
 lint = [
     { name = "maya-stubs" },
     { name = "numpy" },
+    { name = "qt-py" },
     { name = "ruff" },
     { name = "ty" },
 ]
@@ -198,12 +220,14 @@ dev = [
     { name = "debugpy", specifier = ">=1.8.19" },
     { name = "maya-stubs", specifier = ">=0.4.2" },
     { name = "numpy", specifier = ">=2.4.1" },
+    { name = "qt-py", specifier = ">=2.0.2" },
     { name = "ruff", specifier = ">=0.14.14" },
     { name = "ty", specifier = ">=0.0.14" },
 ]
 lint = [
     { name = "maya-stubs", specifier = ">=0.4.2" },
     { name = "numpy", specifier = ">=2.4.1" },
+    { name = "qt-py", specifier = ">=2.0.2" },
     { name = "ruff", specifier = ">=0.14.14" },
     { name = "ty", specifier = ">=0.0.14" },
 ]

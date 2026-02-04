@@ -11,7 +11,13 @@ dev = [
     {include-group = "lint"},
     {include-group = "debug"}
 ]
-lint = ["ty>=0.0.14", "ruff>=0.14.14", "maya-stubs>=0.4.2", "numpy>=2.4.1"]
+lint = [
+    "ty>=0.0.14",
+    "ruff>=0.14.14",
+    "maya-stubs>=0.4.2",
+    "numpy>=2.4.1",
+    "qt-py>=2.0.2",
+]
 debug = ["debugpy>=1.8.19"]
 maya = [
     {include-group = "debug"}
