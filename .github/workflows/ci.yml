@@ -28,15 +28,15 @@ jobs:
         run: uv sync
 
       # Run type checking with ty
-      - name: Run Ty
+      - name: Type Check (Ty)
         run: |
           sudo mkdir -p /usr/autodesk/ApplicationPlugins/ngskintools2/Contents/scripts
           uv run ty check
 
       # Run ruff lint checks
-      - name: Run Ruff lint
+      - name: Lint (Ruff)
         run: uv run ruff check
 
       # Run ruff format check
-      - name: Run Ruff format check
+      - name: Format Check (Ruff)
         run: uv run ruff format --check
