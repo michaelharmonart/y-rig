@@ -170,8 +170,17 @@ version = "0.1.0"
 source = { virtual = "." }
 
 [package.dev-dependencies]
+debug = [
+    { name = "debugpy" },
+]
 dev = [
     { name = "debugpy" },
+    { name = "maya-stubs" },
+    { name = "numpy" },
+    { name = "ruff" },
+    { name = "ty" },
+]
+lint = [
     { name = "maya-stubs" },
     { name = "numpy" },
     { name = "ruff" },
@@ -181,8 +190,15 @@ dev = [
 [package.metadata]
 
 [package.metadata.requires-dev]
+debug = [{ name = "debugpy", specifier = ">=1.8.19" }]
 dev = [
     { name = "debugpy", specifier = ">=1.8.19" },
+    { name = "maya-stubs", specifier = ">=0.4.2" },
+    { name = "numpy", specifier = ">=2.4.1" },
+    { name = "ruff", specifier = ">=0.14.14" },
+    { name = "ty", specifier = ">=0.0.14" },
+]
+lint = [
     { name = "maya-stubs", specifier = ">=0.4.2" },
     { name = "numpy", specifier = ">=2.4.1" },
     { name = "ruff", specifier = ">=0.14.14" },
