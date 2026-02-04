@@ -17,8 +17,11 @@ else:
 
 HAS_NG_SKIN = False
 try:
-    from ngSkinTools2 import api as ng
-    from ngSkinTools2.api.plugin import is_plugin_loaded, load_plugin
+    from ngSkinTools2 import api as ng  # ty: ignore[unresolved-import]
+    from ngSkinTools2.api.plugin import (  # ty: ignore[unresolved-import]
+        is_plugin_loaded,
+        load_plugin,
+    )
 
     HAS_NG_SKIN = True
 except ImportError:
