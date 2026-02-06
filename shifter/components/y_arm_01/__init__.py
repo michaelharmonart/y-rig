@@ -1196,6 +1196,7 @@ class Component(component.Main):
             cv_transforms=[str(transform) for transform in cns_list],
             primary_axis=(1, 0, 0),
             secondary_axis=(0, 0, 1),
+            degree=2,
             pinned_transforms=[str(transform) for transform in self.armTwistChain],
             padded=False,
         )
@@ -1212,6 +1213,7 @@ class Component(component.Main):
             cv_transforms=[str(transform) for transform in cns_list],
             primary_axis=(1, 0, 0),
             secondary_axis=(0, 0, 1),
+            degree=2,
             pinned_transforms=[str(transform) for transform in self.forearmTwistChain],
             padded=False,
         )
