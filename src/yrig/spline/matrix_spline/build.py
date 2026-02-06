@@ -61,7 +61,7 @@ def matrix_spline_from_transforms(
 
     cv_pins: list[str] = []
     for index, transform in enumerate(cv_transforms):
-        cv_pin = cmds.group(empty=True, name=f"{spline_group}_CV{index}", parent=spline_group)
+        cv_pin = cmds.group(empty=True, name=f"{spline_group}_cv{index}", parent=spline_group)
         matrix_constraint(transform, cv_pin, keep_offset=False)
         cv_pins.append(cv_pin)
     matrix_spline = MatrixSpline(
@@ -75,7 +75,7 @@ def matrix_spline_from_transforms(
     if pinned_transforms is not None:
         pins: list[str] = []
         for pinned_transform in pinned_transforms:
-            pin_name = f"{get_short_name(pinned_transform)}_Pin"
+            pin_name = f"{get_short_name(pinned_transform)}_pin"
             pin = cmds.group(empty=True, name=pin_name, parent=spline_group)
             matrix_constraint(pin, pinned_transform, keep_offset=False)
             pins.append(pin)
