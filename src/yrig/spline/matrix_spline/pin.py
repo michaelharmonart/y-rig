@@ -245,6 +245,7 @@ def pin_to_matrix_spline(
 def pin_transforms_to_matrix_spline(
     matrix_spline: MatrixSpline,
     pinned_transforms: Sequence[str],
+    parameters: Sequence[float] | None,
     padded: bool = True,
     stretch: bool = True,
     arc_length: bool = True,
@@ -254,10 +255,11 @@ def pin_transforms_to_matrix_spline(
     align_tangent: bool = True,
 ) -> MatrixSpline:
     """
-    Takes a set of transforms (cvs) and creates a matrix spline with controls and deformation joints.
+    Takes MatrixSpline and a set of transforms pins them to that spline.
     Args:
         matrix_spline: The matrix spline defention that will drive the pinned transforms.
         pinned_transforms: These transforms will be constrained to the spline.
+        parameters: Optional manual specification of the paramters to pin to.
         padded: When True, segments are sampled such that the end points have half a segment of spacing from the ends of the spline.
         stretch: Whether to apply automatic scaling along the spline tangent.
         arc_length: When True, the parameters for the spline will be even according to arc length.
@@ -277,24 +279,26 @@ def pin_transforms_to_matrix_spline(
         matrix_spline: The matrix spline.
     """
     segments = len(pinned_transforms)
-    cv_positions: list[Vector3] = []
-
-    for transform in pinned_transforms:
-        position: tuple[float, float, float] = cmds.xform(  # type: ignore
-            transform, query=True, worldSpace=True, translation=True
+    segment_parameters: Sequence[float]
+    if parameters is not None:
+        segment_parameters = parameters
+    else:
+        cv_positions: list[Vector3] = []
+        for transform in pinned_transforms:
+            position: tuple[float, float, float] = cmds.xform(  # type: ignore
+                transform, query=True, worldSpace=True, translation=True
+            )
+            cv_positions.append(Vector3(*position))
+        segment_parameters = resample(
+            cv_positions=cv_positions,
+            number_of_points=segments,
+            degree=matrix_spline.degree,
+            knots=matrix_spline.knots,
+            periodic=matrix_spline.periodic,
+            padded=padded,
+            arc_length=arc_length,
+            normalize_parameter=False,
         )
-        cv_positions.append(Vector3(*position))
-
-    segment_parameters: list[float] = resample(
-        cv_positions=cv_positions,
-        number_of_points=segments,
-        degree=matrix_spline.degree,
-        knots=matrix_spline.knots,
-        periodic=matrix_spline.periodic,
-        padded=padded,
-        arc_length=arc_length,
-        normalize_parameter=False,
-    )
 
     for transform, parameter in zip(pinned_transforms, segment_parameters):
         pin_to_matrix_spline(
