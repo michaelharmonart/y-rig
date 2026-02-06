@@ -1,11 +1,21 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Any, Generic, Iterator, TypeVar, cast
+from typing import Any, Generic, Iterator, Sequence, TypeAlias, TypeVar, cast
 
 import maya.cmds as cmds
+from maya.api.OpenMaya import MMatrix
 
 AttributeType = TypeVar("AttributeType", bound="Attribute")
+
+# fmt: off
+MatrixTuple: TypeAlias = tuple[
+    float, float, float, float,
+    float, float, float, float,
+    float, float, float, float,
+    float, float, float, float,
+]
+# fmt: on
 
 
 class Attribute:
@@ -141,6 +151,32 @@ class MatrixAttribute(Attribute):
 
     def __init__(self, attr_path: str):
         super().__init__(attr_path)
+
+    def get(self) -> MatrixTuple:
+        """Get the value of this attribute."""
+        return_list = cmds.getAttr(self.attr_path)
+        matrix_tuple = tuple(return_list)
+        return matrix_tuple
+
+    def set(self, value: MatrixTuple | Sequence[float] | MMatrix) -> None:
+        """Set the value of this attribute."""
+        if isinstance(value, MMatrix):
+            cmds.setAttr(self.attr_path, tuple(value), type="matrix")  # type: ignore
+        if len(value) != 16:
+            raise ValueError(
+                f"{value} is not a valid matrix input, it should be a Sequence of 16 floats or a MMatrix"
+            )
+        cmds.setAttr(self.attr_path, tuple(value), type="matrix")  # type: ignore
+
+    @property
+    def value(self) -> MatrixTuple:
+        """Get the value of this attribute."""
+        return self.get()
+
+    @value.setter
+    def value(self, val: MatrixTuple | Sequence[float] | MMatrix) -> None:
+        """Set the value of this attribute."""
+        self.set(val)
 
 
 class Vector3Attribute(Attribute):

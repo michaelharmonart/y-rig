@@ -242,6 +242,17 @@ class FourByFourMatrixNode(Node):
         self.output = MatrixAttribute(f"{self.name}.output")
 
 
+class InverseMatrixNode(Node):
+    """Maya inverseMatrix node with enhanced interface."""
+
+    def __init__(self, name: str = "inverseMatrix") -> None:
+        super().__init__("inverseMatrix", name)
+
+    def _setup_attributes(self) -> None:
+        self.input_matrix = MatrixAttribute(f"{self.name}.inputMatrix")
+        self.output_matrix = MatrixAttribute(f"{self.name}.outputMatrix")
+
+
 class LengthNode(Node):
     """Maya length node with enhanced interface."""
 
