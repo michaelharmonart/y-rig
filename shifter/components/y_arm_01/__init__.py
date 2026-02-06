@@ -7,6 +7,7 @@ from mgear.pymaya import datatypes
 from mgear.shifter import component
 
 from yrig.spline.matrix_spline.build import matrix_spline_from_transforms
+from yrig.transform.matrix import matrix_constraint
 
 #############################################
 # COMPONENT
@@ -346,6 +347,12 @@ class Component(component.Main):
         self.bone0.setAttr("sx", self.length0)
         bShape = self.bone0.getShape()
         bShape.setAttr("visibility", False)
+        self.bone0_tr = primitive.addTransform(
+            parent=self.root,
+            name=self.getName("0_bone_tr"),
+            m=transform.getTransform(self.fk_ctl[0]),
+        )
+        self.bone0_tr.setAttr("visibility", False)
 
         t = transform.getTransform(self.fk_ctl[1])
         self.bone1 = primitive.addLocator(self.root, self.getName("1_bone"), t)
@@ -356,6 +363,12 @@ class Component(component.Main):
         self.bone1.setAttr("sx", self.length1)
         bShape = self.bone1.getShape()
         bShape.setAttr("visibility", False)
+        self.bone1_tr = primitive.addTransform(
+            parent=self.root,
+            name=self.getName("1_bone_tr"),
+            m=transform.getTransform(self.fk_ctl[0]),
+        )
+        self.bone1_tr.setAttr("visibility", False)
 
         # Elbow bone1 ref
         self.elbow_ref = primitive.addTransform(self.root, self.getName("elbow_ref"), t)
@@ -714,7 +727,7 @@ class Component(component.Main):
         elif self.negate:
             self.armBendyA_npo.rz.set(180)
             self.armBendyA_npo.sz.set(-1)
-        attribute.setKeyableAttributes(self.armBendyA_ctl, self.t_params)
+        attribute.setKeyableAttributes(self.armBendyA_ctl)
 
         t = transform.getInterpolateTransformMatrix(self.fk_ctl[0], self.tws1A_npo, 0.9)
         self.armBendyB_npo = primitive.addTransform(
@@ -737,7 +750,7 @@ class Component(component.Main):
         elif self.negate:
             self.armBendyB_npo.rz.set(180)
             self.armBendyB_npo.sz.set(-1)
-        attribute.setKeyableAttributes(self.armBendyB_ctl, self.t_params)
+        attribute.setKeyableAttributes(self.armBendyB_ctl)
 
         tC = self.tws1B_npo.getMatrix(worldSpace=True)
         tC = transform.setMatrixPosition(tC, self.guide.apos[2])
@@ -764,7 +777,7 @@ class Component(component.Main):
         elif self.negate:
             self.forearmBendyA_npo.rz.set(180)
             self.forearmBendyA_npo.sz.set(-1)
-        attribute.setKeyableAttributes(self.forearmBendyA_ctl, self.t_params)
+        attribute.setKeyableAttributes(self.forearmBendyA_ctl)
 
         t = transform.getInterpolateTransformMatrix(self.tws1B_npo, tC, 0.5)
         self.forearmBendyB_loc = primitive.addTransform(
@@ -789,7 +802,7 @@ class Component(component.Main):
         elif self.negate:
             self.forearmBendyB_npo.rz.set(180)
             self.forearmBendyB_npo.sz.set(-1)
-        attribute.setKeyableAttributes(self.forearmBendyB_ctl, self.t_params)
+        attribute.setKeyableAttributes(self.forearmBendyB_ctl)
 
         t = self.mid_ctl.getMatrix(worldSpace=True)
         self.elbowBendy_npo = primitive.addTransform(
@@ -810,7 +823,7 @@ class Component(component.Main):
         if self.negate:
             self.elbowBendy_npo.rz.set(180)
             self.elbowBendy_npo.sz.set(-1)
-        attribute.setKeyableAttributes(self.elbowBendy_ctl, self.t_params)
+        attribute.setKeyableAttributes(self.elbowBendy_ctl)
 
         # add visual reference
         self.line_ref = icon.connection_display_curve(
@@ -1060,6 +1073,13 @@ class Component(component.Main):
         # part is in the final and correct position
         # after the  ctrn_loc is in the correct position with the ikfk2bone op
 
+        matrix_constraint(
+            str(self.bone0), str(self.bone0_tr), keep_offset=False, scale=False, shear=False
+        )
+        matrix_constraint(
+            str(self.bone1), str(self.bone1_tr), keep_offset=False, scale=False, shear=False
+        )
+
         # point constrain tip reference
         pm.pointConstraint(self.ik_ctl, self.tip_ref, mo=False)
 
@@ -1169,9 +1189,10 @@ class Component(component.Main):
             self.armBendyB_ctl,
             self.elbowBendy_ctl,
         ]
+
         self.arm_twist_spline = matrix_spline_from_transforms(
             name=self.getName("armTwist"),
-            parent=str(self.bone0),
+            parent=str(self.bone0_tr),
             cv_transforms=[str(transform) for transform in cns_list],
             primary_axis=(1, 0, 0),
             secondary_axis=(0, 0, 1),
@@ -1187,7 +1208,7 @@ class Component(component.Main):
         ]
         self.forearm_twist_spline = matrix_spline_from_transforms(
             name=self.getName("armTwist"),
-            parent=str(self.bone1),
+            parent=str(self.bone1_tr),
             cv_transforms=[str(transform) for transform in cns_list],
             primary_axis=(1, 0, 0),
             secondary_axis=(0, 0, 1),
@@ -1381,20 +1402,22 @@ class Component(component.Main):
                 )
 
             dm_node = node.createDecomposeMatrixNode(mulmat_node + ".output")
-            pm.connectAttr(dm_node + ".outputTranslate", div_cns + ".t")
+            pm.connectAttr(dm_node + ".outputTranslate", div_cns + ".translate")
             if i == 0:
                 applyop.oriCns(self.bone0, self.arm_root_base, maintainOffset=True)
 
-            pm.connectAttr(dm_node + ".outputRotate", div_cns + ".r")
+            pm.connectAttr(dm_node + ".outputRotate", div_cns + ".rotate")
+            pm.connectAttr(dm_node + ".outputScale", div_cns + ".scale")
+            pm.connectAttr(dm_node + ".outputShear", div_cns + ".shear")
 
-            # Squash n Stretch
-            o_node = applyop.gear_squashstretch2_op(
-                div_cns, None, pm.getAttr(self.volDriver_att), "x"
-            )
-            pm.connectAttr(self.volume_att, o_node + ".blend")
-            pm.connectAttr(self.volDriver_att, o_node + ".driver")
-            pm.connectAttr(self.st_att[i], o_node + ".stretch")
-            pm.connectAttr(self.sq_att[i], o_node + ".squash")
+            # # Squash n Stretch
+            # o_node = applyop.gear_squashstretch2_op(
+            #     div_cns, None, pm.getAttr(self.volDriver_att), "x"
+            # )
+            # pm.connectAttr(self.volume_att, o_node + ".blend")
+            # pm.connectAttr(self.volDriver_att, o_node + ".driver")
+            # pm.connectAttr(self.st_att[i], o_node + ".stretch")
+            # pm.connectAttr(self.sq_att[i], o_node + ".squash")
 
         # TODO: check for a more clean and elegant solution instead of re-match
         # the world matrix again
