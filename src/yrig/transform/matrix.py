@@ -194,7 +194,7 @@ def matrix_constraint(
     mult_matrix.matrix_sum.connect_to(decompose_matrix.input_matrix)
     decompose_matrix.input_rotate_order.connect_from(f"{constrain_transform}.rotateOrder")
 
-    rotate_attr: str = f"{decompose_matrix}.outputRotate"
+    rotate_attr = decompose_matrix.output_rotate
     # If it's a joint we have to do a whole bunch of other nonsense to account for joint orient (I was up till 2am because of this)
     if cmds.nodeType(constrain_transform) == "joint":
         if scale:
@@ -279,7 +279,7 @@ def matrix_constraint(
                     orient_decompose_matrix.input_rotate_order.connect_from(
                         f"{constrain_transform}.rotateOrder"
                     )
-                    rotate_attr = str(orient_decompose_matrix.output_rotate)
+                    rotate_attr = orient_decompose_matrix.output_rotate
             else:
                 cmds.setAttr(f"{constrain_transform}.jointOrient", 0, 0, 0, type="float3")  # type: ignore
 
@@ -287,7 +287,7 @@ def matrix_constraint(
         decompose_matrix.output_translate.connect_to(f"{constrain_transform}.translate")
     if rotate:
         cmds.setAttr(f"{constrain_transform}.rotateAxis", 0, 0, 0, type="float3")  # type: ignore
-        cmds.connectAttr(rotate_attr, f"{constrain_transform}.rotate")
+        rotate_attr.connect_to(f"{constrain_transform}.rotate")
     if scale:
         decompose_matrix.output_scale.connect_to(f"{constrain_transform}.scale")
     if shear:
