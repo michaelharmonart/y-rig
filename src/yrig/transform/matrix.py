@@ -12,6 +12,7 @@ from maya.api.OpenMaya import (
 )
 
 from yrig.maya_api import node
+from yrig.name import get_short_name
 
 # fmt: off
 MatrixTuple: TypeAlias = tuple[
@@ -153,7 +154,7 @@ def matrix_constraint(
         scale: whether to constrain scale.
         shear: whether to constrain shear.
     """
-    constraint_name: str = constrain_transform.split("|")[-1]
+    constraint_name: str = get_short_name(constrain_transform)
 
     # Create node to multiply matrices, as well as a counter to make sure to input into the right slot.
     mult_index: int = 0
