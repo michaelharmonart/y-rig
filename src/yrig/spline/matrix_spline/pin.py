@@ -284,7 +284,7 @@ def pin_transforms_to_matrix_spline(
         segment_parameters = parameters
     else:
         cv_positions: list[Vector3] = []
-        for transform in pinned_transforms:
+        for transform in matrix_spline.cv_transforms:
             position: tuple[float, float, float] = cmds.xform(  # type: ignore
                 transform, query=True, worldSpace=True, translation=True
             )

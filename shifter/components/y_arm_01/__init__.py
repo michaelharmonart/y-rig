@@ -6,6 +6,8 @@ from mgear.core import applyop, attribute, fcurve, icon, node, primitive, string
 from mgear.pymaya import datatypes
 from mgear.shifter import component
 
+from yrig.spline.matrix_spline.build import matrix_spline_from_transforms
+
 #############################################
 # COMPONENT
 #############################################
@@ -1161,18 +1163,36 @@ class Component(component.Main):
         pm.connectAttr(dm_node + ".outputRotate", self.tws2_npo.attr("rotate"))
 
         # spline IK for  twist jnts
-        self.ikhArmTwist, self.armTwistCrv = applyop.splineIK(
-            self.getName("armTwist"),
-            self.armTwistChain,
-            parent=self.root,
-            cParent=self.bone0,
+        cns_list = [
+            self.armBendyA_loc,
+            self.armBendyA_ctl,
+            self.armBendyB_ctl,
+            self.elbowBendy_ctl,
+        ]
+        self.arm_twist_spline = matrix_spline_from_transforms(
+            name=self.getName("armTwist"),
+            parent=str(self.bone0),
+            cv_transforms=[str(transform) for transform in cns_list],
+            primary_axis=(1, 0, 0),
+            secondary_axis=(0, 0, 1),
+            pinned_transforms=[str(transform) for transform in self.armTwistChain],
+            padded=False,
         )
 
-        self.ikhForearmTwist, self.forearmTwistCrv = applyop.splineIK(
-            self.getName("forearmTwist"),
-            self.forearmTwistChain,
-            parent=self.root,
-            cParent=self.bone1,
+        cns_list = [
+            self.elbowBendy_ctl,
+            self.forearmBendyA_ctl,
+            self.forearmBendyB_ctl,
+            self.forearmBendyB_loc,
+        ]
+        self.forearm_twist_spline = matrix_spline_from_transforms(
+            name=self.getName("armTwist"),
+            parent=str(self.bone1),
+            cv_transforms=[str(transform) for transform in cns_list],
+            primary_axis=(1, 0, 0),
+            secondary_axis=(0, 0, 1),
+            pinned_transforms=[str(transform) for transform in self.forearmTwistChain],
+            padded=False,
         )
 
         # references
@@ -1197,68 +1217,7 @@ class Component(component.Main):
             cParent=self.eff_loc,
         )
 
-        # setting connexions for ikhArmTwist
-        self.ikhArmTwist.attr("dTwistControlEnable").set(True)
-        self.ikhArmTwist.attr("dWorldUpType").set(4)
-        self.ikhArmTwist.attr("dWorldUpAxis").set(3)
-        self.ikhArmTwist.attr("dWorldUpVectorZ").set(1.0)
-        self.ikhArmTwist.attr("dWorldUpVectorY").set(0.0)
-        self.ikhArmTwist.attr("dWorldUpVectorEndZ").set(1.0)
-        self.ikhArmTwist.attr("dWorldUpVectorEndY").set(0.0)
-        if self.negate:
-            self.ikhArmTwist.attr("dForwardAxis").set(1)
-
-        pm.connectAttr(
-            self.armRollRef[0].attr("worldMatrix[0]"),
-            self.ikhArmTwist.attr("dWorldUpMatrix"),
-        )
-        pm.connectAttr(
-            self.bone0.attr("worldMatrix[0]"),
-            self.ikhArmTwist.attr("dWorldUpMatrixEnd"),
-        )
-
-        # setting connexions for ikhAuxTwist
-        self.ikhAuxTwist.attr("dTwistControlEnable").set(True)
-        self.ikhAuxTwist.attr("dWorldUpType").set(4)
-        self.ikhAuxTwist.attr("dWorldUpAxis").set(3)
-        self.ikhAuxTwist.attr("dWorldUpVectorZ").set(1.0)
-        self.ikhAuxTwist.attr("dWorldUpVectorY").set(0.0)
-        self.ikhAuxTwist.attr("dWorldUpVectorEndZ").set(1.0)
-        self.ikhAuxTwist.attr("dWorldUpVectorEndY").set(0.0)
-        pm.connectAttr(
-            self.forearmRollRef[0].attr("worldMatrix[0]"),
-            self.ikhAuxTwist.attr("dWorldUpMatrix"),
-        )
-        pm.connectAttr(
-            self.eff_loc.attr("worldMatrix[0]"),
-            self.ikhAuxTwist.attr("dWorldUpMatrixEnd"),
-        )
-        pm.connectAttr(
-            self.auxTwistChain[1].attr("rx"),
-            self.ikhForearmTwist.attr("twist"),
-        )
-
         pm.parentConstraint(self.bone1, self.aux_npo, maintainOffset=True)
-
-        # scale arm length for twist chain (not the squash and stretch)
-        arclen_node = pm.arclen(self.armTwistCrv, ch=True)
-        alAttrArm = arclen_node.attr("arcLength")
-        muldiv_nodeArm = pm.createNode("multiplyDivide")
-        pm.connectAttr(arclen_node.attr("arcLength"), muldiv_nodeArm.attr("input1X"))
-        muldiv_nodeArm.attr("input2X").set(alAttrArm.get())
-        muldiv_nodeArm.attr("operation").set(2)
-        for jnt in self.armTwistChain:
-            pm.connectAttr(muldiv_nodeArm.attr("outputX"), jnt.attr("sx"))
-
-        # scale forearm length for twist chain (not the squash and stretch)
-        arclen_node = pm.arclen(self.forearmTwistCrv, ch=True)
-        alAttrForearm = arclen_node.attr("arcLength")
-        muldiv_nodeForearm = pm.createNode("multiplyDivide")
-        pm.connectAttr(arclen_node.attr("arcLength"), muldiv_nodeForearm.attr("input1X"))
-        muldiv_nodeForearm.attr("input2X").set(alAttrForearm.get())
-        muldiv_nodeForearm.attr("operation").set(2)
-        for jnt in self.forearmTwistChain:
-            pm.connectAttr(muldiv_nodeForearm.attr("outputX"), jnt.attr("sx"))
 
         # scale compensation for the first  twist join
         dm_node = pm.createNode("decomposeMatrix")
@@ -1377,23 +1336,6 @@ class Component(component.Main):
         )
         pm.connectAttr(div_node2.attr("outputX"), self.tws1B_loc.attr("sx"))
         pm.connectAttr(div_node2.attr("outputX"), self.forearmBendyB_loc.attr("sx"))
-
-        # conection curve
-        cns_list = [
-            self.armBendyA_loc,
-            self.armBendyA_ctl,
-            self.armBendyB_ctl,
-            self.elbowBendy_ctl,
-        ]
-        applyop.gear_curvecns_op(self.armTwistCrv, cns_list)
-
-        cns_list = [
-            self.elbowBendy_ctl,
-            self.forearmBendyA_ctl,
-            self.forearmBendyB_ctl,
-            self.forearmBendyB_loc,
-        ]
-        applyop.gear_curvecns_op(self.forearmTwistCrv, cns_list)
 
         # connect elbow ref
         cns = pm.parentConstraint(self.bone1, self.elbow_ref, mo=False)

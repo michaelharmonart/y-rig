@@ -2,6 +2,7 @@ from typing import Sequence
 
 from maya import cmds
 
+from yrig.name import get_short_name
 from yrig.spline.math import generate_knots
 from yrig.spline.matrix_spline.core import MatrixSpline
 from yrig.spline.matrix_spline.pin import pin_transforms_to_matrix_spline
@@ -12,7 +13,7 @@ def matrix_spline_from_transforms(
     name: str,
     cv_transforms: Sequence[str],
     pinned_transforms: Sequence[str] | None,
-    parent: str | None,
+    parent: str | None = None,
     degree: int = 3,
     knots: Sequence[float] | None = None,
     periodic: bool = False,
@@ -74,9 +75,8 @@ def matrix_spline_from_transforms(
     if pinned_transforms is not None:
         pins: list[str] = []
         for pinned_transform in pinned_transforms:
-            pin = cmds.group(
-                empty=True, name=f"{spline_group}_{pinned_transform}_Pin", parent=spline_group
-            )
+            pin_name = f"{get_short_name(pinned_transform)}_Pin"
+            pin = cmds.group(empty=True, name=pin_name, parent=spline_group)
             matrix_constraint(pin, pinned_transform, keep_offset=False)
             pins.append(pin)
         pin_transforms_to_matrix_spline(
