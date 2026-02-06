@@ -1,3 +1,5 @@
+from typing import Sequence
+
 import maya.cmds as cmds
 from maya.api.OpenMaya import (
     MDoubleArray,
@@ -16,9 +18,9 @@ from yrig.spline.math import generate_knots
 class MatrixSpline:
     def __init__(
         self,
-        cv_transforms: list[str],
+        cv_transforms: Sequence[str],
         degree: int = 3,
-        knots: list[float] | None = None,
+        knots: Sequence[float] | None = None,
         periodic: bool = False,
         name: str | None = None,
     ) -> None:
@@ -42,10 +44,10 @@ class MatrixSpline:
         self.curve: str | None = None
         self.periodic: bool = periodic
         self.degree: int = degree
-        self.cv_transforms: list[str] = cv_transforms
+        self.cv_transforms: list[str] = list(cv_transforms)
         number_of_cvs: int = len(cv_transforms) + (periodic * degree)
         self.knots: list[float] = (
-            knots
+            list(knots)
             if knots is not None
             else generate_knots(count=number_of_cvs, degree=degree, periodic=periodic)
         )
@@ -110,9 +112,43 @@ class MatrixSpline:
         self.cv_matrices: list[str] = cv_matrices
         self.cv_position_attrs: list[tuple[str, str, str]] = cv_position_attrs
 
+    def create_bound_curve(self, curve_name: str | None = None, curve_parent: str | None = None):
+        """
+        Creates a NURBS curve driven by the MatrixSpline’s control transforms.
+
+        This function builds a NURBS curve whose control points are bound directly to
+        the CV transforms of the MatrixSpline. This is useful for having calculating a
+        live attribute for the MatrixSpline arc length for example.
+
+        Args:
+            matrix_spline (MatrixSpline): The MatrixSpline instance providing CVs, knots,
+                and degree information.
+            curve_name (str | None, optional): Optional name for the curve transform.
+            curve_parent (str | None, optional): Optional parent transform to parent the
+                created curve under.
+
+        Returns:
+            str: The name of the created curve transform node.
+        """
+        return bound_curve_from_matrix_spline(
+            matrix_spline=self, curve_name=curve_name, curve_parent=curve_parent
+        )
+
+    def closest_parameter(self, position: MPoint | tuple[float, float, float]) -> float:
+        """
+        Finds the closest parameter value on the MatrixSpline to a given 3D position in world space.
+
+        Args:
+            position: The world-space point to project onto the spline.
+
+        Returns:
+            float: The curve parameter value (in knot space) at the closest point to the input position.
+        """
+        return closest_parameter_on_matrix_spline(matrix_spline=self, position=position)
+
 
 def bound_curve_from_matrix_spline(
-    matrix_spline: MatrixSpline, curve_parent: str | None = None
+    matrix_spline: MatrixSpline, curve_name: str | None = None, curve_parent: str | None = None
 ) -> str:
     """
     Creates a NURBS curve driven by a MatrixSpline’s control transforms.
@@ -124,20 +160,22 @@ def bound_curve_from_matrix_spline(
     Args:
         matrix_spline (MatrixSpline): The MatrixSpline instance providing CVs, knots,
             and degree information.
+        curve_name (str | None, optional): Optional name for the curve transform.
         curve_parent (str | None, optional): Optional parent transform to parent the
-            created curve under. If provided, the curve is parented relatively.
+            created curve under.
 
     Returns:
         str: The name of the created curve transform node.
     """
-    maya_knots: list[float] = matrix_spline.knots[1:-1]
-    extended_cvs: list[str] = (
+    curve_transform_name = curve_name if curve_name is not None else f"{matrix_spline.name}_curve"
+    maya_knots: Sequence[float] = matrix_spline.knots[1:-1]
+    extended_cvs: Sequence[str] = (
         (matrix_spline.cv_transforms + matrix_spline.cv_transforms[: matrix_spline.degree])
         if matrix_spline.periodic
         else matrix_spline.cv_transforms
     )
     curve_transform: str = cmds.curve(
-        name=f"{matrix_spline.name}_curve",
+        name=curve_transform_name,
         point=[  # type: ignore
             cmds.xform(cv, query=True, worldSpace=True, translation=True) for cv in extended_cvs
         ],
@@ -155,8 +193,8 @@ def bound_curve_from_matrix_spline(
     return curve_transform
 
 
-def closest_point_on_matrix_spline(
-    matrix_spline: MatrixSpline, position: tuple[float, float, float]
+def closest_parameter_on_matrix_spline(
+    matrix_spline: MatrixSpline, position: MPoint | tuple[float, float, float]
 ) -> float:
     """
     Finds the closest parameter value on a spline (defined by a MatrixSpline) to a given 3D position.
@@ -168,9 +206,6 @@ def closest_point_on_matrix_spline(
     Returns:
         float: The curve parameter value (in knot space) at the closest point to the input position.
     """
-    knots: list[float] = matrix_spline.knots
-    degree: int = matrix_spline.degree
-    periodic: bool = matrix_spline.periodic
     cv_transforms: list[str] = matrix_spline.cv_transforms
     cv_positions: MPointArray = MPointArray()
     for transform in cv_transforms:
@@ -178,7 +213,7 @@ def closest_point_on_matrix_spline(
             transform, query=True, worldSpace=True, translation=True
         )
         cv_positions.append(MPoint(*cv_position))
-    maya_knots: list[float] = knots[1:-1]
+    maya_knots: list[float] = matrix_spline.knots[1:-1]
 
     fn_data: MFnNurbsCurveData = MFnNurbsCurveData()
     data_obj: MObject = fn_data.create()
@@ -186,15 +221,13 @@ def closest_point_on_matrix_spline(
     fn_curve.create(
         cv_positions,
         MDoubleArray(maya_knots),
-        degree,
-        MFnNurbsCurve.kOpen if not periodic else MFnNurbsCurve.kPeriodic,
+        matrix_spline.degree,
+        MFnNurbsCurve.kOpen if not matrix_spline.periodic else MFnNurbsCurve.kPeriodic,
         False,  # create2D
         False,  # not rational
         data_obj,
     )
-
-    parameter: float = fn_curve.closestPoint(
-        MPoint(position[0], position[1], position[2]), space=MSpace.kObject
-    )[1]
+    test_point = position if isinstance(position, MPoint) else MPoint(*position)
+    parameter: float = fn_curve.closestPoint(test_point, space=MSpace.kObject)[1]
 
     return parameter

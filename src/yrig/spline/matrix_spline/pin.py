@@ -245,7 +245,7 @@ def pin_to_matrix_spline(
 def pin_transforms_to_matrix_spline(
     matrix_spline: MatrixSpline,
     pinned_transforms: Sequence[str],
-    parameters: Sequence[float] | None,
+    parameters: Sequence[float] | None = None,
     padded: bool = True,
     stretch: bool = True,
     arc_length: bool = True,
@@ -255,7 +255,7 @@ def pin_transforms_to_matrix_spline(
     align_tangent: bool = True,
 ) -> MatrixSpline:
     """
-    Takes MatrixSpline and a set of transforms pins them to that spline.
+    Takes a set of transforms pins them to a MatrixSpline (note that the pins are all calculated in local space!).
     Args:
         matrix_spline: The matrix spline defention that will drive the pinned transforms.
         pinned_transforms: These transforms will be constrained to the spline.
