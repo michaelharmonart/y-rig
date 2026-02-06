@@ -25,7 +25,7 @@ def matrix_spline_from_transforms(
     align_tangent: bool = True,
 ) -> MatrixSpline:
     """
-    Takes a set of transforms (cvs) and creates a matrix spline and optionally pins transforms to them..
+    Takes a set of transforms (cvs) and creates a matrix spline and optionally pins transforms to them.
     Args:
         matrix_spline: The matrix spline defention that will drive the pinned transforms.
         pinned_transforms: These transforms will be constrained to the spline.
@@ -77,6 +77,7 @@ def matrix_spline_from_transforms(
             pin = cmds.group(
                 empty=True, name=f"{spline_group}_{pinned_transform}_Pin", parent=spline_group
             )
+            matrix_constraint(pin, pinned_transform, keep_offset=False)
             pins.append(pin)
         pin_transforms_to_matrix_spline(
             matrix_spline=matrix_spline,
