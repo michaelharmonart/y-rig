@@ -1,5 +1,5 @@
 import maya.cmds as cmds
-from maya.api.OpenMaya import MAngle, MEulerRotation, MMatrix
+from maya.api.OpenMaya import MAngle, MEulerRotation, MMatrix, MPoint
 
 from yrig.transform.matrix import (
     get_world_matrix,
@@ -17,6 +17,10 @@ def get_shapes(transform: str) -> list[str]:
         return shape_list
     else:
         raise RuntimeError(f"{transform} has no child shape nodes")
+
+
+def get_position(transform: str, world_space: bool = True) -> MPoint:
+    return MPoint(cmds.xform(transform, query=True, worldSpace=world_space, translation=True))
 
 
 def match_transform(transform: str, target_transform: str) -> None:

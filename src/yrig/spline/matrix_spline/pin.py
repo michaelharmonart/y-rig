@@ -1,6 +1,10 @@
+from typing import Sequence
+
+import maya.cmds as cmds
+
 from yrig.maya_api import node
 from yrig.maya_api.attribute import MatrixAttribute, ScalarAttribute, Vector4Attribute
-from yrig.spline.math import point_on_spline_weights, tangent_on_spline_weights
+from yrig.spline.math import point_on_spline_weights, resample, tangent_on_spline_weights
 from yrig.spline.matrix_spline.core import MatrixSpline
 from yrig.structs.transform import Vector3
 
@@ -236,3 +240,72 @@ def pin_to_matrix_spline(
 
     output_matrix.output.connect_to(f"{pinned_transform}.offsetParentMatrix")
     matrix_spline.pinned_transforms.append(pinned_transform)
+
+
+def pin_transforms_to_matrix_spline(
+    matrix_spline: MatrixSpline,
+    pinned_transforms: Sequence[str],
+    padded: bool = True,
+    stretch: bool = True,
+    arc_length: bool = True,
+    primary_axis: tuple[int, int, int] | None = (0, 1, 0),
+    secondary_axis: tuple[int, int, int] | None = (0, 0, 1),
+    twist: bool = True,
+    align_tangent: bool = True,
+) -> MatrixSpline:
+    """
+    Takes a set of transforms (cvs) and creates a matrix spline with controls and deformation joints.
+    Args:
+        matrix_spline: The matrix spline defention that will drive the pinned transforms.
+        pinned_transforms: These transforms will be constrained to the spline.
+        padded: When True, segments are sampled such that the end points have half a segment of spacing from the ends of the spline.
+        stretch: Whether to apply automatic scaling along the spline tangent.
+        arc_length: When True, the parameters for the spline will be even according to arc length.
+        primary_axis (tuple[int, int, int], optional): Local axis of the pinned
+            transform that should aim down the spline tangent. Must be one of
+            the cardinal axes (±X, ±Y, ±Z). Defaults to (0, 1, 0) (the +Y axis).
+        secondary_axis (tuple[int, int, int], optional): Local axis of the pinned
+            transform that should be aligned to a secondary reference direction
+            from the spline. Used to resolve orientation. Must be one of the
+            cardinal axes (±X, ±Y, ±Z) and orthogonal to ``primary_axis``.
+            Defaults to (0, 0, 1) (the +Z axis).
+        twist (bool): When True the twist is calculated by averaging the secondary axis vector
+            as the up vector for the aim matrix. If False no vector is set and the orientation is the swing
+            part of a swing twist decomposition.
+        align_tangent: When True the pinned segments will align their primary axis along the spline.
+    Returns:
+        matrix_spline: The matrix spline.
+    """
+    segments = len(pinned_transforms)
+    cv_positions: list[Vector3] = []
+
+    for transform in pinned_transforms:
+        position: tuple[float, float, float] = cmds.xform(  # type: ignore
+            transform, query=True, worldSpace=True, translation=True
+        )
+        cv_positions.append(Vector3(*position))
+
+    segment_parameters: list[float] = resample(
+        cv_positions=cv_positions,
+        number_of_points=segments,
+        degree=matrix_spline.degree,
+        knots=matrix_spline.knots,
+        periodic=matrix_spline.periodic,
+        padded=padded,
+        arc_length=arc_length,
+        normalize_parameter=False,
+    )
+
+    for transform, parameter in zip(pinned_transforms, segment_parameters):
+        pin_to_matrix_spline(
+            matrix_spline=matrix_spline,
+            pinned_transform=transform,
+            parameter=parameter,
+            stretch=stretch,
+            primary_axis=primary_axis,
+            secondary_axis=secondary_axis,
+            normalize_parameter=False,
+            twist=twist,
+            align_tangent=align_tangent,
+        )
+    return matrix_spline
