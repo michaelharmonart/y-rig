@@ -40,8 +40,10 @@ class Guide(guide.ComponentGuide):
         self.save_transform = [
             "root",
             "spineBase",
+            "hipPivot",
             "tan0",
             "tan1",
+            "chestPivot",
             "spineTop",
             "chest",
         ]
@@ -58,19 +60,33 @@ class Guide(guide.ComponentGuide):
         vTemp = transform.getOffsetPosition(self.root, [0, 0, 5])
         self.chest = self.addLoc("chest", self.spineTop, vTemp)
 
+        v_hip_pivot = vector.linearlyInterpolate(
+            self.spineBase.getTranslation(space="world"),  # type: ignore
+            self.spineTop.getTranslation(space="world"),  # type: ignore
+            1 / 3,
+        )
+        self.hipPivot = self.addLoc("hipPivot", self.spineBase, v_hip_pivot)
+
         vTan0 = vector.linearlyInterpolate(
             self.spineBase.getTranslation(space="world"),  # type: ignore
             self.spineTop.getTranslation(space="world"),  # type: ignore
-            0.3333,
+            1 / 3,
         )
         self.tan0 = self.addLoc("tan0", self.spineBase, vTan0)
 
         vTan1 = vector.linearlyInterpolate(
             self.spineTop.getTranslation(space="world"),  # type: ignore
             self.spineBase.getTranslation(space="world"),  # type: ignore
-            0.3333,
+            1 / 3,
         )
         self.tan1 = self.addLoc("tan1", self.spineTop, vTan1)
+
+        v_chest_pivot = vector.linearlyInterpolate(
+            self.spineBase.getTranslation(space="world"),  # type: ignore
+            self.spineTop.getTranslation(space="world"),  # type: ignore
+            0.5,
+        )
+        self.chestPivot = self.addLoc("chestPivot", self.spineBase, v_chest_pivot)
 
         self.blade = self.addBlade("blade", self.root, self.spineTop)
 
