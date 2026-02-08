@@ -46,7 +46,7 @@ class Component(component.Main):
         # Main Controllers ------------------------------------
         t = transform.getTransformLookingAt(
             self.guide.pos["spineBase"],
-            self.guide.pos["spineTop"],
+            self.guide.pos["chest"],
             self.guide.blades["blade"].z * -1,
             "yx",
             self.negate,
@@ -57,6 +57,25 @@ class Component(component.Main):
             ik_t = transform.setMatrixPosition(ik_t, self.guide.pos["spineBase"])
         else:
             ik_t = t
+
+        chest_name = "chest"
+        chest_transform = transform.setMatrixPosition(ik_t, self.guide.pos["chestPivot"])
+        chest_control_offset = chest_transform.inverse() * (
+            self.guide.pos["chest"] - self.guide.pos["chestPivot"]
+        )
+        self.chest_npo = primitive.addTransform(
+            self.root, self.getName(f"{chest_name}_npo"), chest_transform
+        )
+        self.chest_ctl = self.addCtl(
+            self.chest_npo,
+            f"{chest_name}_ctl",
+            chest_transform,
+            self.color_ik,
+            "compas",
+            w=self.size,
+            tp=self.parentCtlTag,
+            po=chest_control_offset,
+        )
 
         self.ik_off = primitive.addTransform(self.root, self.getName("ik_off"), ik_t)
         # handle Z up orientation offset
