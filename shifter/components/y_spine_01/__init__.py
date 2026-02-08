@@ -77,6 +77,25 @@ class Component(component.Main):
             po=chest_control_offset,
         )
 
+        hip_name = "hip"
+        hip_transform = transform.setMatrixPosition(ik_t, self.guide.pos["hipPivot"])
+        hip_control_offset = hip_transform.inverse() * (
+            self.guide.pos["spineBase"] - self.guide.pos["hipPivot"]
+        )
+        self.hip_npo = primitive.addTransform(
+            self.root, self.getName(f"{hip_name}_npo"), hip_transform
+        )
+        self.hip_ctl = self.addCtl(
+            self.hip_npo,
+            f"{hip_name}_ctl",
+            hip_transform,
+            self.color_ik,
+            "circle",
+            w=self.size,
+            tp=self.parentCtlTag,
+            po=hip_control_offset,
+        )
+
         self.ik_off = primitive.addTransform(self.root, self.getName("ik_off"), ik_t)
         # handle Z up orientation offset
         if self.up_axis == "z" and self.settings["IKWorldOri"]:
