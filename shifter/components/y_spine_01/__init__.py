@@ -75,7 +75,7 @@ class Component(component.Main):
             w=self.size,
             tp=self.parentCtlTag,
         )
-        
+
         attribute.setKeyableAttributes(self.ik0_ctl, self.tr_params)
         attribute.setRotOrder(self.ik0_ctl, "ZXY")
         attribute.setInvertMirror(self.ik0_ctl, ["tx", "ry", "rz"])

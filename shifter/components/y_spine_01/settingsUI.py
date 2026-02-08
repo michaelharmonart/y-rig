@@ -9,7 +9,9 @@
 # WARNING! All changes made in this file will be lost!
 
 import mgear.core.pyqt as gqt
+
 QtGui, QtCore, QtWidgets, wrapInstance = gqt.qt_import()
+
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -87,7 +89,9 @@ class Ui_Form(object):
         self.horizontalLayout_6.addWidget(self.lockOri_chest_spinBox)
         self.formLayout.setLayout(3, QtWidgets.QFormLayout.FieldRole, self.horizontalLayout_6)
         self.maxStretch_label = QtWidgets.QLabel(self.groupBox)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.maxStretch_label.sizePolicy().hasHeightForWidth())
@@ -95,7 +99,9 @@ class Ui_Form(object):
         self.maxStretch_label.setObjectName("maxStretch_label")
         self.formLayout.setWidget(4, QtWidgets.QFormLayout.LabelRole, self.maxStretch_label)
         self.maxStretch_spinBox = QtWidgets.QDoubleSpinBox(self.groupBox)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.maxStretch_spinBox.sizePolicy().hasHeightForWidth())
@@ -106,7 +112,9 @@ class Ui_Form(object):
         self.maxStretch_spinBox.setObjectName("maxStretch_spinBox")
         self.formLayout.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.maxStretch_spinBox)
         self.maxSquash_label = QtWidgets.QLabel(self.groupBox)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.maxSquash_label.sizePolicy().hasHeightForWidth())
@@ -114,7 +122,9 @@ class Ui_Form(object):
         self.maxSquash_label.setObjectName("maxSquash_label")
         self.formLayout.setWidget(5, QtWidgets.QFormLayout.LabelRole, self.maxSquash_label)
         self.maxSquash_spinBox = QtWidgets.QDoubleSpinBox(self.groupBox)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.maxSquash_spinBox.sizePolicy().hasHeightForWidth())
@@ -129,7 +139,9 @@ class Ui_Form(object):
         self.divisions_label.setObjectName("divisions_label")
         self.formLayout.setWidget(6, QtWidgets.QFormLayout.LabelRole, self.divisions_label)
         self.division_spinBox = QtWidgets.QSpinBox(self.groupBox)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.division_spinBox.sizePolicy().hasHeightForWidth())
@@ -162,7 +174,9 @@ class Ui_Form(object):
         self.formLayout.setWidget(9, QtWidgets.QFormLayout.FieldRole, self.centralTangent_checkBox)
         self.squashStretchProfile_pushButton = QtWidgets.QPushButton(self.groupBox)
         self.squashStretchProfile_pushButton.setObjectName("squashStretchProfile_pushButton")
-        self.formLayout.setWidget(12, QtWidgets.QFormLayout.SpanningRole, self.squashStretchProfile_pushButton)
+        self.formLayout.setWidget(
+            12, QtWidgets.QFormLayout.SpanningRole, self.squashStretchProfile_pushButton
+        )
         self.leafJoints_checkBox = QtWidgets.QCheckBox(self.groupBox)
         self.leafJoints_checkBox.setText("")
         self.leafJoints_checkBox.setObjectName("leafJoints_checkBox")
@@ -173,30 +187,84 @@ class Ui_Form(object):
         self.gridLayout.addWidget(self.groupBox, 0, 0, 1, 1)
 
         self.retranslateUi(Form)
-        QtCore.QObject.connect(self.softness_slider, QtCore.SIGNAL("sliderMoved(int)"), self.softness_spinBox.setValue)
-        QtCore.QObject.connect(self.softness_spinBox, QtCore.SIGNAL("valueChanged(int)"), self.softness_slider.setValue)
-        QtCore.QObject.connect(self.position_slider, QtCore.SIGNAL("valueChanged(int)"), self.position_spinBox.setValue)
-        QtCore.QObject.connect(self.position_spinBox, QtCore.SIGNAL("valueChanged(int)"), self.position_slider.setValue)
-        QtCore.QObject.connect(self.lockOri_pelvis_spinBox, QtCore.SIGNAL("valueChanged(int)"), self.lockOri_pelvis_slider.setValue)
-        QtCore.QObject.connect(self.lockOri_pelvis_slider, QtCore.SIGNAL("valueChanged(int)"), self.lockOri_pelvis_spinBox.setValue)
-        QtCore.QObject.connect(self.lockOri_chest_spinBox, QtCore.SIGNAL("valueChanged(int)"), self.lockOri_chest_slider.setValue)
-        QtCore.QObject.connect(self.lockOri_chest_slider, QtCore.SIGNAL("valueChanged(int)"), self.lockOri_chest_spinBox.setValue)
-        QtCore.QObject.connect(self.softness_slider, QtCore.SIGNAL("valueChanged(int)"), self.softness_spinBox.setValue)
+        QtCore.QObject.connect(
+            self.softness_slider, QtCore.SIGNAL("sliderMoved(int)"), self.softness_spinBox.setValue
+        )
+        QtCore.QObject.connect(
+            self.softness_spinBox, QtCore.SIGNAL("valueChanged(int)"), self.softness_slider.setValue
+        )
+        QtCore.QObject.connect(
+            self.position_slider, QtCore.SIGNAL("valueChanged(int)"), self.position_spinBox.setValue
+        )
+        QtCore.QObject.connect(
+            self.position_spinBox, QtCore.SIGNAL("valueChanged(int)"), self.position_slider.setValue
+        )
+        QtCore.QObject.connect(
+            self.lockOri_pelvis_spinBox,
+            QtCore.SIGNAL("valueChanged(int)"),
+            self.lockOri_pelvis_slider.setValue,
+        )
+        QtCore.QObject.connect(
+            self.lockOri_pelvis_slider,
+            QtCore.SIGNAL("valueChanged(int)"),
+            self.lockOri_pelvis_spinBox.setValue,
+        )
+        QtCore.QObject.connect(
+            self.lockOri_chest_spinBox,
+            QtCore.SIGNAL("valueChanged(int)"),
+            self.lockOri_chest_slider.setValue,
+        )
+        QtCore.QObject.connect(
+            self.lockOri_chest_slider,
+            QtCore.SIGNAL("valueChanged(int)"),
+            self.lockOri_chest_spinBox.setValue,
+        )
+        QtCore.QObject.connect(
+            self.softness_slider, QtCore.SIGNAL("valueChanged(int)"), self.softness_spinBox.setValue
+        )
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QtWidgets.QApplication.translate("Form", "Form", None, -1))
         self.softness_label.setText(QtWidgets.QApplication.translate("Form", "Softness", None, -1))
-        self.softness_label_2.setText(QtWidgets.QApplication.translate("Form", "Position", None, -1))
-        self.softness_label_3.setText(QtWidgets.QApplication.translate("Form", "Lock Orient Pelvis", None, -1))
-        self.softness_label_4.setText(QtWidgets.QApplication.translate("Form", "Lock Orient Chest", None, -1))
-        self.maxStretch_label.setText(QtWidgets.QApplication.translate("Form", "Max Stretch", None, -1))
-        self.maxSquash_label.setText(QtWidgets.QApplication.translate("Form", "Max Squash", None, -1))
-        self.divisions_label.setText(QtWidgets.QApplication.translate("Form", "Divisions", None, -1))
-        self.autoBend_label.setText(QtWidgets.QApplication.translate("Form", "Auto Bend Control", None, -1))
-        self.autoBend_label_2.setText(QtWidgets.QApplication.translate("Form", "IK CTL World Ori", None, -1))
-        self.IKWorldOri_checkBox.setToolTip(QtWidgets.QApplication.translate("Form", "<html><head/><body><p>If checked the IK controls will be oriented to world space in XYZ</p></body></html>", None, -1))
-        self.centralTangent_label.setText(QtWidgets.QApplication.translate("Form", "Central Tangent", None, -1))
-        self.squashStretchProfile_pushButton.setText(QtWidgets.QApplication.translate("Form", "Squash and Stretch Profile", None, -1))
-        self.leafJoints_label.setText(QtWidgets.QApplication.translate("Form", "Leaf Joints", None, -1))
-
+        self.softness_label_2.setText(
+            QtWidgets.QApplication.translate("Form", "Position", None, -1)
+        )
+        self.softness_label_3.setText(
+            QtWidgets.QApplication.translate("Form", "Lock Orient Pelvis", None, -1)
+        )
+        self.softness_label_4.setText(
+            QtWidgets.QApplication.translate("Form", "Lock Orient Chest", None, -1)
+        )
+        self.maxStretch_label.setText(
+            QtWidgets.QApplication.translate("Form", "Max Stretch", None, -1)
+        )
+        self.maxSquash_label.setText(
+            QtWidgets.QApplication.translate("Form", "Max Squash", None, -1)
+        )
+        self.divisions_label.setText(
+            QtWidgets.QApplication.translate("Form", "Divisions", None, -1)
+        )
+        self.autoBend_label.setText(
+            QtWidgets.QApplication.translate("Form", "Auto Bend Control", None, -1)
+        )
+        self.autoBend_label_2.setText(
+            QtWidgets.QApplication.translate("Form", "IK CTL World Ori", None, -1)
+        )
+        self.IKWorldOri_checkBox.setToolTip(
+            QtWidgets.QApplication.translate(
+                "Form",
+                "<html><head/><body><p>If checked the IK controls will be oriented to world space in XYZ</p></body></html>",
+                None,
+                -1,
+            )
+        )
+        self.centralTangent_label.setText(
+            QtWidgets.QApplication.translate("Form", "Central Tangent", None, -1)
+        )
+        self.squashStretchProfile_pushButton.setText(
+            QtWidgets.QApplication.translate("Form", "Squash and Stretch Profile", None, -1)
+        )
+        self.leafJoints_label.setText(
+            QtWidgets.QApplication.translate("Form", "Leaf Joints", None, -1)
+        )
