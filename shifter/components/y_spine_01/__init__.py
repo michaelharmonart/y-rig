@@ -76,14 +76,16 @@ class Component(component.Main):
             tp=self.parentCtlTag,
             po=hip_control_offset,
         )
+        attribute.setRotOrder(self.hip_ctl, "YZX")
+        attribute.setInvertMirror(self.hip_ctl, ["tx", "ry", "rz"])
 
         mid_name = "mid"
         mid_transform = transform.setMatrixPosition(ik_t, self.guide.pos["chestPivot"])
-        self.hip_npo = primitive.addTransform(
+        self.mid_npo = primitive.addTransform(
             self.root, self.getName(f"{mid_name}_npo"), mid_transform
         )
-        self.hip_ctl = self.addCtl(
-            self.hip_npo,
+        self.mid_ctl = self.addCtl(
+            self.mid_npo,
             f"{mid_name}_ctl",
             mid_transform,
             self.color_ik,
@@ -91,6 +93,8 @@ class Component(component.Main):
             w=self.size * 0.85,
             tp=self.parentCtlTag,
         )
+        attribute.setRotOrder(self.mid_ctl, "YZX")
+        attribute.setInvertMirror(self.mid_ctl, ["tx", "ry", "rz"])
 
         torso_name = "torso"
         torso_transform = transform.setMatrixPosition(ik_t, self.guide.pos["spineBase"])
@@ -106,6 +110,8 @@ class Component(component.Main):
             w=(self.size),
             tp=self.parentCtlTag,
         )
+        attribute.setRotOrder(self.torso_ctl, "YZX")
+        attribute.setInvertMirror(self.torso_ctl, ["tx", "ry", "rz"])
 
         chest_name = "chest"
         chest_transform = transform.setMatrixPosition(ik_t, self.guide.pos["chestPivot"])
@@ -125,6 +131,8 @@ class Component(component.Main):
             tp=self.parentCtlTag,
             po=chest_control_offset,
         )
+        attribute.setRotOrder(self.chest_ctl, "YZX")
+        attribute.setInvertMirror(self.chest_ctl, ["tx", "ry", "rz"])
 
         chest_ik_name = "chest_ik"
         chest_ik_transform = transform.setMatrixPosition(ik_t, self.guide.pos["chestPivot"])
@@ -144,8 +152,10 @@ class Component(component.Main):
             tp=self.chest_ctl,
             po=chest_ik_control_offset - datatypes.Vector(0, self.size * 0.15, 0),
         )
+        attribute.setRotOrder(self.chest_ik_ctl, "YZX")
+        attribute.setInvertMirror(self.chest_ik_ctl, ["tx", "ry", "rz"])
 
-        chest_top_name = "chest_ik"
+        chest_top_name = "chest_top"
         chest_top_transform = transform.setMatrixPosition(ik_t, self.guide.pos["spineTop"])
         self.chest_top_npo = primitive.addTransform(
             self.chest_ik_ctl, self.getName(f"{chest_ik_name}_npo"), chest_top_transform
@@ -159,6 +169,8 @@ class Component(component.Main):
             w=self.size * 0.85,
             tp=self.chest_ik_ctl,
         )
+        attribute.setRotOrder(self.chest_top_ctl, "YZX")
+        attribute.setInvertMirror(self.chest_top_ctl, ["tx", "ry", "rz"])
 
         self.ik_off = primitive.addTransform(self.root, self.getName("ik_off"), ik_t)
         # handle Z up orientation offset
@@ -166,7 +178,7 @@ class Component(component.Main):
             self.ik_off.rx.set(90)
             ik_t = transform.getTransform(self.ik_off)
 
-        self.ik0_npo = primitive.addTransform(self.ik_off, self.getName("ik0_npo"), ik_t)
+        self.ik0_npo = primitive.addTransform(self.hip_ctl, self.getName("ik0_npo"), ik_t)
 
         self.ik0_ctl = self.addCtl(
             self.ik0_npo,
