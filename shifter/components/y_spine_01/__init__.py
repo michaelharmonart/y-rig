@@ -58,25 +58,6 @@ class Component(component.Main):
         else:
             ik_t = t
 
-        chest_name = "chest"
-        chest_transform = transform.setMatrixPosition(ik_t, self.guide.pos["chestPivot"])
-        chest_control_offset = chest_transform.inverse() * (
-            self.guide.pos["chest"] - self.guide.pos["chestPivot"]
-        )
-        self.chest_npo = primitive.addTransform(
-            self.root, self.getName(f"{chest_name}_npo"), chest_transform
-        )
-        self.chest_ctl = self.addCtl(
-            self.chest_npo,
-            f"{chest_name}_ctl",
-            chest_transform,
-            self.color_ik,
-            "compas",
-            w=self.size,
-            tp=self.parentCtlTag,
-            po=chest_control_offset,
-        )
-
         hip_name = "hip"
         hip_transform = transform.setMatrixPosition(ik_t, self.guide.pos["hipPivot"])
         hip_control_offset = hip_transform.inverse() * (
@@ -89,11 +70,64 @@ class Component(component.Main):
             self.hip_npo,
             f"{hip_name}_ctl",
             hip_transform,
-            self.color_ik,
+            self.color_fk,
             "circle",
             w=self.size,
             tp=self.parentCtlTag,
             po=hip_control_offset,
+        )
+
+        chest_name = "chest"
+        chest_transform = transform.setMatrixPosition(ik_t, self.guide.pos["chestPivot"])
+        chest_control_offset = chest_transform.inverse() * (
+            self.guide.pos["chest"] - self.guide.pos["chestPivot"]
+        )
+        self.chest_npo = primitive.addTransform(
+            self.root, self.getName(f"{chest_name}_npo"), chest_transform
+        )
+        self.chest_ctl = self.addCtl(
+            self.chest_npo,
+            f"{chest_name}_ctl",
+            chest_transform,
+            self.color_fk,
+            "compas",
+            w=self.size,
+            tp=self.parentCtlTag,
+            po=chest_control_offset,
+        )
+
+        chest_ik_name = "chest_ik"
+        chest_ik_transform = transform.setMatrixPosition(ik_t, self.guide.pos["chestPivot"])
+        chest_ik_control_offset = chest_ik_transform.inverse() * (
+            self.guide.pos["spineTop"] - self.guide.pos["chestPivot"]
+        )
+        self.chest_ik_npo = primitive.addTransform(
+            self.root, self.getName(f"{chest_ik_name}_npo"), chest_ik_transform
+        )
+        self.chest_ik_ctl = self.addCtl(
+            self.chest_ctl,
+            f"{chest_ik_name}_ctl",
+            chest_ik_transform,
+            self.color_fk,
+            "circle",
+            w=self.size,
+            tp=self.chest_ctl,
+            po=chest_ik_control_offset - datatypes.Vector(0, self.size * 0.15, 0),
+        )
+
+        chest_top_name = "chest_ik"
+        chest_top_transform = transform.setMatrixPosition(ik_t, self.guide.pos["spineTop"])
+        self.chest_top_npo = primitive.addTransform(
+            self.root, self.getName(f"{chest_ik_name}_npo"), chest_top_transform
+        )
+        self.chest_top_ctl = self.addCtl(
+            self.chest_ik_ctl,
+            f"{chest_top_name}_ctl",
+            chest_top_transform,
+            self.color_fk,
+            "circle",
+            w=self.size,
+            tp=self.chest_ik_ctl,
         )
 
         self.ik_off = primitive.addTransform(self.root, self.getName("ik_off"), ik_t)
