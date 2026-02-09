@@ -70,11 +70,41 @@ class Component(component.Main):
             self.hip_npo,
             f"{hip_name}_ctl",
             hip_transform,
-            self.color_fk,
+            self.color_ik,
             "circle",
-            w=self.size,
+            w=self.size * 0.85,
             tp=self.parentCtlTag,
             po=hip_control_offset,
+        )
+
+        mid_name = "mid"
+        mid_transform = transform.setMatrixPosition(ik_t, self.guide.pos["chestPivot"])
+        self.hip_npo = primitive.addTransform(
+            self.root, self.getName(f"{mid_name}_npo"), mid_transform
+        )
+        self.hip_ctl = self.addCtl(
+            self.hip_npo,
+            f"{mid_name}_ctl",
+            mid_transform,
+            self.color_ik,
+            "circle",
+            w=self.size * 0.85,
+            tp=self.parentCtlTag,
+        )
+
+        torso_name = "torso"
+        torso_transform = transform.setMatrixPosition(ik_t, self.guide.pos["spineBase"])
+        self.torso_npo = primitive.addTransform(
+            self.root, self.getName(f"{torso_name}_npo"), torso_transform
+        )
+        self.torso_ctl = self.addCtl(
+            self.torso_npo,
+            f"{hip_name}_ctl",
+            torso_transform,
+            self.color_fk,
+            "circle",
+            w=(self.size),
+            tp=self.parentCtlTag,
         )
 
         chest_name = "chest"
@@ -83,15 +113,15 @@ class Component(component.Main):
             self.guide.pos["chest"] - self.guide.pos["chestPivot"]
         )
         self.chest_npo = primitive.addTransform(
-            self.root, self.getName(f"{chest_name}_npo"), chest_transform
+            self.torso_ctl, self.getName(f"{chest_name}_npo"), chest_transform
         )
         self.chest_ctl = self.addCtl(
             self.chest_npo,
             f"{chest_name}_ctl",
             chest_transform,
-            self.color_fk,
+            self.color_ik,
             "compas",
-            w=self.size,
+            w=self.size * 0.85,
             tp=self.parentCtlTag,
             po=chest_control_offset,
         )
@@ -102,15 +132,15 @@ class Component(component.Main):
             self.guide.pos["spineTop"] - self.guide.pos["chestPivot"]
         )
         self.chest_ik_npo = primitive.addTransform(
-            self.root, self.getName(f"{chest_ik_name}_npo"), chest_ik_transform
+            self.chest_ctl, self.getName(f"{chest_ik_name}_npo"), chest_ik_transform
         )
         self.chest_ik_ctl = self.addCtl(
-            self.chest_ctl,
+            self.chest_ik_npo,
             f"{chest_ik_name}_ctl",
             chest_ik_transform,
-            self.color_fk,
+            self.color_ik,
             "circle",
-            w=self.size,
+            w=self.size * 0.85,
             tp=self.chest_ctl,
             po=chest_ik_control_offset - datatypes.Vector(0, self.size * 0.15, 0),
         )
@@ -118,15 +148,15 @@ class Component(component.Main):
         chest_top_name = "chest_ik"
         chest_top_transform = transform.setMatrixPosition(ik_t, self.guide.pos["spineTop"])
         self.chest_top_npo = primitive.addTransform(
-            self.root, self.getName(f"{chest_ik_name}_npo"), chest_top_transform
+            self.chest_ik_ctl, self.getName(f"{chest_ik_name}_npo"), chest_top_transform
         )
         self.chest_top_ctl = self.addCtl(
-            self.chest_ik_ctl,
+            self.chest_top_npo,
             f"{chest_top_name}_ctl",
             chest_top_transform,
-            self.color_fk,
+            self.color_ik,
             "circle",
-            w=self.size,
+            w=self.size * 0.85,
             tp=self.chest_ik_ctl,
         )
 
