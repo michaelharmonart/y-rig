@@ -140,7 +140,7 @@ class Component(component.Main):
         )
         self.torso_ctl = self.addCtl(
             self.torso_npo,
-            f"{hip_name}_ctl",
+            f"{torso_name}_ctl",
             torso_transform,
             self.color_fk,
             "circle",
