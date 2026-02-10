@@ -53,11 +53,11 @@ class Guide(guide.ComponentGuide):
         """Add the Guide Root, blade and locators"""
 
         self.root = self.addRoot()
-        vTemp = transform.getOffsetPosition(self.root, [0, 0, 0.5])
+        vTemp = transform.getOffsetPosition(self.root, [0, 0.5, 0])
         self.spineBase = self.addLoc("spineBase", self.root, vTemp)
-        vTemp = transform.getOffsetPosition(self.root, [0, 0, 4])
+        vTemp = transform.getOffsetPosition(self.root, [0, 4, 0])
         self.spineTop = self.addLoc("spineTop", self.spineBase, vTemp)
-        vTemp = transform.getOffsetPosition(self.root, [0, 0, 5])
+        vTemp = transform.getOffsetPosition(self.root, [0, 5, 0])
         self.chest = self.addLoc("chest", self.spineTop, vTemp)
 
         v_hip_pivot = vector.linearlyInterpolate(
@@ -105,18 +105,10 @@ class Guide(guide.ComponentGuide):
         """Add the configurations settings"""
 
         # Default values
-        self.pPosition = self.addParam("position", "double", 0, 0, 1)
-        self.pMaxStretch = self.addParam("maxstretch", "double", 1.5, 1)
-        self.pMaxSquash = self.addParam("maxsquash", "double", 0.5, 0, 1)
-        self.pSoftness = self.addParam("softness", "double", 0, 0, 1)
-        self.pleafJoints = self.addParam("leafJoints", "bool", False)
-        self.pLockOriPelvis = self.addParam("lock_ori_pelvis", "double", 1, 0, 1)
-        self.pLockOriChest = self.addParam("lock_ori_chest", "double", 1, 0, 1)
-
-        # Options
         self.pDivision = self.addParam("division", "long", 4, 2)
-        self.pAutoBend = self.addParam("autoBend", "bool", True)
-        self.pCentralTangent = self.addParam("centralTangent", "bool", True)
+        self.pleafJoints = self.addParam("leafJoints", "bool", False)
+
+        self.pPreserveLength = self.addParam("preserve_length", "double", 1, 0, 1)
         self.pIKWorldOri = self.addParam("IKWorldOri", "bool", True)
 
         # FCurves

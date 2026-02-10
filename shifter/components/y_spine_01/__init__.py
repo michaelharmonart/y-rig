@@ -6,7 +6,7 @@ from mgear.core import attribute, fcurve, primitive, string, transform
 from mgear.pymaya import datatypes
 from mgear.shifter import component
 
-from yrig.maya_api.node import CurveInfoNode, SubtractNode
+from yrig.maya_api.node import CurveInfoNode, MultiplyNode, SubtractNode
 from yrig.spline import pin_to_matrix_spline
 from yrig.spline.curve import bound_curve_from_transforms
 from yrig.spline.matrix_spline.build import matrix_spline_from_transforms
@@ -32,20 +32,6 @@ class Component(component.Main):
         # joint Description Names
         jd_names = ast.literal_eval(self.settings["jointNamesDescription_custom"])
         jdn_spine = jd_names[1]
-
-        # Auto bend with position controls  -------------------
-        if self.settings["autoBend"]:
-            self.autoBendChain = primitive.add2DChain(
-                self.root,
-                self.getName("autoBend%s_jnt"),
-                [self.guide.pos["spineBase"], self.guide.pos["spineTop"]],
-                self.guide.blades["blade"].z * -1,
-                False,
-                True,
-            )
-
-            for j in self.autoBendChain:
-                j.drawStyle.set(2)
 
         # Rotation-only chain (for spine length adjustment)
         self.rotation_group = primitive.addTransform(self.root, self.getName("rotation_grp"))
@@ -375,94 +361,9 @@ class Component(component.Main):
 
     def addAttributes(self):
         # Anim -------------------------------------------
-        self.position_att = self.addAnimParam(
-            "position", "Position", "double", self.settings["position"], 0, 1
+        self.preserve_length_att = self.addAnimParam(
+            "preserveLength", "Preserve Length", "double", self.settings["preserve_length"], 0, 1
         )
-
-        self.maxstretch_att = self.addAnimParam(
-            "maxstretch",
-            "Max Stretch",
-            "double",
-            self.settings["maxstretch"],
-            1,
-        )
-
-        self.maxsquash_att = self.addAnimParam(
-            "maxsquash",
-            "Max Squash",
-            "double",
-            self.settings["maxsquash"],
-            0,
-            1,
-        )
-
-        self.softness_att = self.addAnimParam(
-            "softness", "Softness", "double", self.settings["softness"], 0, 1
-        )
-
-        self.lock_ori0_att = self.addAnimParam(
-            "lock_ori_pelvis",
-            "Lock Ori Pelvis",
-            "double",
-            self.settings["lock_ori_pelvis"],
-            0,
-            1,
-        )
-
-        self.lock_ori1_att = self.addAnimParam(
-            "lock_ori_chest",
-            "Lock Ori Chest",
-            "double",
-            self.settings["lock_ori_chest"],
-            0,
-            1,
-        )
-
-        self.tan0_att = self.addAnimParam("tan0", "Tangent 0", "double", 1, 0)
-        self.tan1_att = self.addAnimParam("tan1", "Tangent 1", "double", 1, 0)
-
-        # Volume
-        self.volume_att = self.addAnimParam("volume", "Volume", "double", 1, 0, 1)
-
-        if self.settings["autoBend"]:
-            self.sideBend_att = self.addAnimParam("sideBend", "Side Bend", "double", 0.5, 0, 2)
-
-            self.frontBend_att = self.addAnimParam("frontBend", "Front Bend", "double", 0.5, 0, 2)
-
-        self.chestCtlVis_att = self.addAnimParam("chest_vis", "Chest Ctl Vis", "bool", False)
-
-        # Setup ------------------------------------------
-        # Eval Fcurve
-        if self.guide.paramDefs["st_profile"].value:
-            self.st_value = self.guide.paramDefs["st_profile"].value
-            self.sq_value = self.guide.paramDefs["sq_profile"].value
-        else:
-            self.st_value = fcurve.getFCurveValues(self.settings["st_profile"], self.divisions)
-            self.sq_value = fcurve.getFCurveValues(self.settings["sq_profile"], self.divisions)
-
-        self.st_att = [
-            self.addSetupParam(
-                "stretch_%s" % i,
-                "Stretch %s" % i,
-                "double",
-                self.st_value[i],
-                -1,
-                0,
-            )
-            for i in range(self.settings["division"])
-        ]
-
-        self.sq_att = [
-            self.addSetupParam(
-                "squash_%s" % i,
-                "Squash %s" % i,
-                "double",
-                self.sq_value[i],
-                0,
-                1,
-            )
-            for i in range(self.settings["division"])
-        ]
 
     # =====================================================
     # OPERATORS
@@ -491,6 +392,10 @@ class Component(component.Main):
         length_offset = SubtractNode(name=self.getName("length_offset"))
         length_offset.input1.set(rest_length)
         length_offset.input2.connect_from(length_curve_info.arc_length)
+        length_offset_blend = MultiplyNode(name=self.getName("length_offset_blend"))
+        length_offset_blend.input[0].connect_from(self.preserve_length_att)
+        length_offset.output.connect_to(length_offset_blend.input[1])
+
         length_offset.output.connect_to(f"{self.chest_top_length_adjust}.translateY")
 
     # =====================================================
