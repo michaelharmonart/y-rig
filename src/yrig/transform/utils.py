@@ -3,6 +3,7 @@ from maya.api.OpenMaya import MAngle, MEulerRotation, MMatrix, MPoint
 
 from yrig.transform.matrix import (
     get_world_matrix,
+    set_local_matrix,
     set_world_matrix,
 )
 
@@ -50,6 +51,13 @@ def match_location(transform: str, target_transform: str) -> None:
 
     # Set the world-space translation of the source object to the target's position.
     cmds.xform(transform, worldSpace=True, translation=target_pos)
+
+
+def zero_transform(transform: str, local: bool = True) -> None:
+    if local:
+        set_local_matrix(transform, MMatrix.kIdentity)
+    else:
+        set_world_matrix(transform, MMatrix.kIdentity)
 
 
 def zero_rotate_axis(transform: str) -> None:
