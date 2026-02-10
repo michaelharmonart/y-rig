@@ -6,6 +6,7 @@ from mgear.core import applyop, attribute, curve, fcurve, node, primitive, strin
 from mgear.pymaya import datatypes
 from mgear.shifter import component
 
+from yrig.spline import pin_to_matrix_spline
 from yrig.spline.matrix_spline.build import matrix_spline_from_transforms
 
 #############################################
@@ -96,8 +97,11 @@ class Component(component.Main):
         self.mid_npo = primitive.addTransform(
             self.root, self.getName(f"{mid_name}_npo"), mid_transform
         )
+        self.mid_twist = primitive.addTransform(
+            self.mid_npo, self.getName(f"{mid_name}_twist"), mid_transform
+        )
         self.mid_ctl = self.addCtl(
-            self.mid_npo,
+            self.mid_twist,
             f"{mid_name}_ctl",
             mid_transform,
             self.color_ik,
@@ -200,7 +204,18 @@ class Component(component.Main):
             cv_transforms=[self.spine_base, self.hip_tan, self.chest_tan, self.spine_top],
             parent=self.root,
         )
-        self.spine_matrix_spline.create_bound_curve(self.getName("length_ref"))
+        pin_to_matrix_spline(
+            self.spine_matrix_spline,
+            self.mid_npo,
+            stretch=False,
+            parameter=0.5,
+            normalize_parameter=True,
+            primary_axis=(0, 1, 0),
+            secondary_axis=(1, 0, 0),
+        )
+        self.spine_matrix_spline.create_bound_curve(
+            self.getName("length_ref"), curve_parent=self.root
+        )
 
         self.ik_off = primitive.addTransform(self.root, self.getName("ik_off"), ik_t)
         # handle Z up orientation offset
