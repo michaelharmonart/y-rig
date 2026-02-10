@@ -6,6 +6,8 @@ from mgear.core import applyop, attribute, curve, fcurve, node, primitive, strin
 from mgear.pymaya import datatypes
 from mgear.shifter import component
 
+from yrig.spline.matrix_spline.build import matrix_spline_from_transforms
+
 #############################################
 # COMPONENT
 #############################################
@@ -78,6 +80,16 @@ class Component(component.Main):
         )
         attribute.setRotOrder(self.hip_ctl, "YZX")
         attribute.setInvertMirror(self.hip_ctl, ["tx", "ry", "rz"])
+        spine_base_transform = transform.setMatrixPosition(ik_t, self.guide.pos["spineBase"])
+        self.spine_base = primitive.addTransform(
+            self.hip_ctl, self.getName("spine_base"), spine_base_transform
+        )
+        self.transform2Lock.append(self.spine_base)
+        hip_tan_transform = transform.setMatrixPosition(ik_t, self.guide.pos["tan0"])
+        self.hip_tan = primitive.addTransform(
+            self.hip_ctl, self.getName("hip_tan"), hip_tan_transform
+        )
+        self.transform2Lock.append(self.hip_tan)
 
         mid_name = "mid"
         mid_transform = transform.setMatrixPosition(ik_t, self.guide.pos["chestPivot"])
@@ -155,6 +167,12 @@ class Component(component.Main):
         attribute.setRotOrder(self.chest_ik_ctl, "YZX")
         attribute.setInvertMirror(self.chest_ik_ctl, ["tx", "ry", "rz"])
 
+        chest_tan_transform = transform.setMatrixPosition(ik_t, self.guide.pos["tan1"])
+        self.chest_tan = primitive.addTransform(
+            self.chest_ik_ctl, self.getName("chest_tan"), chest_tan_transform
+        )
+        self.transform2Lock.append(self.chest_tan)
+
         chest_top_name = "chest_top"
         chest_top_transform = transform.setMatrixPosition(ik_t, self.guide.pos["spineTop"])
         self.chest_top_npo = primitive.addTransform(
@@ -171,6 +189,18 @@ class Component(component.Main):
         )
         attribute.setRotOrder(self.chest_top_ctl, "YZX")
         attribute.setInvertMirror(self.chest_top_ctl, ["tx", "ry", "rz"])
+        spine_top_transform = transform.setMatrixPosition(ik_t, self.guide.pos["spineTop"])
+        self.spine_top = primitive.addTransform(
+            self.chest_top_ctl, self.getName("spine_top"), spine_top_transform
+        )
+        self.transform2Lock.append(self.spine_top)
+
+        self.spine_matrix_spline = matrix_spline_from_transforms(
+            name=self.getName("matrix_spline"),
+            cv_transforms=[self.spine_base, self.hip_tan, self.chest_tan, self.spine_top],
+            parent=self.root,
+        )
+        self.spine_matrix_spline.create_bound_curve(self.getName("length_ref"))
 
         self.ik_off = primitive.addTransform(self.root, self.getName("ik_off"), ik_t)
         # handle Z up orientation offset
