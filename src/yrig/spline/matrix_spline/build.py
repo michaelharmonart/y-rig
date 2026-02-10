@@ -12,7 +12,7 @@ from yrig.transform.matrix import matrix_constraint
 def matrix_spline_from_transforms(
     name: str,
     cv_transforms: Sequence[str],
-    pinned_transforms: Sequence[str] | None,
+    pinned_transforms: Sequence[str] | None = None,
     parent: str | None = None,
     degree: int = 3,
     knots: Sequence[float] | None = None,
