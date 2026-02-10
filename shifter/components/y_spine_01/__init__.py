@@ -6,6 +6,7 @@ from mgear.core import applyop, attribute, curve, fcurve, node, primitive, strin
 from mgear.pymaya import datatypes
 from mgear.shifter import component
 
+from yrig.maya_api.node import CurveInfoNode, SubtractNode
 from yrig.spline import pin_to_matrix_spline
 from yrig.spline.matrix_spline.build import matrix_spline_from_transforms
 
@@ -214,7 +215,7 @@ class Component(component.Main):
             primary_axis=(0, 1, 0),
             secondary_axis=(1, 0, 0),
         )
-        self.spine_matrix_spline.create_bound_curve(
+        self.length_curve = self.spine_matrix_spline.create_bound_curve(
             self.getName("length_ref"), curve_parent=self.root
         )
 
@@ -738,6 +739,14 @@ class Component(component.Main):
         we shouldn't create any new object in this method.
 
         """
+        length_curve_shape = pm.listRelatives(self.length_curve, shapes=True)[0]
+        length_curve_info = CurveInfoNode(name=self.getName("length_info"))
+        length_curve_info.input_curve.connect_from(f"{length_curve_shape}.local")
+        rest_length = length_curve_info.arc_length.get()
+        length_offset = SubtractNode(name=self.getName("length_offset"))
+        length_offset.input1.set(rest_length)
+        length_offset.input2.connect_from(length_curve_info.arc_length)
+
         # chest ctl vis
         for shp in self.chest_ctl.getShapes():
             pm.connectAttr(self.chestCtlVis_att, shp.attr("visibility"))
