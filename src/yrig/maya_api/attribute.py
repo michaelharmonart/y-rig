@@ -179,6 +179,13 @@ class MatrixAttribute(Attribute):
         self.set(val)
 
 
+class NurbsCurveAttribute(Attribute):
+    """A Maya attribute of the nurbsCurve type."""
+
+    def __init__(self, attr_path: str):
+        super().__init__(attr_path)
+
+
 class Vector3Attribute(Attribute):
     """A Maya attribute of the type double3 (XYZ)"""
 

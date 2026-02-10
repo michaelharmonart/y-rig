@@ -12,6 +12,7 @@ from yrig.maya_api.attribute import (
     IndexableWtMatrixAttribute,
     IntegerAttribute,
     MatrixAttribute,
+    NurbsCurveAttribute,
     QuatAttribute,
     ScalarAttribute,
     Vector3Attribute,
@@ -172,6 +173,20 @@ class CrossProductNode(Node):
         self.input1 = Vector3Attribute(f"{self.name}.input1")
         self.input2 = Vector3Attribute(f"{self.name}.input2")
         self.output = Vector3Attribute(f"{self.name}.output")
+
+
+class CurveInfoNode(Node):
+    """Maya curveInfo node with enhanced interface."""
+
+    def __init__(self, name: str = "curveInfo") -> None:
+        super().__init__("curveInfo", name)
+
+    def _setup_attributes(self) -> None:
+        self.input_curve = NurbsCurveAttribute(f"{self.name}.inputCurve")
+        self.arc_length = ScalarAttribute(f"{self.name}.arcLength")
+        self.control_points = IndexableScalarAttribute(f"{self.name}.controlPoints")
+        self.knots = IndexableScalarAttribute(f"{self.name}.knots")
+        self.weights = IndexableScalarAttribute(f"{self.name}.weights")
 
 
 class DecomposeMatrixNode(Node):
