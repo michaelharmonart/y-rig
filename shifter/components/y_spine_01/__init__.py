@@ -111,6 +111,7 @@ class Component(component.Main):
         )
         attribute.setRotOrder(self.mid_ctl, "YZX")
         attribute.setInvertMirror(self.mid_ctl, ["tx", "ry", "rz"])
+        self.transform2Lock.append(self.mid_npo)
 
         torso_name = "torso"
         torso_transform = transform.setMatrixPosition(ik_t, self.guide.pos["spineBase"])
