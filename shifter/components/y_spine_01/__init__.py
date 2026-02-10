@@ -2,7 +2,7 @@
 import ast
 
 import mgear.pymaya as pm
-from mgear.core import attribute, fcurve, primitive, string, transform
+from mgear.core import attribute, primitive, string, transform
 from mgear.pymaya import datatypes
 from mgear.shifter import component
 
