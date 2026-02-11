@@ -67,7 +67,7 @@ class Component(component.Main):
             hip_transform,
             self.color_ik,
             "circle",
-            w=self.size * 0.85,
+            w=self.size * 0.8,
             tp=self.parentCtlTag,
             po=hip_control_offset,
         )
@@ -79,10 +79,10 @@ class Component(component.Main):
         )
         self.transform2Lock.append(self.spine_base)
         hip_tan_transform = transform.setMatrixPosition(ik_t, self.guide.pos["tan0"])
-        self.hip_tan = primitive.addTransform(
-            self.hip_ctl, self.getName("hip_tan"), hip_tan_transform
+        self.mid_spline_hip_tan = primitive.addTransform(
+            self.hip_ctl, self.getName("mid_spline_hip_tan"), hip_tan_transform
         )
-        self.transform2Lock.append(self.hip_tan)
+        self.transform2Lock.append(self.mid_spline_hip_tan)
         self.spine_base_rotation = primitive.addTransform(
             self.rotation_group, self.getName("spine_base_rotation"), spine_base_transform
         )
@@ -107,12 +107,16 @@ class Component(component.Main):
             mid_transform,
             self.color_ik,
             "circle",
-            w=self.size * 0.85,
+            w=self.size * 0.8,
             tp=self.parentCtlTag,
         )
         attribute.setRotOrder(self.mid_ctl, "YZX")
         attribute.setInvertMirror(self.mid_ctl, ["tx", "ry", "rz"])
         self.transform2Lock.append(self.mid_npo)
+        self.hip_tan = primitive.addTransform(
+            self.mid_ctl, self.getName("hip_tan"), hip_tan_transform
+        )
+        self.transform2Lock.append(self.hip_tan)
 
         # Torso Control
         torso_name = "torso"
@@ -155,7 +159,7 @@ class Component(component.Main):
             chest_transform,
             self.color_ik,
             "compas",
-            w=self.size * 0.85,
+            w=self.size * 0.8,
             tp=self.parentCtlTag,
             po=chest_control_offset,
         )
@@ -181,7 +185,7 @@ class Component(component.Main):
             chest_ik_transform,
             self.color_ik,
             "circle",
-            w=self.size * 0.85,
+            w=self.size * 0.8,
             tp=self.chest_ctl,
             po=chest_ik_control_offset - datatypes.Vector(0, self.size * 0.1, 0),
         )
@@ -189,8 +193,12 @@ class Component(component.Main):
         attribute.setInvertMirror(self.chest_ik_ctl, ["tx", "ry", "rz"])
 
         chest_tan_transform = transform.setMatrixPosition(ik_t, self.guide.pos["tan1"])
+        self.mid_spline_chest_tan = primitive.addTransform(
+            self.chest_ik_ctl, self.getName("mid_spline_chest_tan"), chest_tan_transform
+        )
+        self.transform2Lock.append(self.mid_spline_chest_tan)
         self.chest_tan = primitive.addTransform(
-            self.chest_ik_ctl, self.getName("chest_tan"), chest_tan_transform
+            self.mid_ctl, self.getName("chest_tan"), chest_tan_transform
         )
         self.transform2Lock.append(self.chest_tan)
 
@@ -209,7 +217,7 @@ class Component(component.Main):
             chest_top_transform,
             self.color_ik,
             "circle",
-            w=self.size * 0.85,
+            w=self.size * 0.8,
             tp=self.chest_ik_ctl,
         )
         attribute.setRotOrder(self.chest_top_ctl, "YZX")
@@ -233,7 +241,12 @@ class Component(component.Main):
         # Pin Mid Control so it's in the right spot and create the length curve
         self.mid_matrix_spline = matrix_spline_from_transforms(
             name=self.getName("mid_spline"),
-            cv_transforms=[self.spine_base, self.hip_tan, self.chest_tan, self.spine_top],
+            cv_transforms=[
+                self.spine_base,
+                self.mid_spline_hip_tan,
+                self.mid_spline_chest_tan,
+                self.spine_top,
+            ],
             parent=self.root,
         )
         pin_to_matrix_spline(
@@ -257,107 +270,28 @@ class Component(component.Main):
         )
 
         # Division -----------------------------------------
-        # The user only define how many intermediate division he wants.
-        # First and last divisions are an obligation.
-        parentdiv = self.root
-        parentctl = self.root
-        self.div_cns = []
-        self.fk_ctl = []
-        self.fk_npo = []
-        self.scl_transforms = []
-        # self.twister = []
-        # self.ref_twist = []
-
-        t = transform.getTransformLookingAt(
-            self.guide.pos["spineBase"],
-            self.guide.pos["spineTop"],
-            self.guide.blades["blade"].z * -1,
-            "yx",
-            self.negate,
+        self.bind_spline = matrix_spline_from_transforms(
+            name=self.getName("bind_spline"),
+            cv_transforms=[self.spine_base, self.hip_tan, self.chest_tan, self.spine_top],
+            parent=self.root,
+            pinned_transforms=int(self.settings["division"]),
+            padded=False,
+            primary_axis=(0, 1, 0),
+            secondary_axis=(1, 0, 0),
         )
+        print(self.bind_spline.pinned_transforms)
+        self.base_connection = pm.PyNode(self.bind_spline.pinned_transforms[0])
+        self.top_connection = pm.PyNode(self.bind_spline.pinned_transforms[-1])
 
-        self.jointList = []
-        self.preiviousCtlTag = self.parentCtlTag
-
-        for i in range(self.settings["division"]):
-            # References
-            div_cns = primitive.addTransform(parentdiv, self.getName("%s_cns" % i))
-            pm.setAttr(div_cns + ".inheritsTransform", False)
-            self.div_cns.append(div_cns)
-            parentdiv = div_cns
-
-            t = transform.getTransform(parentctl)
-
-            fk_npo = primitive.addTransform(parentctl, self.getName("fk%s_npo" % (i)), t)
-
-            fk_ctl = self.addCtl(
-                fk_npo,
-                "fk%s_ctl" % (i),
-                transform.getTransform(parentctl),
-                self.color_fk,
-                "cube",
-                w=self.size,
-                h=self.size * 0.05,
-                d=self.size,
-                tp=self.preiviousCtlTag,
-            )
-
-            attribute.setKeyableAttributes(self.fk_ctl)
-            attribute.setRotOrder(fk_ctl, "ZXY")
-            self.fk_ctl.append(fk_ctl)
-            self.preiviousCtlTag = fk_ctl
-
-            self.fk_npo.append(fk_npo)
-            parentctl = fk_ctl
-            if i == self.settings["division"] - 1:
-                t = transform.getTransformLookingAt(
-                    self.guide.pos["spineTop"],
-                    self.guide.pos["chest"],
-                    self.guide.blades["blade"].z * -1,
-                    "yx",
-                    False,
-                )
-                scl_ref_parent = self.root
-            else:
-                t = transform.getTransform(parentctl)
-                scl_ref_parent = parentctl
-
-            scl_ref = primitive.addTransform(scl_ref_parent, self.getName("%s_scl_ref" % i), t)
-
-            self.scl_transforms.append(scl_ref)
-
-            # Deformers (Shadow)
-            if i == 0:
-                guide_relative = "spineBase"
-            elif i == self.settings["division"] - 1:
-                guide_relative = "spineTop"
-            else:
-                guide_relative = None
+        for i, pin in enumerate(self.bind_spline.pinned_transforms):
             self.jnt_pos.append(
                 {
-                    "obj": scl_ref,
+                    "obj": pm.PyNode(pin),
                     "name": string.replaceSharpWithPadding(jdn_spine, i + 1),
-                    "guide_relative": guide_relative,
-                    "data_contracts": "Twist,Squash",
+                    "data_contracts": "Twist",
                     "leaf_joint": self.settings["leafJoints"],
                 }
             )
-
-            for x in self.fk_ctl[:-1]:
-                attribute.setInvertMirror(x, ["tx", "rz", "ry"])
-
-        # Connections (Hooks) ------------------------------
-        self.cnx0 = primitive.addTransform(self.root, self.getName("0_cnx"))
-        self.cnx1 = primitive.addTransform(self.root, self.getName("1_cnx"))
-        self.jnt_pos.append(
-            {
-                "obj": self.cnx1,
-                "name": string.replaceSharpWithPadding(jdn_spine, i + 2),
-                "guide_relative": "chest",
-                "data_contracts": "Twist,Squash",
-                "leaf_joint": self.settings["leafJoints"],
-            }
-        )
 
     def addAttributes(self):
         # Anim -------------------------------------------
@@ -403,18 +337,24 @@ class Component(component.Main):
     # =====================================================
     def setRelation(self):
         """Set the relation beetween object from guide to rig"""
-        self.relatives["root"] = self.cnx0
-        self.relatives["spineTop"] = self.cnx1
-        self.relatives["chest"] = self.cnx1
-        self.relatives["tan0"] = self.fk_ctl[1]
-        self.controlRelatives["root"] = self.fk_ctl[0]
-        self.controlRelatives["spineTop"] = self.fk_ctl[-2]
-        self.controlRelatives["chest"] = self.chest_ctl
+        self.relatives["root"] = self.root
+        self.relatives["spineBase"] = self.hip_ctl
+        self.relatives["hip_pivot"] = self.hip_ctl
+        self.relatives["tan0"] = self.mid_ctl
+        self.relatives["tan1"] = self.mid_ctl
+        self.relatives["spineTop"] = self.top_connection
+        self.relatives["chest"] = self.top_connection
+        self.relatives["chest_pivot"] = self.chest_ctl
+
+        self.controlRelatives["root"] = self.torso_ctl
+        self.controlRelatives["spineBase"] = self.hip_ctl
+        self.controlRelatives["hip_pivot"] = self.hip_ctl
+        self.controlRelatives["tan0"] = self.mid_ctl
+        self.controlRelatives["tan1"] = self.mid_ctl
+        self.controlRelatives["spineTop"] = self.chest_top_ctl
+        self.controlRelatives["chest"] = self.chest_top_ctl
 
         self.jointRelatives["root"] = 0
-        self.jointRelatives["tan0"] = 1
-        self.jointRelatives["spineTop"] = -2
+        self.jointRelatives["tan0"] = 0
+        self.jointRelatives["spineTop"] = -1
         self.jointRelatives["chest"] = -1
-
-        self.aliasRelatives["root"] = "pelvis"
-        self.aliasRelatives["chest"] = "chest"

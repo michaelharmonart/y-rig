@@ -84,7 +84,7 @@ class Guide(guide.ComponentGuide):
         v_chest_pivot = vector.linearlyInterpolate(
             self.spineBase.getTranslation(space="world"),  # type: ignore
             self.spineTop.getTranslation(space="world"),  # type: ignore
-            2 / 3,
+            1 / 2,
         )
         self.chestPivot = self.addLoc("chestPivot", self.spineBase, v_chest_pivot)
 
@@ -105,7 +105,7 @@ class Guide(guide.ComponentGuide):
         """Add the configurations settings"""
 
         # Default values
-        self.pDivision = self.addParam("division", "long", 4, 2)
+        self.pDivision = self.addParam("division", "long", 5, 2)
         self.pleafJoints = self.addParam("leafJoints", "bool", False)
 
         self.pPreserveLength = self.addParam("preserve_length", "double", 1, 0, 1)
