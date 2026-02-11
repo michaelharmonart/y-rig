@@ -84,23 +84,12 @@ def get_world_matrix(transform: str) -> MMatrix:
     return dag_path.inclusiveMatrix()
 
 
-def set_world_matrix(transform: str, matrix: MMatrix, fallback=False) -> None:
-    """
-    Set the world matrix of a transform by decomposing it into local components.
-
-    Args:
-        transform: Maya transform node name.
-        matrix: Target world space matrix.
-        fallback: If True, use cmds.xform instead of manual decomposition.
-    """
+def set_local_matrix(transform: str, matrix: MMatrix, fallback=False) -> None:
     if fallback:
-        cmds.xform(transform, worldSpace=True, matrix=matrix)  # type: ignore
+        cmds.xform(transform, worldSpace=False, matrix=matrix)  # type: ignore
     else:
-        inverse_matrix: MMatrix = get_parent_inverse_matrix(transform)
-        local_matrix: MMatrix = matrix * inverse_matrix
-
         # Apply local matrix using transformation matrix
-        transform_matrix: MTransformationMatrix = MTransformationMatrix(local_matrix)
+        transform_matrix: MTransformationMatrix = MTransformationMatrix(matrix)
         # Set translation
         translation = transform_matrix.translation(MSpace.kTransform)
         cmds.setAttr(f"{transform}.translate", translation.x, translation.y, translation.z)
@@ -127,6 +116,23 @@ def set_world_matrix(transform: str, matrix: MMatrix, fallback=False) -> None:
         # Set shear
         shear = transform_matrix.shear(MSpace.kTransform)
         cmds.setAttr(f"{transform}.shear", shear[0], shear[1], shear[2])
+
+
+def set_world_matrix(transform: str, matrix: MMatrix, fallback=False) -> None:
+    """
+    Set the world matrix of a transform by decomposing it into local components.
+
+    Args:
+        transform: Maya transform node name.
+        matrix: Target world space matrix.
+        fallback: If True, use cmds.xform instead of manual decomposition.
+    """
+    if fallback:
+        cmds.xform(transform, worldSpace=True, matrix=matrix)  # type: ignore
+    else:
+        inverse_matrix: MMatrix = get_parent_inverse_matrix(transform)
+        local_matrix: MMatrix = matrix * inverse_matrix
+        set_local_matrix(transform, local_matrix)
 
 
 def matrix_constraint(

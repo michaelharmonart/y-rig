@@ -7,6 +7,7 @@ from yrig.maya_api.attribute import MatrixAttribute, ScalarAttribute, Vector4Att
 from yrig.spline.math import point_on_spline_weights, resample, tangent_on_spline_weights
 from yrig.spline.matrix_spline.core import MatrixSpline
 from yrig.structs.transform import Vector3
+from yrig.transform.utils import zero_transform
 
 
 def pin_to_matrix_spline(
@@ -19,6 +20,7 @@ def pin_to_matrix_spline(
     secondary_axis: tuple[int, int, int] | None = (0, 0, 1),
     twist: bool = True,
     align_tangent: bool = True,
+    reset_transforms: bool = True,
 ) -> None:
     """
     Pins a transform to a matrix spline at a given parameter along the curve.
@@ -40,6 +42,8 @@ def pin_to_matrix_spline(
             as the up vector for the aim matrix. If False no vector is set and the orientation is the swing
             part of a swing twist decomposition.
         align_tangent: When True the pinned segments will align their primary axis along the spline.
+        reset_transforms: When True the translate rotation scale and shear of the pinned transform will be reset
+            such that the offset parent matrix can be used to drive the transform without side effects.
     Returns:
         None
     """
@@ -237,6 +241,9 @@ def pin_to_matrix_spline(
     blended_matrix_row4.output.x.connect_to(output_matrix.in_30)
     blended_matrix_row4.output.y.connect_to(output_matrix.in_31)
     blended_matrix_row4.output.z.connect_to(output_matrix.in_32)
+
+    if reset_transforms:
+        zero_transform(pinned_transform)
 
     output_matrix.output.connect_to(f"{pinned_transform}.offsetParentMatrix")
     matrix_spline.pinned_transforms.append(pinned_transform)

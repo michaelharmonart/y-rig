@@ -12,7 +12,7 @@ from yrig.transform.matrix import matrix_constraint
 def matrix_spline_from_transforms(
     name: str,
     cv_transforms: Sequence[str],
-    pinned_transforms: Sequence[str] | None,
+    pinned_transforms: Sequence[str] | int | None = None,
     parent: str | None = None,
     degree: int = 3,
     knots: Sequence[float] | None = None,
@@ -30,6 +30,7 @@ def matrix_spline_from_transforms(
     Args:
         matrix_spline: The matrix spline defention that will drive the pinned transforms.
         pinned_transforms: These transforms will be constrained to the spline.
+            If the input is an integer, that many pins will be created and bound to the spline.
         padded: When True, segments are sampled such that the end points have half a segment of spacing from the ends of the spline.
         stretch: Whether to apply automatic scaling along the spline tangent.
         arc_length: When True, the parameters for the spline will be even according to arc length.
@@ -72,22 +73,30 @@ def matrix_spline_from_transforms(
         periodic=periodic,
     )
 
-    if pinned_transforms is not None:
-        pins: list[str] = []
+    if pinned_transforms is None:
+        return matrix_spline
+
+    pins: list[str] = []
+    if isinstance(pinned_transforms, int):
+        for i in range(pinned_transforms):
+            pin_name = f"{matrix_spline.name}_pin{i}"
+            pin = cmds.group(empty=True, name=pin_name, parent=spline_group)
+            pins.append(pin)
+    else:
         for pinned_transform in pinned_transforms:
             pin_name = f"{get_short_name(pinned_transform)}_pin"
             pin = cmds.group(empty=True, name=pin_name, parent=spline_group)
             matrix_constraint(pin, pinned_transform, keep_offset=False)
             pins.append(pin)
-        pin_transforms_to_matrix_spline(
-            matrix_spline=matrix_spline,
-            pinned_transforms=pins,
-            padded=padded,
-            stretch=stretch,
-            arc_length=arc_length,
-            primary_axis=primary_axis,
-            secondary_axis=secondary_axis,
-            twist=twist,
-            align_tangent=align_tangent,
-        )
+    pin_transforms_to_matrix_spline(
+        matrix_spline=matrix_spline,
+        pinned_transforms=pins,
+        padded=padded,
+        stretch=stretch,
+        arc_length=arc_length,
+        primary_axis=primary_axis,
+        secondary_axis=secondary_axis,
+        twist=twist,
+        align_tangent=align_tangent,
+    )
     return matrix_spline

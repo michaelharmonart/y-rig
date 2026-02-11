@@ -12,7 +12,8 @@ from maya.api.OpenMaya import (
 )
 
 from yrig.maya_api import node
-from yrig.spline.math import generate_knots
+from yrig.spline.math import generate_knots, get_point_on_spline
+from yrig.structs.transform import Vector3
 
 
 class MatrixSpline:
@@ -146,6 +147,76 @@ class MatrixSpline:
         """
         return closest_parameter_on_matrix_spline(matrix_spline=self, position=position)
 
+    def get_point(self, parameter: float, normalize_parameter: bool = True) -> MPoint:
+        return get_point_on_matrix_spline(matrix_spline=self, parameter=parameter)
+
+
+def get_matrix_spline_mfn_curve(matrix_spline: MatrixSpline) -> tuple[MFnNurbsCurve, MObject]:
+    cv_transforms: list[str] = matrix_spline.cv_transforms
+    cv_positions: MPointArray = MPointArray()
+    for transform in cv_transforms:
+        cv_position: tuple[float, float, float] = cmds.xform(  # type: ignore
+            transform, query=True, worldSpace=True, translation=True
+        )
+        cv_positions.append(MPoint(*cv_position))
+    maya_knots: list[float] = matrix_spline.knots[1:-1]
+
+    fn_data: MFnNurbsCurveData = MFnNurbsCurveData()
+    data_obj: MObject = fn_data.create()
+    fn_curve: MFnNurbsCurve = MFnNurbsCurve()
+    fn_curve.create(
+        cv_positions,
+        MDoubleArray(maya_knots),
+        matrix_spline.degree,
+        MFnNurbsCurve.kOpen if not matrix_spline.periodic else MFnNurbsCurve.kPeriodic,
+        False,  # create2D
+        False,  # not rational
+        data_obj,
+    )
+    return fn_curve, data_obj
+
+
+def closest_parameter_on_matrix_spline(
+    matrix_spline: MatrixSpline, position: MPoint | tuple[float, float, float]
+) -> float:
+    """
+    Finds the closest parameter value on a spline (defined by a MatrixSpline) to a given 3D position.
+
+    Args:
+        matrix_spline: Spline definition object.
+        position: The world-space point to project onto the spline.
+
+    Returns:
+        float: The curve parameter value (in knot space) at the closest point to the input position.
+    """
+    fn_curve, data_obj = get_matrix_spline_mfn_curve(matrix_spline)
+    test_point = position if isinstance(position, MPoint) else MPoint(*position)
+    parameter: float = fn_curve.closestPoint(test_point, space=MSpace.kObject)[1]
+
+    return parameter
+
+
+def get_point_on_matrix_spline(
+    matrix_spline: MatrixSpline, parameter: float, normalize_paramter: bool = True
+) -> MPoint:
+    cv_transforms: list[str] = matrix_spline.cv_transforms
+    cv_positions: list[Vector3] = []
+    for transform in cv_transforms:
+        cv_position: tuple[float, float, float] = cmds.xform(  # type: ignore
+            transform, query=True, worldSpace=True, translation=True
+        )
+        cv_positions.append(Vector3(*cv_position))
+
+    position = get_point_on_spline(
+        cv_positions=cv_positions,
+        t=parameter,
+        degree=matrix_spline.degree,
+        knots=matrix_spline.knots,
+        normalize_parameter=normalize_paramter,
+    )
+    point: MPoint = MPoint(position.x, position.y, position.z)
+    return point
+
 
 def bound_curve_from_matrix_spline(
     matrix_spline: MatrixSpline, curve_name: str | None = None, curve_parent: str | None = None
@@ -191,43 +262,3 @@ def bound_curve_from_matrix_spline(
         cmds.connectAttr(cv_position_attrs[1], f"{curve_transform}.controlPoints[{index}].yValue")
         cmds.connectAttr(cv_position_attrs[2], f"{curve_transform}.controlPoints[{index}].zValue")
     return curve_transform
-
-
-def closest_parameter_on_matrix_spline(
-    matrix_spline: MatrixSpline, position: MPoint | tuple[float, float, float]
-) -> float:
-    """
-    Finds the closest parameter value on a spline (defined by a MatrixSpline) to a given 3D position.
-
-    Args:
-        matrix_spline: Spline definition object.
-        position: The world-space point to project onto the spline.
-
-    Returns:
-        float: The curve parameter value (in knot space) at the closest point to the input position.
-    """
-    cv_transforms: list[str] = matrix_spline.cv_transforms
-    cv_positions: MPointArray = MPointArray()
-    for transform in cv_transforms:
-        cv_position: tuple[float, float, float] = cmds.xform(  # type: ignore
-            transform, query=True, worldSpace=True, translation=True
-        )
-        cv_positions.append(MPoint(*cv_position))
-    maya_knots: list[float] = matrix_spline.knots[1:-1]
-
-    fn_data: MFnNurbsCurveData = MFnNurbsCurveData()
-    data_obj: MObject = fn_data.create()
-    fn_curve: MFnNurbsCurve = MFnNurbsCurve()
-    fn_curve.create(
-        cv_positions,
-        MDoubleArray(maya_knots),
-        matrix_spline.degree,
-        MFnNurbsCurve.kOpen if not matrix_spline.periodic else MFnNurbsCurve.kPeriodic,
-        False,  # create2D
-        False,  # not rational
-        data_obj,
-    )
-    test_point = position if isinstance(position, MPoint) else MPoint(*position)
-    parameter: float = fn_curve.closestPoint(test_point, space=MSpace.kObject)[1]
-
-    return parameter
