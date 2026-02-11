@@ -84,7 +84,7 @@ class Guide(guide.ComponentGuide):
         v_chest_pivot = vector.linearlyInterpolate(
             self.spineBase.getTranslation(space="world"),  # type: ignore
             self.spineTop.getTranslation(space="world"),  # type: ignore
-            1 / 2,
+            2 / 3,
         )
         self.chestPivot = self.addLoc("chestPivot", self.spineBase, v_chest_pivot)
 
