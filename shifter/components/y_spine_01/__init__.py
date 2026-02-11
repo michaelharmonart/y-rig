@@ -253,7 +253,7 @@ class Component(component.Main):
         pin_to_matrix_spline(
             self.mid_matrix_spline,
             self.mid_npo,
-            stretch=False,
+            stretch=True,
             parameter=0.5,
             normalize_parameter=True,
             primary_axis=(0, 1, 0),
