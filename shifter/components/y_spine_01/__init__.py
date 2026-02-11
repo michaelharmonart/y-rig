@@ -1,5 +1,6 @@
 # type: ignore
 import ast
+from itertools import chain
 
 import mgear.pymaya as pm
 from mgear.core import attribute, primitive, string, transform
@@ -282,11 +283,15 @@ class Component(component.Main):
         print(self.bind_spline.pinned_transforms)
         self.base_connection = pm.PyNode(self.bind_spline.pinned_transforms[0])
         self.top_connection = pm.PyNode(self.bind_spline.pinned_transforms[-1])
-
-        for i, pin in enumerate(self.bind_spline.pinned_transforms):
+        start_transform = self.spine_base
+        mid_pin_transforms = (
+            pm.PyNode(transform) for transform in self.bind_spline.pinned_transforms[1:-1]
+        )
+        end_transform = self.spine_top
+        for i, pin in enumerate(chain((start_transform,), mid_pin_transforms, (end_transform,))):
             self.jnt_pos.append(
                 {
-                    "obj": pm.PyNode(pin),
+                    "obj": pin,
                     "name": string.replaceSharpWithPadding(jdn_spine, i + 1),
                     "data_contracts": "Twist",
                     "leaf_joint": self.settings["leafJoints"],
