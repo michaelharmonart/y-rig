@@ -114,10 +114,6 @@ class Component(component.Main):
         attribute.setRotOrder(self.mid_ctl, "YZX")
         attribute.setInvertMirror(self.mid_ctl, ["tx", "ry", "rz"])
         self.transform2Lock.append(self.mid_npo)
-        self.hip_tan = primitive.addTransform(
-            self.mid_ctl, self.getName("hip_tan"), hip_tan_transform
-        )
-        self.transform2Lock.append(self.hip_tan)
 
         # Torso Control
         torso_name = "torso"
@@ -198,10 +194,6 @@ class Component(component.Main):
             self.chest_ik_ctl, self.getName("mid_spline_chest_tan"), chest_tan_transform
         )
         self.transform2Lock.append(self.mid_spline_chest_tan)
-        self.chest_tan = primitive.addTransform(
-            self.mid_ctl, self.getName("chest_tan"), chest_tan_transform
-        )
-        self.transform2Lock.append(self.chest_tan)
 
         # Chest Top Control and Tangents
         chest_top_name = "chest_top"
@@ -269,6 +261,15 @@ class Component(component.Main):
             name=self.getName("length_ref"),
             parent=self.root,
         )
+
+        self.hip_tan = primitive.addTransform(
+            self.mid_ctl, self.getName("hip_tan"), hip_tan_transform
+        )
+        self.transform2Lock.append(self.hip_tan)
+        self.chest_tan = primitive.addTransform(
+            self.mid_ctl, self.getName("chest_tan"), chest_tan_transform
+        )
+        self.transform2Lock.append(self.chest_tan)
 
         # Division -----------------------------------------
         self.bind_spline = matrix_spline_from_transforms(
