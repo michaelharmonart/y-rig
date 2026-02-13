@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>314</width>
-    <height>223</height>
+    <width>339</width>
+    <height>332</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -38,6 +38,9 @@
            </size>
           </property>
           <property name="maximum">
+           <number>100</number>
+          </property>
+          <property name="sliderPosition">
            <number>100</number>
           </property>
           <property name="orientation">
@@ -144,7 +147,7 @@
   <connection>
    <sender>preserve_length_slider</sender>
    <signal>valueChanged(int)</signal>
-   <receiver>preserve_length_slider</receiver>
+   <receiver>preserve_length_spinBox</receiver>
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
@@ -152,8 +155,8 @@
      <y>152</y>
     </hint>
     <hint type="destinationlabel">
-     <x>325</x>
-     <y>152</y>
+     <x>291</x>
+     <y>38</y>
     </hint>
    </hints>
   </connection>

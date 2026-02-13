@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'settingsUIUYzAxN.ui'
+## Form generated from reading UI file 'settingsUIXJxXqO.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.10.2
 ##
@@ -33,7 +33,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName("Form")
-        Form.resize(314, 223)
+        Form.resize(339, 332)
         self.gridLayout = QGridLayout(Form)
         self.gridLayout.setObjectName("gridLayout")
         self.groupBox = QGroupBox(Form)
@@ -51,6 +51,7 @@ class Ui_Form(object):
         self.preserve_length_slider.setObjectName("preserve_length_slider")
         self.preserve_length_slider.setMinimumSize(QSize(0, 15))
         self.preserve_length_slider.setMaximum(100)
+        self.preserve_length_slider.setSliderPosition(100)
         self.preserve_length_slider.setOrientation(Qt.Orientation.Horizontal)
 
         self.preserve_length_layout.addWidget(self.preserve_length_slider)
@@ -118,7 +119,7 @@ class Ui_Form(object):
         self.gridLayout.addItem(self.verticalSpacer, 1, 0, 1, 1)
 
         self.retranslateUi(Form)
-        self.preserve_length_slider.valueChanged.connect(self.preserve_length_slider.setValue)
+        self.preserve_length_slider.valueChanged.connect(self.preserve_length_spinBox.setValue)
         self.preserve_length_spinBox.valueChanged.connect(self.preserve_length_slider.setValue)
 
         QMetaObject.connectSlotsByName(Form)
