@@ -378,7 +378,7 @@ def tangent_on_spline_weights(
     ``sum(cv_position * weight for cv_position, weight in result)``.
 
     .. note::
-        This function only supports **B-splines** (all CV weights equal to ``1``).  
+        This function only supports **B-splines** (all CV weights equal to ``1``).
         It cannot be used for rational NURBS curves because the
         derivative of a rational curve is not a simple weighted sum of CV
         positions.

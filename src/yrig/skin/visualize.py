@@ -74,9 +74,9 @@ def visualize_split_weights(mesh: str, cv_transforms: list[str], degree: int = 2
     """
     Visualizes spline-based weights as vertex colors on a mesh.
 
-    A unique color is assigned to each CV transform and then for or every vertex on the mesh, 
-    spline basis weights are evaluated to determine how much each CV contributes, 
-    and those weights are used to blend the CV colors together.  
+    A unique color is assigned to each CV transform and then for or every vertex on the mesh,
+    spline basis weights are evaluated to determine how much each CV contributes,
+    and those weights are used to blend the CV colors together.
     The resulting per-vertex colors are applied to the mesh.
 
     Args:
