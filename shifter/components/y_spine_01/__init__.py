@@ -352,7 +352,7 @@ class Component(component.Main):
     # =====================================================
     def setRelation(self):
         """Set the relation between object from guide to rig"""
-        self.relatives["root"] = self.root
+        self.relatives["root"] = self.torso_ctl
         self.relatives["spineBase"] = self.hip_ctl
         self.relatives["hipPivot"] = self.hip_ctl
         self.relatives["tan0"] = self.mid_ctl
@@ -378,3 +378,5 @@ class Component(component.Main):
         self.jointRelatives["chestPivot"] = -1
         self.jointRelatives["spineTop"] = -1
         self.jointRelatives["chest"] = -1
+
+        self.aliasRelatives["root"] = "torso"
