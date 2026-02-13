@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Sequence, TypeVar
 
 import maya.cmds as cmds
@@ -258,4 +259,85 @@ def split_weights(
 
     set_weights(
         shape=mesh_shape, new_weights=new_weights, skin_cluster=skin_cluster, normalize=True
+    )
+
+
+@dataclass
+class SplitData:
+    source_influence: str
+    split_influences: Sequence[str]
+    degree: int = 2
+    periodic: bool = False
+
+
+def tag_for_weight_split(
+    influence: str, split_influences: Sequence[str], degree: int = 2, periodic: bool = False
+):
+    num_split_influences = len(split_influences)
+    data_node = influence
+    weight_split_attr_name = "weight_split"
+    cmds.addAttr(
+        data_node, longName=weight_split_attr_name, attributeType="compound", numberOfChildren=3
+    )
+    cmds.addAttr(
+        data_node,
+        longName="degree",
+        attributeType="long",
+        defaultValue=degree,
+        parent=weight_split_attr_name,
+    )
+    cmds.addAttr(
+        data_node,
+        longName="periodic",
+        attributeType="bool",
+        defaultValue=periodic,
+        parent=weight_split_attr_name,
+    )
+    # Split Influences
+    split_influences_attr_name = "split_influences"
+    cmds.addAttr(
+        data_node,
+        longName=split_influences_attr_name,
+        attributeType="compound",
+        numberOfChildren=num_split_influences,
+        parent=weight_split_attr_name,
+    )
+    split_influences_attr = f"{data_node}.{weight_split_attr_name}.{split_influences_attr_name}"
+    split_influence_attrs: dict[str, str] = {}
+    for i, split_influence in enumerate(split_influences):
+        influence_attr_name = f"influence{i}"
+        cmds.addAttr(
+            data_node,
+            longName=influence_attr_name,
+            attributeType="message",
+            parent=split_influences_attr_name,
+        )
+        split_influence_attrs[f"{split_influence}.message"] = (
+            f"{split_influences_attr}.{influence_attr_name}"
+        )
+    for split_influence_message_attr, split_influence_attr in split_influence_attrs.items():
+        cmds.connectAttr(split_influence_message_attr, split_influence_attr)
+
+
+def get_weight_split_data(data_node: str) -> SplitData | None:
+    split_data_attr_name = "weight_split"
+    split_data_attr = f"{data_node}.{split_data_attr_name}"
+    if not cmds.objExists(split_data_attr):
+        return None
+    degree: int = int(cmds.getAttr(f"{split_data_attr}.degree"))
+    periodic: bool = bool(cmds.getAttr(f"{split_data_attr}.periodic"))
+    influence_attrs: list[str] = cmds.attributeQuery(  # type: ignore
+        f"{split_data_attr_name}.split_influences",
+        node=data_node,
+        listChildren=True,
+    )
+    influences: list[str] = []
+    for influence_attr in influence_attrs:
+        connection: list[str] = cmds.listConnections(
+            f"{split_data_attr}.split_influences.{influence_attr}", source=True, destination=False
+        )
+        connected_node = connection[0]
+        influences.append(connected_node)
+    return SplitData(
+        source_influence=data_node, degree=degree, periodic=periodic, split_influences=influences
     )
