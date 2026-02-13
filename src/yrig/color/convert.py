@@ -2,6 +2,19 @@ import math
 
 
 def linear_srgb_to_rec2020(color: tuple[float, float, float]) -> tuple[float, float, float]:
+    """Convert a linear sRGB color to the Rec.2020 color space.
+
+    Applies the 3×3 color-space conversion matrix that maps linear sRGB
+    primaries to Rec.2020 primaries. The result remains in linear light
+    (no transfer function / gamma is applied).
+
+    Args:
+        color: An ``(R, G, B)`` tuple in linear sRGB, each channel
+            typically in the ``[0.0, 1.0]`` range.
+
+    Returns:
+        An ``(R, G, B)`` tuple in the linear Rec.2020 color space.
+    """
     SRGB_TO_REC2020 = (
         (0.6274, 0.3293, 0.0433),
         (0.0691, 0.9195, 0.0114),

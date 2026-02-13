@@ -27,6 +27,21 @@ MatrixTuple: TypeAlias = tuple[
 def is_identity_matrix(
     matrix: MMatrix | MatrixTuple | Sequence[float], epsilon: float = 0.001
 ) -> bool:
+    """Check whether a 4×4 matrix is approximately equal to the identity matrix.
+
+    Compares each element of *matrix* against the corresponding element of
+    the identity matrix using the given *epsilon* tolerance.
+
+    Args:
+        matrix: The matrix to test, supplied as an ``MMatrix``, a 16-element
+            tuple, or any sequence of 16 floats in row-major order.
+        epsilon: Maximum per-element deviation from identity that is still
+            considered equivalent.  Defaults to ``0.001``.
+
+    Returns:
+        ``True`` if every element is within *epsilon* of the identity value,
+        ``False`` otherwise.
+    """
     if isinstance(matrix, MMatrix):
         return matrix.isEquivalent(MMatrix.kIdentity, epsilon)
     return all(
@@ -36,6 +51,15 @@ def is_identity_matrix(
 
 
 def mmatrix_to_list(matrix: MMatrix) -> list[float]:
+    """Flatten an ``MMatrix`` into a row-major list of 16 floats.
+
+    Args:
+        matrix: The Maya ``MMatrix`` to convert.
+
+    Returns:
+        A list of 16 ``float`` values in row-major order
+        (row 0 cols 0–3, row 1 cols 0–3, …).
+    """
     return [matrix.getElement(row, col) for row in range(4) for col in range(4)]
 
 
@@ -85,6 +109,22 @@ def get_world_matrix(transform: str) -> MMatrix:
 
 
 def set_local_matrix(transform: str, matrix: MMatrix, fallback=False) -> None:
+    """Set the local transformation of a Maya transform node from a matrix.
+
+    Decomposes the given matrix into translate, rotate, scale, and shear
+    components and applies them to the node's local channels.  For joint
+    nodes the ``jointOrient`` attribute is zeroed so that the full
+    orientation lives in the rotate channels.
+
+    Args:
+        transform: The name of the Maya transform (or joint) node to
+            modify.
+        matrix: The desired local-space matrix.
+        fallback: When ``True``, use ``cmds.xform`` to set the matrix in
+            one call instead of decomposing it into individual channels.
+            This is less precise but can be useful as a workaround for
+            edge-case node types.
+    """
     if fallback:
         cmds.xform(transform, worldSpace=False, matrix=matrix)  # type: ignore
     else:
@@ -119,8 +159,10 @@ def set_local_matrix(transform: str, matrix: MMatrix, fallback=False) -> None:
 
 
 def set_world_matrix(transform: str, matrix: MMatrix, fallback=False) -> None:
-    """
-    Set the world matrix of a transform by decomposing it into local components.
+    """Set the world-space matrix of a transform by converting to local space first.
+
+    The given world matrix is multiplied by the parent's inverse world
+    matrix to obtain a local matrix, which is then applied via `set_local_matrix`.
 
     Args:
         transform: Maya transform node name.
@@ -146,8 +188,23 @@ def matrix_constraint(
     scale: bool = True,
     shear: bool = True,
 ) -> None:
-    """
-    Constrain a transform to another.
+    """Constrain a transform to follow another using a pure-matrix node graph.
+
+    Builds a ``multMatrix`` → ``decomposeMatrix`` network that drives the
+    constrained transform's translate, rotate, scale, and/or shear channels
+    from the source transform's world matrix.
+
+    When *keep_offset* is ``True``, the current world-space offset between
+    the two transforms is baked into the network so the constrained
+    transform maintains its relative position and orientation.
+
+    When constraining **joints**, special handling is applied to account
+    for ``jointOrient`` and ``segmentScaleCompensate``.  If
+    *use_joint_orient* is ``True`` and the joint has a non-zero orient,
+    an additional matrix branch is created to factor it out of the
+    rotation result so that the orient value is preserved.  Otherwise the
+    ``jointOrient`` is zeroed and the full rotation is driven through
+    the ``rotate`` channels.
 
     Args:
         source_transform: joint to match.

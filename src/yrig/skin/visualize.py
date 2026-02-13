@@ -12,8 +12,27 @@ def visualize_weights_on_mesh(
     weights_per_vertex: list[list[tuple[Any, float]]],
     influence_colors: dict[Any, om2.MColor],
 ) -> None:
-    """
-    Helper to assign weighted vertex colors to a mesh.
+    """Apply weighted vertex colors to a mesh for visual debugging of influence weights.
+
+    For each vertex, the final color is computed by blending each influence's
+    assigned color proportionally to its weight.  Colors are blended in Oklab
+    space and converted to linear sRGB before being written as Maya vertex
+    colors.
+
+    Args:
+        mesh_shape: The name of the mesh **shape** node (not the transform)
+            that will receive vertex colors.
+        weights_per_vertex: A list with one entry per vertex.  Each entry is a
+            list of ``(influence_key, weight)`` tuples describing how much each
+            influence contributes to that vertex.  The influence keys must
+            match the keys in *influence_colors*.
+        influence_colors: A mapping from influence key to an ``MColor`` in
+            Oklab space that represents that influence's display color.
+
+    Note:
+        The mesh's ``displayColors`` attribute is enabled and
+        ``displayColorChannel`` is set to ``"Diffuse"`` so that the vertex
+        colors are immediately visible in the viewport.
     """
 
     # make sure the target shape can show vertex colors
@@ -55,10 +74,10 @@ def visualize_split_weights(mesh: str, cv_transforms: list[str], degree: int = 2
     """
     Visualizes spline-based weights as vertex colors on a mesh.
 
-    The function assigns a unique color to each CV based on its hashed position. Then, for each vertex
-    on the mesh, it computes the weighted color by blending CV colors using the spline-based weights.
-    These vertex colors are set on the mesh and can be used to visually verify how influence weights
-    fall off across the mesh.
+    A unique color is assigned to each CV transform and then for or every vertex on the mesh, 
+    spline basis weights are evaluated to determine how much each CV contributes, 
+    and those weights are used to blend the CV colors together.  
+    The resulting per-vertex colors are applied to the mesh.
 
     Args:
         mesh (str): The mesh transform node to visualize on.

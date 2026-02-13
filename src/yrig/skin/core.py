@@ -4,6 +4,18 @@ from maya.api import OpenMayaAnim as oma
 
 
 def get_skin_cluster(mesh: str) -> str | None:
+    """Find the skinCluster deformer attached to a mesh.
+
+    Walks the construction history of the given mesh and returns the first
+    ``skinCluster`` node found, or ``None`` if the mesh is not skinned.
+
+    Args:
+        mesh: The name of a mesh transform or shape node.
+
+    Returns:
+        The name of the first skinCluster node in the mesh's history,
+        or ``None`` if no skinCluster is present.
+    """
     history = cmds.listHistory(mesh, pruneDagObjects=True) or []
     skin_clusters = cmds.ls(history, type="skinCluster")  # type: ignore
     return skin_clusters[0] if skin_clusters else None
@@ -51,6 +63,22 @@ def skin_mesh(
 def get_mesh_points(
     fn_mesh: om2.MFnMesh, vertex_indices: list[int] | None = None
 ) -> om2.MPointArray:
+    """Retrieve world-space vertex positions from a mesh function set.
+
+    When *vertex_indices* is ``None`` every vertex position is returned.
+    Otherwise only the positions at the requested indices are collected
+    (in the order given).
+
+    Args:
+        fn_mesh: An ``MFnMesh`` function set already attached to the
+            target mesh shape.
+        vertex_indices: Optional list of specific vertex indices to
+            retrieve. If ``None``, all vertices are returned.
+
+    Returns:
+        An ``MPointArray`` containing the requested vertex positions in
+        world space.
+    """
     mesh_points: om2.MPointArray = om2.MPointArray()
     if vertex_indices is None:
         mesh_points = fn_mesh.getPoints(space=om2.MSpace.kWorld)
@@ -63,6 +91,20 @@ def get_mesh_points(
 
 
 def get_weights_of_influence(skin_cluster: str, joint: str) -> dict[int, float]:
+    """Query per-vertex skin weights for a single influence joint.
+
+    Uses the Maya API's ``MFnSkinCluster.getPointsAffectedByInfluence``
+    to efficiently retrieve only the vertices and weights associated with
+    the given joint.
+
+    Args:
+        skin_cluster: The name of the skinCluster node to query.
+        joint: The name of the influence joint whose weights are requested.
+
+    Returns:
+        A dictionary mapping vertex indices to their weight values for
+        the specified joint.  Vertices with zero influence are omitted.
+    """
     sel: om2.MSelectionList = om2.MSelectionList()
     sel.add(skin_cluster)
     sel.add(joint)

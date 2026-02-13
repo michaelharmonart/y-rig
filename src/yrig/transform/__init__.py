@@ -1,3 +1,10 @@
+"""Transform utilities for Maya rigs.
+
+Provides helpers for querying and manipulating Maya transform nodes,
+including world/local matrix operations, matrix-based constraints,
+and common transform tasks such as matching, zeroing, and reparenting.
+"""
+
 from . import matrix as matrix
 from . import utils as utils
 from .matrix import (

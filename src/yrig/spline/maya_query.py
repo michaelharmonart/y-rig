@@ -22,12 +22,14 @@ def maya_to_standard_knots(
     Convert Maya-style knot vector to a 'standard' knot vector.
 
     Args:
-        knots (list[float]): Input knot sequence from Maya.
-        degree (int, optional): Degree of the curve. Defaults to 3.
-        periodic (bool, optional): Whether the curve is periodic. Defaults to False.
+        knots: The Maya-style knot sequence (missing the first and last values).
+        degree: Degree of the NURBS curve.  Defaults to ``3`` (cubic).
+        periodic: Whether the curve is periodic (closed with ``C^(degree-1)``
+            continuity).  Defaults to ``False``.
 
     Returns:
-        list[float]: Adjusted knot sequence.
+        A new knot vector with the two missing boundary values restored,
+        suitable for use with standard B-spline / NURBS evaluation.
     """
 
     new_knots: list[float] = knots.copy()
@@ -55,12 +57,22 @@ def maya_to_standard_knots(
 
 
 def get_knots(curve_shape: str) -> list[float]:
-    """
-    Gets the standard knot vector for a given curve shape (not the Maya format).
+    """Retrieve the standard (full) knot vector for a NURBS curve shape.
+
+    Reads the internal Maya knot vector via the API and converts it to the
+    standard form by restoring the two omitted boundary knot values.  The
+    returned vector has length ``num_cvs + degree + 1`` and is suitable for
+    direct use with the spline evaluation utilities in `spline.math`.
+
     Args:
-        curve_shape(str): Name of curve shape node.
+        curve_shape: The name of a NURBS curve **shape** node (not the
+            transform).
+
     Returns:
-        list: A list of knot values. (aka knot vector)
+        The full knot vector as a list of floats.
+
+    See Also:
+        `maya_to_standard_knots` for details on the conversion.
     """
 
     sel: MSelectionList = MSelectionList()
@@ -79,12 +91,19 @@ def get_knots(curve_shape: str) -> list[float]:
 
 
 def get_cvs(curve_shape: str) -> list[Vector3]:
-    """
-    Gets the positions of all CVs for a given curve shape.
+    """Retrieve the world-space positions of all CVs on a NURBS curve shape.
+
+    Uses the Maya API (``MFnNurbsCurve.cvPositions``) to efficiently query
+    every control vertex and returns them as lightweight
+    `Vector3` instances.
+
     Args:
-        curve_shape(str): Name of curve shape node.
+        curve_shape: The name of a NURBS curve **shape** node (not the
+            transform).
+
     Returns:
-        list: A list of CV positions as Vector3s
+        An ordered list of `Vector3` objects,
+        one per CV, in world space.
     """
     sel: MSelectionList = MSelectionList()
     sel.add(curve_shape)

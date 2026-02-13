@@ -9,6 +9,21 @@ from yrig.transform.matrix import (
 
 
 def get_shapes(transform: str) -> list[str]:
+    """Return the non-intermediate shape nodes parented under a transform.
+
+    Queries the DAG hierarchy for shape children of *transform*, filtering
+    out intermediate (construction-history) shapes so that only the
+    renderable/visible shapes are returned.
+
+    Args:
+        transform: The name of the DAG transform node to inspect.
+
+    Returns:
+        A list of shape node names directly under the transform.
+
+    Raises:
+        RuntimeError: If *transform* has no child shape nodes.
+    """
     # list the shapes of node
     shape_list: list[str] = cmds.listRelatives(
         transform, shapes=True, noIntermediate=True, children=True
@@ -21,6 +36,16 @@ def get_shapes(transform: str) -> list[str]:
 
 
 def get_position(transform: str, world_space: bool = True) -> MPoint:
+    """Return the translation of a transform as an ``MPoint``.
+
+    Args:
+        transform: The name of the Maya transform node to query.
+        world_space: If ``True`` (the default), the position is returned in
+            world space.  If ``False``, local (object) space is used.
+
+    Returns:
+        An ``MPoint`` containing the XYZ translation of the transform.
+    """
     return MPoint(cmds.xform(transform, query=True, worldSpace=world_space, translation=True))
 
 
@@ -54,6 +79,19 @@ def match_location(transform: str, target_transform: str) -> None:
 
 
 def zero_transform(transform: str, local: bool = True) -> None:
+    """Reset a transform's matrix to identity, effectively zeroing it out.
+
+    Sets translation, rotation, scale, and shear back to their default
+    values.  When *local* is ``True`` the local matrix is zeroed (the node
+    stays parented and the parent's world matrix is preserved).  When
+    ``False`` the world matrix is set to identity, moving the node to the
+    world origin.
+
+    Args:
+        transform: The name of the Maya transform node to zero.
+        local: If ``True`` (the default), zero the local matrix.  If
+            ``False``, zero the world matrix.
+    """
     if local:
         set_local_matrix(transform, MMatrix.kIdentity)
     else:
@@ -61,6 +99,16 @@ def zero_transform(transform: str, local: bool = True) -> None:
 
 
 def zero_rotate_axis(transform: str) -> None:
+    """Zero out the ``rotateAxis`` attribute while preserving the world-space orientation.
+
+    For **joints**, Maya's ``zeroScaleOrient`` command is used.  For regular
+    transforms the rotateAxis is set to ``(0, 0, 0)`` and the world-space
+    orientation is restored via a temporary helper node so the visual
+    position in the viewport does not change.
+
+    Args:
+        transform: The name of the Maya transform or joint node to modify.
+    """
     node_type = cmds.nodeType(transform)
     if node_type == "joint":
         cmds.joint(transform, edit=True, zeroScaleOrient=True)

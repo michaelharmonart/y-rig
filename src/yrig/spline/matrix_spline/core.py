@@ -148,10 +148,35 @@ class MatrixSpline:
         return closest_parameter_on_matrix_spline(matrix_spline=self, position=position)
 
     def get_point(self, parameter: float, normalize_parameter: bool = True) -> MPoint:
+        """
+        Evaluate the world-space position on the spline at the given parameter.
+
+        Returns:
+            An ``MPoint`` containing the world-space XYZ position on the
+            spline.
+        """
         return get_point_on_matrix_spline(matrix_spline=self, parameter=parameter)
 
 
 def get_matrix_spline_mfn_curve(matrix_spline: MatrixSpline) -> tuple[MFnNurbsCurve, MObject]:
+    """
+    Build a temporary Maya ``MFnNurbsCurve`` from a MatrixSpline's CV transforms.
+
+    Samples the current world-space positions of every CV transform and
+    creates an in-memory NURBS curve (not added to the scene DAG) that
+    mirrors the MatrixSpline's topology.  This is used internally for
+    geometric queries such as closest-point lookups.
+
+    Args:
+        matrix_spline: The :class:`MatrixSpline` whose CV transforms,
+            knot vector, degree, and periodicity are used to construct the
+            curve.
+
+    Returns:
+        A two-element tuple of ``(MFnNurbsCurve, MObject)`` where the
+        function set is ready for evaluation and the ``MObject`` owns the
+        underlying curve data.
+    """
     cv_transforms: list[str] = matrix_spline.cv_transforms
     cv_positions: MPointArray = MPointArray()
     for transform in cv_transforms:
@@ -199,6 +224,23 @@ def closest_parameter_on_matrix_spline(
 def get_point_on_matrix_spline(
     matrix_spline: MatrixSpline, parameter: float, normalize_paramter: bool = True
 ) -> MPoint:
+    """Evaluate the world-space position on a MatrixSpline at a given parameter.
+
+    Samples the current world-space positions of every CV transform and
+    evaluates the B-spline basis functions at *parameter* to produce a
+    blended position.
+
+    Args:
+        matrix_spline: The :class:`MatrixSpline` whose CV transforms,
+            degree, and knot vector define the curve.
+        parameter: The curve parameter at which to evaluate.
+        normalize_paramter: When ``True`` (the default), *parameter* is
+            treated as a normalized value in the ``[0, 1]`` range.  When
+            ``False``, it is interpreted in raw knot-space units.
+
+    Returns:
+        An ``MPoint`` containing the interpolated world-space XYZ position.
+    """
     cv_transforms: list[str] = matrix_spline.cv_transforms
     cv_positions: list[Vector3] = []
     for transform in cv_transforms:

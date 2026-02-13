@@ -1,3 +1,7 @@
+"""
+Matrix spline construction and evaluation.
+"""
+
 from . import build, core, pin
 from .core import (
     MatrixSpline,

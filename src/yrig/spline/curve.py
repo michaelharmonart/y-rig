@@ -38,7 +38,7 @@ def bound_curve_from_transforms(
             CVs to the source transforms directly.
 
     Returns:
-        The created curve transform node name.
+        The name of the created curve transform node.
     """
     curve_transform_name = name
     curve_group: str | None

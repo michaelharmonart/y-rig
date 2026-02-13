@@ -29,6 +29,21 @@ except ImportError:
 
 
 def require_ng_skin(func):
+    """Decorator that guards a function behind the ngSkinTools2 dependency.
+
+    If the ``ngSkinTools2`` package is not installed the wrapped function
+    prints an error message and returns ``None`` instead of executing.
+    When the package *is* available but its Maya plug-in has not yet been
+    loaded, the decorator loads it automatically before proceeding.
+
+    Args:
+        func: The function to wrap.
+
+    Returns:
+        A wrapper that either delegates to *func* or short-circuits with
+        ``None`` when ngSkinTools2 is unavailable.
+    """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         if not HAS_NG_SKIN:
@@ -43,6 +58,20 @@ def require_ng_skin(func):
 
 @require_ng_skin
 def init_layers(shape: str) -> ng.Layers:
+    """Initialize ngSkinTools2 layers on a mesh shape and add a default base layer.
+
+    Looks up the skinCluster associated with *shape*, initialises the
+    ngSkinTools2 layer stack on it, and creates an initial ``"Base Weights"``
+    layer that acts as the foundation for subsequent paint layers.
+
+    Args:
+        shape: The mesh shape node (not the transform) that has a
+            skinCluster attached.
+
+    Returns:
+        The ``ngSkinTools2.api.Layers`` object managing the layer stack
+        for the given shape's skinCluster.
+    """
     skin_cluster = ng.target_info.get_related_skin_cluster(shape)
     layers = ng.layers.init_layers(skin_cluster)
     layers.add("Base Weights")
@@ -76,8 +105,11 @@ def get_or_create_ng_layer(skin_cluster: str, layer_name: str) -> ng.Layer:
 
 @require_ng_skin
 def apply_ng_skin_weights(weights_file: str, geometry: str) -> None:
-    """
-    Applies an ngSkinTools JSON weights file to the specified geometry.
+    """Apply an ngSkinTools2 JSON weights file to the specified geometry.
+
+    Uses name-based influence matching (not distance-based) and vertex-ID
+    transfer mode, so the topology of the target mesh must match the file.
+
     Args:
         weights_file: The JSON weights file to read.
         geometry: The transform, shape, or skinCluster Node to apply to.

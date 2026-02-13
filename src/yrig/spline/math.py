@@ -1,4 +1,5 @@
 from typing import Sequence, TypeVar
+
 import numpy as np
 
 from yrig.structs.transform import Vector3
@@ -8,12 +9,19 @@ CV = TypeVar("CV")
 
 
 def generate_knots(count: int, degree: int = 3, periodic=False) -> list[float]:
-    """
-    Gets a default knot vector for a given number of cvs and degrees.
+    """Generate a default knot vector for a B-spline with the given CV count and degree.
+
+    For **open (clamped)** curves the first and last ``degree`` knot values
+    are repeated so that the curve interpolates its end CVs.  For
+    **periodic** curves the knots are uniformly spaced from ``0`` to
+    ``count + degree``.
+
     Args:
-        count(int): The number of cvs.
-        degree(int): The curve degree.
-        periodic: If true the knot vector will be for a periodic curve.
+        count: The number of control vertices.
+        degree: The curve degree.  Defaults to ``3`` (cubic).
+        periodic: If ``True`` the returned knot vector will be suitable for
+            a periodic (closed) curve.  Defaults to ``False``.
+
     Returns:
         list: A list of knot values. (aka knot vector)
     """
@@ -53,16 +61,33 @@ def deboor_setup(
     # Algorithm and code originally from Cole O'Brien. Modified to support periodic splines.
     # https://coleobrien.medium.com/matrix-splines-in-maya-ec17f3b3741
     # https://gist.github.com/obriencole11/354e6db8a55738cb479523f15f1fd367
-    """
-    find the span index needed for DeBoors Algorithm
+    """Prepare the knot vector, span index, and parameter for De Boor evaluation.
+
+    Validates inputs, optionally normalizes the parameter *t* into the
+    knot domain, wraps *t* for periodic curves, and locates the knot span
+    that contains *t*.  The returned tuple provides everything that
+    `deboor_weights` needs to run.
+
     Args:
-        cvs(list): A list of cvs, these are used for the return value.
-        t(float): A parameter value.
-        degree(int): The curve dimensions.
-        knots(list): A list of knot values.
-        normalize(bool): When true, the curve is parameter is normalized from 0-1
+        cvs: A sequence of control vertices (only the length is used).
+        t: The parameter value at which to evaluate.
+        degree: The curve degree.  Defaults to ``3`` (cubic).
+        knots: An explicit knot vector.  When ``None`` a uniform clamped
+            vector is generated via `generate_knots`.
+        normalize: When ``True`` (the default), *t* is treated as a
+            ``0``–``1`` value and is remapped to the knot domain before
+            span lookup.
+
     Returns:
-        tuple: Tuple containing list of knot values, span number, parameter(t), and a boolean for wether the curve is periodic.
+        A 4-tuple ``(knots, span, t, periodic)`` where *knots* is the
+        (possibly generated) knot list, *span* is the index of the knot
+        interval containing *t*, *t* is the (possibly remapped / wrapped)
+        parameter, and *periodic* indicates whether the knot vector is
+        periodic.
+
+    Raises:
+        ValueError: If the number of CVs is too small for the given degree,
+            or the knot vector length does not equal ``len(cvs) + degree + 1``.
     """
 
     order = degree + 1  # Our functions often use order instead of degree
@@ -115,17 +140,32 @@ def deboor_weights(
     # Algorithm and code originally from Cole O'Brien
     # https://coleobrien.medium.com/matrix-splines-in-maya-ec17f3b3741
     # https://gist.github.com/obriencole11/354e6db8a55738cb479523f15f1fd367
-    """
-    Extracts information needed for DeBoors Algorithm
+    """Evaluate De Boor's algorithm to compute per-CV basis weights at a given parameter.
+
+    Runs De Boor's algorithm on the provided
+    CVs for the specified knot span and parameter value.  When *cv_weights*
+    are supplied the result is the rational (NURBS) basis; otherwise a
+    standard B-spline basis is computed (all CV weights equal to ``1``).
+
     Args:
-        cvs(list): A list of cvs, these are used for the return value.
-        t(float): A parameter value.
-        span(int): Span index (can be retrieved with deBoorSetup)
-        degree(int): The curve dimensions.
-        knots(list): A list of knot values.
-        weights(dict): A dictionary of CV:Weight values.
+        cvs: The sequence of control vertices (or their hashable proxies).
+        knots: The full knot vector.
+        t: The parameter value at which to evaluate (must lie within the
+            span defined by *span*).
+        span: The knot span index containing *t*, as returned by
+            :func:`deboor_setup`.
+        degree: The curve degree.  Defaults to ``3`` (cubic).
+        cv_weights: An optional mapping of ``{cv: weight}`` for rational
+            NURBS evaluation.  When ``None``, every CV is assigned a
+            weight of ``1`` (pure B-spline).
+
     Returns:
-        dict: Dictionary with cv: weight mappings
+        A dictionary mapping each contributing CV to its normalised basis
+        weight.
+
+    Raises:
+        ZeroDivisionError: If the total of all basis weights is zero
+            (degenerate configuration).
     """
     if cv_weights is None:
         cv_weights = {cv: 1 for cv in cvs}
@@ -191,6 +231,7 @@ def point_on_spline_weights(
         knots: A list of knot values.
         weights: A list of CV weight values.
         normalize: When true, the curve is parameter is normalized from 0-1
+        return_zero_weights: When True, weights that don't contribute will also be returned.
     Returns:
         list: A list of control point, weight pairs.
     """
@@ -233,22 +274,32 @@ def get_weights_along_spline(
     knots: Sequence[float] | None = None,
     sample_points: int = 128,
 ) -> list[list[tuple[CV, float]]]:
-    """
-    Evaluates B-spline basis weights for a given list of parameters.
-    Faster than calling point_on_spline_weights in a loop as this function uses a
-    lookup table and interpolation. Will be much faster when passing a large number
-    of parameter values such as when splitting skin weights on a dense mesh.
+    """Batch-evaluate B-spline basis weights for many parameter values efficiently.
+
+    When the number of parameters exceeds *sample_points* this function
+    builds a lookup table (LUT) of evenly spaced weight samples and
+    linearly interpolates between them, which is significantly faster than
+    calling `point_on_spline_weights` in a tight loop — especially
+    for dense meshes with thousands of vertices.
+
+    When the parameter count is small enough the function falls back to
+    exact per-parameter evaluation automatically.
 
     Args:
-        cvs(list): A list of cvs, these are used for the return value.
-        parameters(list): List of parameters.
-        degree: Degree of the B-spline.
-        knots(list): Knot vector of the B-spline.
-        sample_points: Number of samples to take for Lookup Table Interpolation,
-            more samples will be more accurate but slower. Default value of 128 should be plenty.
+        cvs: An ordered sequence of control vertices.  The CV objects are
+            returned verbatim in the output tuples.
+        parameters: The parameter values at which to evaluate weights.
+        degree: Degree of the B-spline.  Defaults to ``3`` (cubic).
+        knots: An explicit knot vector.  When ``None`` a uniform clamped
+            vector is generated via :func:`generate_knots`.
+        sample_points: Number of evenly spaced samples used to build the
+            LUT.  Higher values yield more accurate interpolation at the
+            cost of a slightly longer setup phase.  Defaults to ``128``.
 
     Returns:
-        A (len(parameters), n_basis) matrix of spline weights.
+        A list with one entry per parameter.  Each entry is a list of
+        ``(cv, weight)`` tuples (same format as
+        :func:`point_on_spline_weights`).
     """
     cv_ids = list(range(len(cvs)))
 
@@ -318,17 +369,33 @@ def tangent_on_spline_weights(
 
     # This cannot be used for full NURBS, only B-Splines (NURBS where every CV has a weight of 1)
     # as the derivative of a full NURB Spline cannot be expressed as a weighted sum of point positions
-    """
-    Creates a mapping of cvs to curve tangent weight values.
-    While all cvs are required, only the cvs with non-zero weights will be returned.
+    """Compute per-CV weights for the **tangent** (first derivative) of a B-spline at a parameter.
+
+    The tangent of a degree-*d* B-spline can be expressed as a weighted
+    sum of CV positions where the weights come from a degree-*(d − 1)*
+    basis evaluated on a modified knot vector.  This function returns
+    those weights so that the caller can compute the tangent vector as
+    ``sum(cv_position * weight for cv_position, weight in result)``.
+
+    .. note::
+        This function only supports **B-splines** (all CV weights equal to ``1``).  
+        It cannot be used for rational NURBS curves because the
+        derivative of a rational curve is not a simple weighted sum of CV
+        positions.
+
     Args:
-        cvs(list): A list of cvs, these are used for the return value.
-        t(float): A parameter value.
-        degree(int): The curve dimensions.
-        knots(list): A list of knot values.
-        normalize(bool): When true, the curve parameter is normalized from 0-1
+        cvs: An ordered sequence of control vertices.  The CV objects are
+            returned in the output tuples.
+        t: The parameter value at which to evaluate the tangent.
+        degree: The curve degree.  Defaults to ``3`` (cubic).
+        knots: An explicit knot vector.  When ``None`` a uniform clamped
+            vector is generated via :func:`generate_knots`.
+        normalize: When ``True`` (the default), *t* is treated as a
+            ``0``–``1`` value and is remapped to the knot domain.
+
     Returns:
-        list: A list of control point, weight pairs.
+        A list of ``(cv, weight)`` tuples for CVs with non-zero tangent
+        contribution at *t*.
     """
 
     new_knots, segment, t, periodic = deboor_setup(
@@ -373,6 +440,26 @@ def get_point_on_spline(
     weights: Sequence[float] | None = None,
     normalize_parameter: bool = True,
 ) -> Vector3:
+    """Evaluate the position on a B-spline (or NURBS) curve at parameter *t*.
+
+    Computes basis weights via :func:`point_on_spline_weights` and returns
+    the weighted sum of CV positions.
+
+    Args:
+        cv_positions: Ordered control-vertex positions as
+            :class:`~yrig.structs.transform.Vector3` instances.
+        t: The parameter value at which to evaluate.
+        degree: The curve degree.  Defaults to ``3`` (cubic).
+        knots: An explicit knot vector, or ``None`` for auto-generation.
+        weights: Per-CV rational weights for NURBS.  ``None`` for a pure
+            B-spline.
+        normalize_parameter: When ``True``, *t* is in the ``0``–``1``
+            range.
+
+    Returns:
+        A :class:`~yrig.structs.transform.Vector3` representing the
+        world-space point on the curve.
+    """
     position: Vector3 = Vector3()
     for control_point, weight in point_on_spline_weights(
         cvs=cv_positions,
@@ -389,6 +476,23 @@ def get_point_on_spline(
 def get_tangent_on_spline(
     cv_positions: Sequence[Vector3], t: float, degree: int = 3, knots: Sequence[float] | None = None
 ) -> Vector3:
+    """Evaluate the tangent vector of a B-spline curve at parameter *t*.
+
+    Computes tangent basis weights via :func:`tangent_on_spline_weights`
+    and returns the weighted sum of CV positions, yielding the first
+    derivative of the curve.
+
+    Args:
+        cv_positions: Ordered control-vertex positions as
+            :class:`~yrig.structs.transform.Vector3` instances.
+        t: The parameter value at which to evaluate.
+        degree: The curve degree.  Defaults to ``3`` (cubic).
+        knots: An explicit knot vector, or ``None`` for auto-generation.
+
+    Returns:
+        A :class:`~yrig.structs.transform.Vector3` representing the
+        (unnormalised) tangent direction at *t*.
+    """
     tangent: Vector3 = Vector3()
     for control_point, weight in tangent_on_spline_weights(
         cvs=cv_positions, t=t, degree=degree, knots=knots
@@ -411,24 +515,55 @@ def resample(
     u_max: float | None = None,
     normalize_parameter: bool = True,
 ) -> list[float]:
-    """
-    Takes curve CV positions and returns the parameter of evenly spaced points along the curve.
+    """Compute evenly spaced parameter values along a B-spline curve.
+
+    Given a set of CV positions this function returns *number_of_points*
+    parameter values that are either uniformly distributed in parameter
+    space or uniformly distributed by **arc length** (the default).
+
+    Arc-length resampling works by densely sampling the curve, building a
+    cumulative-distance lookup table, and binary-searching for the
+    parameter that corresponds to each desired fractional distance.
+
     Args:
-        cv_positions: list of vectors containing XYZ of the CV positions.
-        number_of_points: Number of point positions along the curve.
-        degree: Degree of the spline CVs
-        knots(list): A list of knot values.
-        weights(list): A list of CV weight values.
-        periodic(bool): When True, the samples will be spaced evenly on the curve assuming it is periodic
-        padded(bool): When True, the points are returned such that the end points have half a segment
-            of spacing from the ends of the curve. Ignored if periodic.
-        arc_length(bool): When True, the points are returned with even spacing according to arc length.
-        sample_points: The number of points to sample along the curve to find even arc-length segments.
-            More points will be more accurate/evenly spaced.
-        u_min (float): The starting parameter value of the resampling range. Must be less than u_max.
-        u_max (float): The ending parameter value of the resampling range. Must be greater than u_min.
+        cv_positions: Ordered CV positions as
+            :class:`~yrig.structs.transform.Vector3` instances.
+        number_of_points: How many evenly spaced sample parameters to
+            produce.
+        degree: The curve degree.  Defaults to ``3`` (cubic).
+        knots: An explicit knot vector.  When ``None`` a uniform clamped
+            vector is generated via :func:`generate_knots`.
+        weights: Per-CV rational weights for NURBS.  ``None`` for a pure
+            B-spline.
+        periodic: When ``True``, samples are distributed for a periodic
+            (closed) curve so the last sample wraps back towards the
+            first.  Defaults to ``False``.
+        padded: When ``True`` (and *periodic* is ``False``), the first and
+            last samples are inset by half a segment width from the curve
+            endpoints, which avoids placing joints exactly at the tips.
+            Defaults to ``True``.
+        arc_length: When ``True`` (the default), the returned parameters
+            are evenly spaced by arc length rather than by raw parameter
+            value.
+        sample_points: The number of dense samples used internally to
+            approximate arc length.  Higher values yield more accurate
+            spacing.  Defaults to ``256``.
+        u_min: Optional start of the resampling range (in the same
+            coordinate system as *normalize_parameter* implies).  Defaults
+            to the domain start.
+        u_max: Optional end of the resampling range.  Defaults to the
+            domain end.
+        normalize_parameter: When ``True`` (the default), the returned
+            parameters and *u_min* / *u_max* are in the ``0``–``1`` range.
+            When ``False``, raw knot-domain values are used.
+
     Returns:
-        list: List of the parameter values of the picked points along the curve.
+        A list of *number_of_points* float parameter values, ordered from
+        the start to the end of the curve.
+
+    Raises:
+        ValueError: If *u_min* is not less than *u_max*, or if
+            *sample_points* is less than ``2``.
     """
 
     if not knots:
