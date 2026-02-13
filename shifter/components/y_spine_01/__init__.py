@@ -46,7 +46,7 @@ class Component(component.Main):
             "yx",
             self.negate,
         )
-        if self.settings["IKWorldOri"]:
+        if self.settings["ctl_world_orient"]:
             print("World")
             ik_t = datatypes.TransformationMatrix()
             ik_t = transform.setMatrixPosition(ik_t, self.guide.pos["spineBase"])
@@ -304,6 +304,14 @@ class Component(component.Main):
         self.preserve_length_att = self.addAnimParam(
             "preserveLength", "Preserve Length", "double", self.settings["preserve_length"], 0, 1
         )
+        if self.validProxyChannels:
+            attribute.addProxyAttribute(
+                [self.preserve_length_att],
+                [
+                    self.chest_ctl,
+                    self.chest_ik_ctl,
+                ],
+            )
 
     # =====================================================
     # OPERATORS

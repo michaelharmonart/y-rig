@@ -109,7 +109,7 @@ class Guide(guide.ComponentGuide):
         self.pleafJoints = self.addParam("leafJoints", "bool", False)
 
         self.pPreserveLength = self.addParam("preserve_length", "double", 1, 0, 1)
-        self.pIKWorldOri = self.addParam("IKWorldOri", "bool", True)
+        self.pCtlWorldOrient = self.addParam("ctl_world_orient", "bool", True)
 
         # FCurves
         self.pSt_profile = self.addFCurveParam("st_profile", [[0, 0], [0.5, -1], [1, 0]])
@@ -151,7 +151,6 @@ class componentSettings(MayaQWidgetDockableMixin, guide.componentMainSettings): 
 
         super(componentSettings, self).__init__(parent=parent)
         self.settingsTab = settingsTab()
-
         self.setup_componentSettingWindow()
         self.create_componentControls()
         self.populate_componentControls()
@@ -180,28 +179,14 @@ class componentSettings(MayaQWidgetDockableMixin, guide.componentMainSettings): 
         self.tabs.insertTab(1, self.settingsTab, "Component Settings")
 
         # populate component settings
-        self.settingsTab.softness_slider.setValue(int(self.root.attr("softness").get() * 100))
-        self.settingsTab.position_spinBox.setValue(int(self.root.attr("position").get() * 100))
-        self.settingsTab.position_slider.setValue(int(self.root.attr("position").get() * 100))
-        self.settingsTab.lockOri_pelvis_spinBox.setValue(
-            int(self.root.attr("lock_ori_pelvis").get() * 100)
+        self.settingsTab.preserve_length_slider.setValue(
+            int(self.root.attr("preserve_length").get() * 100)
         )
-        self.settingsTab.lockOri_pelvis_slider.setValue(
-            int(self.root.attr("lock_ori_pelvis").get() * 100)
+        self.settingsTab.preserve_length_spinBox.setValue(
+            int(self.root.attr("preserve_length").get() * 100)
         )
-        self.settingsTab.lockOri_chest_spinBox.setValue(
-            int(self.root.attr("lock_ori_chest").get() * 100)
-        )
-        self.settingsTab.lockOri_chest_slider.setValue(
-            int(self.root.attr("lock_ori_chest").get() * 100)
-        )
-        self.settingsTab.softness_spinBox.setValue(int(self.root.attr("softness").get() * 100))
-        self.settingsTab.maxStretch_spinBox.setValue(self.root.attr("maxstretch").get())
-        self.settingsTab.maxSquash_spinBox.setValue(self.root.attr("maxsquash").get())
         self.settingsTab.division_spinBox.setValue(self.root.attr("division").get())
-        self.populateCheck(self.settingsTab.autoBend_checkBox, "autoBend")
-        self.populateCheck(self.settingsTab.IKWorldOri_checkBox, "IKWorldOri")
-        self.populateCheck(self.settingsTab.centralTangent_checkBox, "centralTangent")
+        self.populateCheck(self.settingsTab.ctl_world_orient_checkBox, "ctl_world_orient")
         self.populateCheck(self.settingsTab.leafJoints_checkBox, "leafJoints")
 
     def create_componentLayout(self):
@@ -212,66 +197,14 @@ class componentSettings(MayaQWidgetDockableMixin, guide.componentMainSettings): 
         self.setLayout(self.settings_layout)
 
     def create_componentConnections(self):
-        self.settingsTab.softness_slider.valueChanged.connect(
-            partial(self.updateSlider, self.settingsTab.softness_slider, "softness")
+        self.settingsTab.preserve_length_slider.valueChanged.connect(
+            partial(self.updateSlider, self.settingsTab.preserve_length_slider, "preserve_length")
         )
-        self.settingsTab.softness_spinBox.valueChanged.connect(
+        self.settingsTab.preserve_length_spinBox.valueChanged.connect(
             partial(
                 self.updateSlider,
-                self.settingsTab.softness_spinBox,
-                "softness",
-            )
-        )
-        self.settingsTab.position_slider.valueChanged.connect(
-            partial(self.updateSlider, self.settingsTab.position_slider, "position")
-        )
-        self.settingsTab.position_spinBox.valueChanged.connect(
-            partial(
-                self.updateSlider,
-                self.settingsTab.position_spinBox,
-                "position",
-            )
-        )
-        self.settingsTab.lockOri_pelvis_slider.valueChanged.connect(
-            partial(
-                self.updateSlider,
-                self.settingsTab.lockOri_pelvis_slider,
-                "lock_ori_pelvis",
-            )
-        )
-        self.settingsTab.lockOri_pelvis_spinBox.valueChanged.connect(
-            partial(
-                self.updateSlider,
-                self.settingsTab.lockOri_pelvis_spinBox,
-                "lock_ori_pelvis",
-            )
-        )
-        self.settingsTab.lockOri_chest_slider.valueChanged.connect(
-            partial(
-                self.updateSlider,
-                self.settingsTab.lockOri_chest_slider,
-                "lock_ori_chest",
-            )
-        )
-        self.settingsTab.lockOri_chest_spinBox.valueChanged.connect(
-            partial(
-                self.updateSlider,
-                self.settingsTab.lockOri_chest_spinBox,
-                "lock_ori_chest",
-            )
-        )
-        self.settingsTab.maxStretch_spinBox.valueChanged.connect(
-            partial(
-                self.updateSpinBox,
-                self.settingsTab.maxStretch_spinBox,
-                "maxstretch",
-            )
-        )
-        self.settingsTab.maxSquash_spinBox.valueChanged.connect(
-            partial(
-                self.updateSpinBox,
-                self.settingsTab.maxSquash_spinBox,
-                "maxsquash",
+                self.settingsTab.preserve_length_spinBox,
+                "preserve_length",
             )
         )
         self.settingsTab.division_spinBox.valueChanged.connect(
@@ -281,25 +214,11 @@ class componentSettings(MayaQWidgetDockableMixin, guide.componentMainSettings): 
                 "division",
             )
         )
-        self.settingsTab.autoBend_checkBox.stateChanged.connect(
+        self.settingsTab.ctl_world_orient_checkBox.stateChanged.connect(
             partial(
                 self.updateCheck,
-                self.settingsTab.autoBend_checkBox,
-                "autoBend",
-            )
-        )
-        self.settingsTab.IKWorldOri_checkBox.stateChanged.connect(
-            partial(
-                self.updateCheck,
-                self.settingsTab.IKWorldOri_checkBox,
-                "IKWorldOri",
-            )
-        )
-        self.settingsTab.centralTangent_checkBox.stateChanged.connect(
-            partial(
-                self.updateCheck,
-                self.settingsTab.centralTangent_checkBox,
-                "centralTangent",
+                self.settingsTab.ctl_world_orient_checkBox,
+                "ctl_world_orient",
             )
         )
         self.settingsTab.squashStretchProfile_pushButton.clicked.connect(self.setProfile)
