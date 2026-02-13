@@ -142,7 +142,6 @@ def get_mesh_surface_weights(
         influence_transforms (list[str]): A list of transform names that the weights need to be split along.
         degree (int, optional): Degree of the spline curve. Defaults to 2.
         vertex_indices: A list of vertex indices to output weights for.
-        debug_curve: If True a curve node will be created for debug purposes.
     Returns:
         list[list[tuple[Any, float]]]: A list of weights per vertex. Each entry is a list of tuples,
         where each tuple contains a influence transform and its corresponding influence weight on the vertex.
@@ -264,6 +263,8 @@ def split_weights(
 
 @dataclass
 class SplitData:
+    """Describes how a single influence's weights should be split across multiple joints."""
+
     source_influence: str
     split_influences: Sequence[str]
     degree: int = 2
@@ -272,7 +273,21 @@ class SplitData:
 
 def tag_for_weight_split(
     influence: str, split_influences: Sequence[str], degree: int = 2, periodic: bool = False
-):
+) -> None:
+    """Tag an influence joint with metadata attributes describing how its weights should be split.
+
+    Adds a compound ``weight_split`` attribute to the influence node containing the spline
+    degree, periodicity flag, and message connections to each split influence.  This data
+    can later be read back with `get_weight_split_data` to drive an automated
+    weight-split operation.
+
+    Args:
+        influence: The influence joint node that will receive the ``weight_split`` attribute.
+        split_influences: An ordered sequence of joint/transform names that the influence's
+            weights should be redistributed across.
+        degree: Degree of the spline used for spatial weight interpolation. Defaults to 2.
+        periodic: If ``True``, the generated spline curve will be periodic. Defaults to ``False``.
+    """
     num_split_influences = len(split_influences)
     data_node = influence
     weight_split_attr_name = "weight_split"
@@ -320,6 +335,19 @@ def tag_for_weight_split(
 
 
 def get_weight_split_data(data_node: str) -> SplitData | None:
+    """Read weight-split metadata previously stored on a node by `tag_for_weight_split`.
+
+    Inspects the ``weight_split`` compound attribute on *data_node* and extracts the
+    spline degree, periodicity flag, and the list of connected split influences.
+
+    Args:
+        data_node: The Maya node to query for weight-split metadata.
+
+    Returns:
+        A `SplitData` instance containing the stored parameters and connected
+        split influences, or ``None`` if the node does not carry the ``weight_split``
+        attribute.
+    """
     split_data_attr_name = "weight_split"
     split_data_attr = f"{data_node}.{split_data_attr_name}"
     if not cmds.objExists(split_data_attr):
