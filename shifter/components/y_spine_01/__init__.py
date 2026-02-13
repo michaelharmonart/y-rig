@@ -56,8 +56,8 @@ class Component(component.Main):
         # Hip Control and Tangents
         hip_name = "hip"
         hip_transform = transform.setMatrixPosition(ik_t, self.guide.pos["hipPivot"])
-        hip_control_offset = hip_transform.inverse() * (
-            self.guide.pos["spineBase"] - self.guide.pos["hipPivot"]
+        hip_control_offset = datatypes.Vector(
+            datatypes.Point(self.guide.pos["spineBase"]) * hip_transform.inverse()
         )
         self.hip_npo = primitive.addTransform(
             self.root, self.getName(f"{hip_name}_npo"), hip_transform
@@ -140,8 +140,8 @@ class Component(component.Main):
         # Chest Control
         chest_name = "chest"
         chest_transform = transform.setMatrixPosition(ik_t, self.guide.pos["chestPivot"])
-        chest_control_offset = chest_transform.inverse() * (
-            self.guide.pos["chest"] - self.guide.pos["chestPivot"]
+        chest_control_offset = datatypes.Vector(
+            datatypes.Point(self.guide.pos["chest"]) * chest_transform.inverse()
         )
         self.chest_rotation = primitive.addTransform(
             self.torso_rotation, self.getName(f"{chest_name}_rotation"), chest_transform
@@ -166,8 +166,8 @@ class Component(component.Main):
         # Chest IK Control
         chest_ik_name = "chest_ik"
         chest_ik_transform = transform.setMatrixPosition(ik_t, self.guide.pos["chestPivot"])
-        chest_ik_control_offset = chest_ik_transform.inverse() * (
-            self.guide.pos["spineTop"] - self.guide.pos["chestPivot"]
+        chest_ik_control_offset = datatypes.Vector(
+            datatypes.Point(self.guide.pos["spineTop"]) * chest_ik_transform.inverse()
         )
         self.chest_ik_rotation = primitive.addTransform(
             self.chest_rotation, self.getName(f"{chest_ik_name}_rotation"), chest_ik_transform
