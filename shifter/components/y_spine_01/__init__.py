@@ -260,6 +260,7 @@ class Component(component.Main):
             ],
             name=self.getName("length_ref"),
             parent=self.root,
+            hide=False if self.WIP else True,
         )
 
         self.hip_tan = primitive.addTransform(

@@ -15,6 +15,7 @@ def bound_curve_from_transforms(
     knots: Sequence[float] | None = None,
     periodic: bool = False,
     create_pins: bool = True,
+    hide: bool = False,
 ) -> str:
     """
     Create a NURBS curve whose CVs are driven by the given transforms.
@@ -68,6 +69,12 @@ def bound_curve_from_transforms(
 
     if curve_group is not None:
         cmds.parent(curve_transform, curve_group, relative=True)
+
+    if hide:
+        if curve_group is not None:
+            cmds.hide(curve_group)
+        else:
+            cmds.hide(curve_transform)
 
     extended_cv_mapping: dict[str, str] = {}
     if create_pins:
