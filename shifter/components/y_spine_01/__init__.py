@@ -280,10 +280,11 @@ class Component(component.Main):
             padded=False,
             primary_axis=(0, 1, 0),
             secondary_axis=(1, 0, 0),
+            stretch=True,
         )
         print(self.bind_spline.pinned_transforms)
-        self.base_connection = pm.PyNode(self.bind_spline.pinned_transforms[0])
-        self.top_connection = pm.PyNode(self.bind_spline.pinned_transforms[-1])
+        self.base_connection = self.spine_base
+        self.top_connection = self.spine_top
         start_transform = self.spine_base
         mid_pin_transforms = (
             pm.PyNode(transform) for transform in self.bind_spline.pinned_transforms[1:-1]
@@ -350,25 +351,30 @@ class Component(component.Main):
     # CONNECTOR
     # =====================================================
     def setRelation(self):
-        """Set the relation beetween object from guide to rig"""
+        """Set the relation between object from guide to rig"""
         self.relatives["root"] = self.root
         self.relatives["spineBase"] = self.hip_ctl
-        self.relatives["hip_pivot"] = self.hip_ctl
+        self.relatives["hipPivot"] = self.hip_ctl
         self.relatives["tan0"] = self.mid_ctl
         self.relatives["tan1"] = self.mid_ctl
+        self.relatives["chestPivot"] = self.chest_ctl
         self.relatives["spineTop"] = self.top_connection
         self.relatives["chest"] = self.top_connection
-        self.relatives["chest_pivot"] = self.chest_ctl
 
         self.controlRelatives["root"] = self.torso_ctl
         self.controlRelatives["spineBase"] = self.hip_ctl
         self.controlRelatives["hip_pivot"] = self.hip_ctl
         self.controlRelatives["tan0"] = self.mid_ctl
         self.controlRelatives["tan1"] = self.mid_ctl
+        self.controlRelatives["chestPivot"] = self.chest_ctl
         self.controlRelatives["spineTop"] = self.chest_top_ctl
         self.controlRelatives["chest"] = self.chest_top_ctl
 
         self.jointRelatives["root"] = 0
+        self.jointRelatives["spineBase"] = 0
+        self.jointRelatives["hipPivot"] = 0
         self.jointRelatives["tan0"] = 0
+        self.jointRelatives["tan1"] = -1
+        self.jointRelatives["chestPivot"] = -1
         self.jointRelatives["spineTop"] = -1
         self.jointRelatives["chest"] = -1
