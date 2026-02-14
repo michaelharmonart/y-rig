@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Sequence, TypeVar
+from typing import Self, Sequence, TypeVar
 
 import maya.cmds as cmds
 from maya.api import OpenMaya as om2
@@ -16,6 +16,12 @@ from maya.api.OpenMaya import (
 
 from yrig import spline
 from yrig.math import remap
+from yrig.maya_api.attribute import (
+    BooleanAttribute,
+    IndexableMessageAttribute,
+    IntegerAttribute,
+    MessageAttribute,
+)
 from yrig.skin.core import get_mesh_points, get_skin_cluster, get_weights, set_weights
 
 # CV can be anything: a Vector3, a transform name, etc.
@@ -262,7 +268,7 @@ def split_weights(
 
 
 @dataclass
-class SplitData:
+class WeightSplitData:
     """Describes how a single influence's weights should be split across multiple joints."""
 
     source_influence: str
@@ -271,101 +277,95 @@ class SplitData:
     periodic: bool = False
 
 
+class WeightSplitTag:
+    def __init__(self, node: str):
+        self.source_influence = MessageAttribute(f"{node}.source_influence")
+        self.degree = IntegerAttribute(f"{node}.degree")
+        self.periodic = BooleanAttribute(f"{node}.periodic")
+        self.split_influences = IndexableMessageAttribute(f"{node}.split_influences")
+
+    @classmethod
+    def create(cls, name: str | None) -> Self:
+        tag_node = cmds.createNode("network", name=name if name is not None else "weight_split_tag")
+        cmds.addAttr(
+            tag_node,
+            longName="source_influence",
+            attributeType="message",
+        )
+        cmds.addAttr(
+            tag_node,
+            longName="degree",
+            attributeType="long",
+        )
+        cmds.addAttr(
+            tag_node,
+            longName="periodic",
+            attributeType="bool",
+        )
+        cmds.addAttr(tag_node, longName="split_influences", attributeType="message", multi=True)
+
+        return cls(tag_node)
+
+    @classmethod
+    def from_node(cls, node: str) -> Self | None:
+        if not cmds.objExists(node):
+            return None
+        return cls(node)
+
+    def get_weight_split_data(self) -> WeightSplitData:
+        source_influence = self.source_influence.source_node
+        if source_influence is None:
+            raise RuntimeError(
+                f"{self.source_influence} doesn't have a source node, maybe it was disconnected at some point?"
+            )
+        degree = self.degree.value
+        periodic = self.periodic.value
+        split_influences = [
+            split_influence_attr.source_node
+            for split_influence_attr in self.split_influences
+            if split_influence_attr.source_node is not None
+        ]
+
+        return WeightSplitData(
+            source_influence=source_influence,
+            split_influences=split_influences,
+            degree=degree,
+            periodic=periodic,
+        )
+
+
 def tag_for_weight_split(
     influence: str, split_influences: Sequence[str], degree: int = 2, periodic: bool = False
-) -> None:
-    """Tag an influence joint with metadata attributes describing how its weights should be split.
-
-    Adds a compound ``weight_split`` attribute to the influence node containing the spline
-    degree, periodicity flag, and message connections to each split influence.  This data
-    can later be read back with `get_weight_split_data` to drive an automated
-    weight-split operation.
+) -> WeightSplitTag:
+    """Create a tag connected to an influence joint with metadata attributes describing how its weights should be split.
+    This data can later be read back with `get_weight_split_data` to drive an automated weight-split operation.
 
     Args:
-        influence: The influence joint node that will receive the ``weight_split`` attribute.
+        influence: The influence joint node that will be tagged.
         split_influences: An ordered sequence of joint/transform names that the influence's
             weights should be redistributed across.
         degree: Degree of the spline used for spatial weight interpolation. Defaults to 2.
         periodic: If ``True``, the generated spline curve will be periodic. Defaults to ``False``.
     """
-    num_split_influences = len(split_influences)
-    data_node = influence
-    weight_split_attr_name = "weight_split"
     cmds.addAttr(
-        data_node, longName=weight_split_attr_name, attributeType="compound", numberOfChildren=3
+        influence,
+        longName="weight_split_tag",
+        attributeType="message",
     )
-    cmds.addAttr(
-        data_node,
-        longName="degree",
-        attributeType="long",
-        defaultValue=degree,
-        parent=weight_split_attr_name,
-    )
-    cmds.addAttr(
-        data_node,
-        longName="periodic",
-        attributeType="bool",
-        defaultValue=periodic,
-        parent=weight_split_attr_name,
-    )
-    # Split Influences
-    split_influences_attr_name = "split_influences"
-    cmds.addAttr(
-        data_node,
-        longName=split_influences_attr_name,
-        attributeType="compound",
-        numberOfChildren=num_split_influences,
-        parent=weight_split_attr_name,
-    )
-    split_influences_attr = f"{data_node}.{weight_split_attr_name}.{split_influences_attr_name}"
-    split_influence_attrs: dict[str, str] = {}
+    tag_node = WeightSplitTag.create(name=f"{influence}_weight_split_tag")
+    tag_node.source_influence.connect_from(f"{influence}.weight_split_tag")
+    tag_node.degree.set(degree)
+    tag_node.periodic.set(periodic)
     for i, split_influence in enumerate(split_influences):
-        influence_attr_name = f"influence{i}"
-        cmds.addAttr(
-            data_node,
-            longName=influence_attr_name,
-            attributeType="message",
-            parent=split_influences_attr_name,
-        )
-        split_influence_attrs[f"{split_influence}.message"] = (
-            f"{split_influences_attr}.{influence_attr_name}"
-        )
-    for split_influence_message_attr, split_influence_attr in split_influence_attrs.items():
-        cmds.connectAttr(split_influence_message_attr, split_influence_attr)
+        tag_node.split_influences[i].connect_from(f"{split_influence}.message")
+    return tag_node
 
 
-def get_weight_split_data(data_node: str) -> SplitData | None:
-    """Read weight-split metadata previously stored on a node by `tag_for_weight_split`.
-
-    Inspects the ``weight_split`` compound attribute on *data_node* and extracts the
-    spline degree, periodicity flag, and the list of connected split influences.
-
-    Args:
-        data_node: The Maya node to query for weight-split metadata.
-
-    Returns:
-        A `SplitData` instance containing the stored parameters and connected
-        split influences, or ``None`` if the node does not carry the ``weight_split``
-        attribute.
-    """
-    split_data_attr_name = "weight_split"
-    split_data_attr = f"{data_node}.{split_data_attr_name}"
-    if not cmds.objExists(split_data_attr):
+def get_weight_split_tag(influence: str) -> WeightSplitTag | None:
+    if not cmds.objExists(f"{influence}.weight_split_tag"):
         return None
-    degree: int = int(cmds.getAttr(f"{split_data_attr}.degree"))
-    periodic: bool = bool(cmds.getAttr(f"{split_data_attr}.periodic"))
-    influence_attrs: list[str] = cmds.attributeQuery(  # type: ignore
-        f"{split_data_attr_name}.split_influences",
-        node=data_node,
-        listChildren=True,
-    )
-    influences: list[str] = []
-    for influence_attr in influence_attrs:
-        connection: list[str] = cmds.listConnections(
-            f"{split_data_attr}.split_influences.{influence_attr}", source=True, destination=False
-        )
-        connected_node = connection[0]
-        influences.append(connected_node)
-    return SplitData(
-        source_influence=data_node, degree=degree, periodic=periodic, split_influences=influences
-    )
+    sources = cmds.listConnections(source=True, destination=False)
+    if not sources:
+        return None
+    source = sources[0]
+    return WeightSplitTag.from_node(source)

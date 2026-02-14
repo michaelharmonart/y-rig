@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Any, Generic, Iterator, Sequence, TypeAlias, TypeVar, cast
+from typing import Any, Generic, Iterable, Iterator, Sequence, TypeAlias, TypeVar, cast
 
 import maya.cmds as cmds
 from maya.api.OpenMaya import MMatrix
@@ -241,7 +241,7 @@ class QuatAttribute(Attribute):
         self.w = ScalarAttribute(f"{attr_path}W")
 
 
-class IndexableAttribute(Attribute, Generic[AttributeType]):
+class IndexableAttribute(Attribute, Generic[AttributeType], Iterable[AttributeType]):
     """A Maya attribute that supports indexing with bracket notation."""
 
     @abstractmethod
@@ -330,3 +330,35 @@ class AimMatrixAxisAttribute(Attribute):
         self.mode = EnumAttribute(f"{attr_path}.{axis_name}Mode")
         self.target_vector = Vector3Attribute(f"{attr_path}.{axis_name}TargetVector")
         self.target_matrix = MatrixAttribute(f"{attr_path}.{axis_name}TargetMatrix")
+
+
+class MessageAttribute(Attribute):
+    """A Maya message attribute."""
+
+    def __init__(self, attr_path: str):
+        super().__init__(attr_path)
+
+    def connected_nodes(
+        self,
+        source: bool = True,
+        destination: bool = False,
+    ) -> list[str]:
+        return cmds.listConnections(self.attr_path, source=source, destination=destination)
+
+    @property
+    def source_node(self) -> str | None:
+        source_nodes = self.connected_nodes(source=True, destination=False)
+        source_node = source_nodes[0] if source_nodes else None
+        return source_node
+
+    @property
+    def destination_nodes(self) -> list[str]:
+        return self.connected_nodes(source=False, destination=True)
+
+
+class IndexableMessageAttribute(IndexableAttribute[MessageAttribute]):
+    """A Maya attribute that supports indexing elements in a wtAddMatrix with bracket notation."""
+
+    def __getitem__(self, index: int) -> MessageAttribute:
+        """Return the indexed attribute path: attr.input[0], attr.input[1], etc."""
+        return MessageAttribute(attr_path=f"{self.attr_path}[{index}]")
