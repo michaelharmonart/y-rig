@@ -77,7 +77,7 @@
                <number>100</number>
               </property>
               <property name="orientation">
-               <enum>Qt::Horizontal</enum>
+               <enum>Qt::Orientation::Horizontal</enum>
               </property>
              </widget>
             </item>
@@ -120,16 +120,16 @@
              <bool>true</bool>
             </property>
             <property name="dragDropMode">
-             <enum>QAbstractItemView::InternalMove</enum>
+             <enum>QAbstractItemView::DragDropMode::InternalMove</enum>
             </property>
             <property name="defaultDropAction">
-             <enum>Qt::MoveAction</enum>
+             <enum>Qt::DropAction::MoveAction</enum>
             </property>
             <property name="alternatingRowColors">
              <bool>true</bool>
             </property>
             <property name="selectionMode">
-             <enum>QAbstractItemView::ExtendedSelection</enum>
+             <enum>QAbstractItemView::SelectionMode::ExtendedSelection</enum>
             </property>
             <property name="selectionRectVisible">
              <bool>false</bool>
@@ -157,7 +157,7 @@
           <item>
            <spacer name="ikRefArray_verticalSpacer">
             <property name="orientation">
-             <enum>Qt::Vertical</enum>
+             <enum>Qt::Orientation::Vertical</enum>
             </property>
             <property name="sizeHint" stdset="0">
              <size>
