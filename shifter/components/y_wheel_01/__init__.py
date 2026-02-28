@@ -61,9 +61,9 @@ class Component(component.Main):
 
         self.steer_att = self.addAnimParam("steer", "Steer", "double", 0)
 
-    # =====================================================
-    # OPERATORS
-    # =====================================================
+        # =====================================================
+        # OPERATORS
+        # =====================================================
         def addOperators(self):
             pm.connectAttr(self.spin_att, self.spin_grp.rotateX)
             pm.connectAttr(self.steer_att, self.steer_grp.rotateY)
