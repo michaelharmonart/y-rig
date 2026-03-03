@@ -22,20 +22,22 @@ class Component(component.Main):
     # OBJECTS
     # =====================================================
     def addObjects(self):
+        # Get the position of the guide locators and built the component objects based on that
         t = self.guide.tra["root"]
 
-        # Base group
-        self.wheel_npo = primitive.addTransform(self.root, self.getName("wheel_npo"), t)
+        # --- Hierarchy Setup (Transforms) ---
+        # Ball pivot (Main parent for both steer and wheel)
+        self.ball_npo = primitive.addTransform(self.root, self.getName("ball_npo"), t)
 
-        # Steering group
-        self.steer_grp = primitive.addTransform(self.wheel_npo, self.getName("steer_grp"), t)
+        # Steering offset pivot (Child of ball)
+        self.steer_npo = primitive.addTransform(self.ball_npo, self.getName("steer_npo"), t)
 
-        # Spin group
-        self.spin_grp = primitive.addTransform(self.steer_grp, self.getName("spin_grp"), t)
+        # Wheel spin pivot (Child of ball, NOT child of steer)
+        self.wheel_npo = primitive.addTransform(self.ball_npo, self.getName("wheel_npo"), t)
 
         # Control
         self.wheel_ctl = self.addCtl(
-            self.spin_grp,
+            self.wheel_npo,
             "wheel_ctl",
             t,
             self.color_fk,
@@ -44,35 +46,39 @@ class Component(component.Main):
             tp=self.parentCtlTag,
         )
 
-        # Deform locator
+        # Deform locator (final output for binding)
         self.wheel_loc = primitive.addTransform(
             self.wheel_ctl,
             self.getName("wheel_loc"),
             t,
         )
 
-        self.jnt_pos.append([self.wheel_loc, 0, None, False])
+        self.jnt_pos.append([self.ball_npo, "ball", None, False])
+        self.jnt_pos.append([self.steer_npo, "steer", "ball", False])
+        self.jnt_pos.append([self.wheel_loc, "wheel", "ball", False])
 
     # =====================================================
     # ATTRIBUTES
     # =====================================================
     def addAttributes(self):
         self.spin_att = self.addAnimParam("spin", "Spin", "double", 0)
-
         self.steer_att = self.addAnimParam("steer", "Steer", "double", 0)
 
-        # =====================================================
-        # OPERATORS
-        # =====================================================
-        def addOperators(self):
-            pm.connectAttr(self.spin_att, self.spin_grp.rotateX)
-            pm.connectAttr(self.steer_att, self.steer_grp.rotateY)
+    # =====================================================
+    # OPERATORS
+    # =====================================================
+    def addOperators(self):
+        # Connect animation attributes to transforms
+        pm.connectAttr(self.spin_att, self.wheel_npo.rotateX)
+        pm.connectAttr(self.steer_att, self.ball_npo.rotateY)
 
-        # =====================================================
-        # CONNECTOR
-        # =====================================================
-
+    # =====================================================
+    # CONNECTOR
+    # =====================================================
     def setRelation(self):
-        self.relatives["root"] = self.wheel_loc
-        self.jointRelatives["root"] = 0
+        self.relatives["root"] = self.ball_npo
         self.controlRelatives["root"] = self.wheel_ctl
+
+        self.jointRelatives["ball"] = 0
+        self.jointRelatives["steer"] = 1
+        self.jointRelatives["wheel"] = 2
