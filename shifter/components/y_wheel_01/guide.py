@@ -44,7 +44,6 @@ class Guide(guide.ComponentGuide):
         self.save_transform = ["root", "ball", "steer", "wheel", "width"]
 
     def addObjects(self):
-
         self.root = self.addRoot()
         vTemp = transform.getOffsetPosition(self.root, [53.130, 35, 121.403])
         self.ball = self.addLoc("ball", self.root, vTemp)

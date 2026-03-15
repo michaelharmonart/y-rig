@@ -6,7 +6,7 @@ import maya.cmds as cmds
 
 from mgear.shifter import component
 from mgear.core import primitive
-from mgear.core import transform
+# from mgear.core import transform
 
 
 ##########################################################
@@ -147,6 +147,8 @@ class Component(component.Main):
         for cv in cv_list:
             pm.connectAttr(self.radius_md.outputX, cv + ".xValue")
             pm.connectAttr(self.radius_md.outputX, cv + ".zValue")
+
+        # comment here
 
     # =====================================================
     # CONNECTOR
