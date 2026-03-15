@@ -8,6 +8,8 @@ from mgear.vendor.Qt import QtWidgets, QtCore  # type: ignore
 
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin  # type: ignore
 from maya.app.general.mayaMixin import MayaQDockWidget  # type: ignore
+from mgear.core import transform
+
 
 from . import settingsUI as sui
 
@@ -39,21 +41,21 @@ class Guide(guide.ComponentGuide):
     version = VERSION
 
     def postInit(self):
-        """Initialize the position for the guide"""
-
-        self.save_transform = ["root", "#_loc"]
-        self.save_blade = ["blade"]
-        self.addMinMax("#_loc", 1, -1)
+        self.save_transform = ["root", "ball", "steer", "wheel", "width"]
 
     def addObjects(self):
-        """Add the Guide Root, blade and locators"""
 
         self.root = self.addRoot()
-        self.locs = self.addLocMulti("#_loc", self.root)
-        self.blade = self.addBlade("blade", self.root, self.locs[0])
+        vTemp = transform.getOffsetPosition(self.root, [53.130, 35, 121.403])
+        self.ball = self.addLoc("ball", self.root, vTemp)
+        vTemp = transform.getOffsetPosition(self.root, [53.130, 35, 94.763])
+        self.steer = self.addLoc("steer", self.root, vTemp)
+        vTemp = transform.getOffsetPosition(self.root, [88.130, 35, 121.403])
+        self.wheel = self.addLoc("wheel", self.root, vTemp)
+        vTemp = transform.getOffsetPosition(self.root, [20, 35, 121.403])
+        self.width = self.addLoc("width", self.root, vTemp)
 
-        centers = [self.root]
-        centers.extend(self.locs)
+        centers = [self.root, self.ball, self.steer, self.wheel]
         self.dispcrv = self.addDispCurve("crv", centers)
 
     def addParameters(self):
