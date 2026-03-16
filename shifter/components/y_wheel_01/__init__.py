@@ -2,7 +2,7 @@
 """Component Chain 01 module"""
 
 import mgear.pymaya as pm
-import maya.cmds as cmds
+# import maya.cmds as cmds
 
 from mgear.shifter import component
 from mgear.core import primitive
@@ -96,11 +96,13 @@ class Component(component.Main):
     # =====================================================
 
     def addAttributes(self):
-        self.spin_att = self.addSetupParam("spin", "Spin", "double", 0)
+        # self.spin_att = self.addSetupParam("spin", "Spin", "double", 0)
 
-        self.steer_att = self.addSetupParam("steer", "Steer", "double", 0)
+        # self.steer_att = self.addSetupParam("steer", "Steer", "double", 0)
 
-        self.wheel_radius = self.addSetupParam("wheel_radius", "Wheel Radius", "double", 1)
+        self.wheelRadius = self.addSetupParam("wheelRadius", "Wheel Radius", "double", 1)
+
+        self.wheelDrive = self.addSetupParam("wheelDrive", "Wheel Drive", "double", 0)
 
         """
         ex) michaels arm module
@@ -122,31 +124,62 @@ class Component(component.Main):
 
         # wheel radius stuff
         pm.parentConstraint(self.wheel_npo, self.frontWheel_display_ctl, maintainOffset=True)
-        # --- Wheel Radius Display Control ---
-
-        shape = self.frontWheel_display_ctl.getShape()
 
         # get the CVs of the circle
         # --- Wheel Radius Display Control ---
 
-        shape = self.frontWheel_display_ctl.getShape()
-
-        # get the CVs using cmds
-        cv_list = cmds.ls(shape.name() + ".cv[*]", fl=True)
-
-        # create multiplyDivide node
         self.radius_md = pm.createNode("multiplyDivide", n=self.getName("wheelRadius_md"))
 
-        # connect wheel radius
-        pm.connectAttr(self.wheel_radius, self.radius_md.input1X)
+        pm.connectAttr(self.wheelRadius, self.radius_md.input1X)
 
-        # default circle size
-        pm.setAttr(self.radius_md.input2X, 0.3 * self.size)
+        pm.setAttr(self.radius_md.input2X, 0.05)
 
-        # connect to CV positions
-        for cv in cv_list:
-            pm.connectAttr(self.radius_md.outputX, cv + ".xValue")
-            pm.connectAttr(self.radius_md.outputX, cv + ".zValue")
+        pm.connectAttr(self.radius_md.outputX, self.frontWheel_display_ctl.scaleX)
+        pm.connectAttr(self.radius_md.outputX, self.frontWheel_display_ctl.scaleY)
+        pm.connectAttr(self.radius_md.outputX, self.frontWheel_display_ctl.scaleZ)
+
+        expr = """
+        global vector $vPos = << 0, 0, 0 >>;
+        float $distance = 0.0;
+        int $direction = 1;
+        vector $vPosChange = `getAttr drive_ctrl.translate`;
+        float $cx = $vPosChange.x - $vPos.x;
+        float $cy = $vPosChange.y - $vPos.y;
+        float $cz = $vPosChange.z - $vPos.z;
+        $distance = sqrt( `pow $cx 2` + `pow $cy 2` + `pow $cz 2` );
+        float $angle = drive_ctrl.rotateY%360;
+
+        if ( ( $vPosChange.x == $vPos.x ) && ( $vPosChange.y == $vPos.y ) && ( $vPosChange.z == $vPos.z ) ){}
+        else {
+            if ( $angle == 0 ){ 
+                if ( $vPosChange.z > $vPos.z ) $direction = 1;
+                else $direction=-1;}
+            if ( ( $angle > 0 && $angle <= 90 ) || ( $angle <- 180 && $angle >= -270 ) ){ 
+                if ( $vPosChange.x > $vPos.x ) $direction = 1 * $direction;
+                else $direction = -1 * $direction; }
+            if ( ( $angle > 90 && $angle <= 180 ) || ( $angle < -90 && $angle >= -180 ) ){
+                if ( $vPosChange.z > $vPos.z ) $direction = -1 * $direction;
+                else $direction = 1 * $direction; }
+            if ( ( $angle > 180 && $angle <= 270 ) || ( $angle < 0 && $angle >= -90 ) ){
+                if ( $vPosChange.x > $vPos.x ) $direction = -1 * $direction;
+                else $direction = 1 * $direction; }
+            if ( ( $angle > 270 && $angle <= 360 ) || ( $angle < -270 && $angle >= -360 ) ) {
+                if ( $vPosChange.z > $vPos.z ) $direction = 1 * $direction;
+                else $direction = -1 * $direction; }
+
+            drive_ctrl.wheelDrive = drive_ctrl.wheelDrive + ( ( $direction * ( ( $distance / ( 6.283185 * drive_ctrl.wheelRadius ) ) * 360.0 ) ) ); 
+        }
+
+        $vPos = << drive_ctrl.translateX, drive_ctrl.translateY, drive_ctrl.translateZ >>;
+        """
+        driver = self.root.name()
+        expr = expr.replace("drive_ctrl", driver)
+
+        pm.expression(
+            name=self.getName("wheelDrive_expr"),
+            string=expr,
+            alwaysEvaluate=True,
+        )
 
         # comment here
 
