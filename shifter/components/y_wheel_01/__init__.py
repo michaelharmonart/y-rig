@@ -6,7 +6,7 @@ import mgear.pymaya as pm
 
 from mgear.shifter import component
 from mgear.core import primitive
-from mgear.core import transform
+# from mgear.core import transform
 
 
 ##########################################################
