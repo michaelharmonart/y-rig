@@ -6,7 +6,7 @@ import mgear.pymaya as pm
 
 from mgear.shifter import component
 from mgear.core import primitive
-# from mgear.core import transform
+from mgear.core import transform
 
 
 ##########################################################
@@ -64,6 +64,18 @@ class Component(component.Main):
         #     self.root_npo, self.getName("frontWheel_reset"), t_width
         # )
 
+        # self.drive_ctrl = self.addCtl(
+        #     self.frontWheel_reset,
+        #     "drive_ctrl",
+        #     t_wheel,
+        #     self.color_fk,
+        #     "circle",
+        #     w=self.size * 0.4,
+        #     tp=None,
+        # )
+
+        # t_display = transform.setMatrixRotation(t_wheel, [90, 0, 0])
+
         self.frontWheel_display_ctl = self.addCtl(
             self.frontWheel_reset,
             "frontWheel_display_ctl",
@@ -104,6 +116,8 @@ class Component(component.Main):
 
         self.wheelDrive = self.addSetupParam("wheelDrive", "Wheel Drive", "double", 0)
 
+        self.steer_att = self.addSetupParam("steer", "Steer", "double", 0)
+
         """
         ex) michaels arm module
         attribute.addProxyAttribute(self.roll_att, [self.ik_ctl, self.upv_ctl])
@@ -142,44 +156,63 @@ class Component(component.Main):
         global vector $vPos = << 0, 0, 0 >>;
         float $distance = 0.0;
         int $direction = 1;
-        vector $vPosChange = `getAttr drive_ctrl.translate`;
+
+        vector $vPosChange = << drive_ctrl.translateX, drive_ctrl.translateY, drive_ctrl.translateZ >>;
+
         float $cx = $vPosChange.x - $vPos.x;
         float $cy = $vPosChange.y - $vPos.y;
         float $cz = $vPosChange.z - $vPos.z;
-        $distance = sqrt( `pow $cx 2` + `pow $cy 2` + `pow $cz 2` );
-        float $angle = drive_ctrl.rotateY%360;
 
-        if ( ( $vPosChange.x == $vPos.x ) && ( $vPosChange.y == $vPos.y ) && ( $vPosChange.z == $vPos.z ) ){}
+        $distance = sqrt( ($cx * $cx) + ($cy * $cy) + ($cz * $cz) );
+
+        float $angle = drive_ctrl.rotateY % 360;
+
+        if ( ($vPosChange.x == $vPos.x) && ($vPosChange.y == $vPos.y) && ($vPosChange.z == $vPos.z) ) {}
         else {
-            if ( $angle == 0 ){ 
-                if ( $vPosChange.z > $vPos.z ) $direction = 1;
-                else $direction=-1;}
-            if ( ( $angle > 0 && $angle <= 90 ) || ( $angle <- 180 && $angle >= -270 ) ){ 
-                if ( $vPosChange.x > $vPos.x ) $direction = 1 * $direction;
-                else $direction = -1 * $direction; }
-            if ( ( $angle > 90 && $angle <= 180 ) || ( $angle < -90 && $angle >= -180 ) ){
-                if ( $vPosChange.z > $vPos.z ) $direction = -1 * $direction;
-                else $direction = 1 * $direction; }
-            if ( ( $angle > 180 && $angle <= 270 ) || ( $angle < 0 && $angle >= -90 ) ){
-                if ( $vPosChange.x > $vPos.x ) $direction = -1 * $direction;
-                else $direction = 1 * $direction; }
-            if ( ( $angle > 270 && $angle <= 360 ) || ( $angle < -270 && $angle >= -360 ) ) {
-                if ( $vPosChange.z > $vPos.z ) $direction = 1 * $direction;
-                else $direction = -1 * $direction; }
+            if ($angle == 0){
+                if ($vPosChange.z > $vPos.z) $direction = 1;
+                else $direction = -1;
+            }
 
-            drive_ctrl.wheelDrive = drive_ctrl.wheelDrive + ( ( $direction * ( ( $distance / ( 6.283185 * drive_ctrl.wheelRadius ) ) * 360.0 ) ) ); 
+            if ( ($angle > 0 && $angle <= 90) || ($angle < -180 && $angle >= -270) ){
+                if ($vPosChange.x > $vPos.x) $direction *= 1;
+                else $direction *= -1;
+            }
+
+            if ( ($angle > 90 && $angle <= 180) || ($angle < -90 && $angle >= -180) ){
+                if ($vPosChange.z > $vPos.z) $direction *= -1;
+                else $direction *= 1;
+            }
+
+            if ( ($angle > 180 && $angle <= 270) || ($angle < 0 && $angle >= -90) ){
+                if ($vPosChange.x > $vPos.x) $direction *= -1;
+                else $direction *= 1;
+            }
+
+            if ( ($angle > 270 && $angle <= 360) || ($angle < -270 && $angle >= -360) ){
+                if ($vPosChange.z > $vPos.z) $direction *= 1;
+                else $direction *= -1;
+            }
+
+            drive_ctrl.wheelDrive = drive_ctrl.wheelDrive +
+                ( $direction * ( ($distance / (6.283185 * drive_ctrl.wheelRadius)) * 360.0 ) );
         }
 
         $vPos = << drive_ctrl.translateX, drive_ctrl.translateY, drive_ctrl.translateZ >>;
         """
-        driver = self.root.name()
+        driver = self.root.longName()
         expr = expr.replace("drive_ctrl", driver)
+
+        # driver = self.drive_ctrl.longName()
+        # expr = expr.replace("drive_ctrl", driver)
 
         pm.expression(
             name=self.getName("wheelDrive_expr"),
             string=expr,
             alwaysEvaluate=True,
         )
+
+        pm.connectAttr(self.wheelDrive, self.wheel_npo.rotateX)
 
         # comment here
 
