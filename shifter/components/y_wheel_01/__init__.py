@@ -110,13 +110,18 @@ class Component(component.Main):
     def addAttributes(self):
         # self.spin_att = self.addSetupParam("spin", "Spin", "double", 0)
 
-        # self.steer_att = self.addSetupParam("steer", "Steer", "double", 0)
 
         self.wheelRadius = self.addSetupParam("wheelRadius", "Wheel Radius", "double", 1)
 
         self.wheelDrive = self.addSetupParam("wheelDrive", "Wheel Drive", "double", 0)
 
         self.steer_att = self.addSetupParam("steer", "Steer", "double", 0)
+
+        self.frontWheel_spin_att = self.addSetupParam(
+            "frontWheelSpin", "Front Wheel Spin", "double", 0
+        )
+
+        self.steerDrive_att = self.addSetupParam("steerDrive", "Steer Drive", "double", 0)
 
         """
         ex) michaels arm module
@@ -212,9 +217,38 @@ class Component(component.Main):
             alwaysEvaluate=True,
         )
 
-        pm.connectAttr(self.wheelDrive, self.wheel_npo.rotateX)
+        # pm.connectAttr(self.wheelDrive, self.wheel_npo.rotateX)
 
-        # comment here
+        # add in the front wheel spin attribute and connect it to the wheel spin pivot
+        pm.createNode("plusMinusAverage", n=self.getName("frontWheelSpin_PMA"))
+        pm.connectAttr(self.frontWheel_spin_att, self.getName("frontWheelSpin_PMA") + ".input1D[0]")
+        pm.connectAttr(self.wheelDrive, self.getName("frontWheelSpin_PMA") + ".input1D[1]")
+        # pm.connectAttr(self.getName("frontWheelSpin_PMA") + ".output1D", self.wheel_npo.rotateX)
+
+        # connect up front wheel spin up to another PMA so that the right and left wheel spin can be computed separately.
+        # make this work when mirroring the component as well, so that the left and right wheel spin can be computed separately.
+        # make right side plus minus average set to minus!!!!!!!!
+        side = "L"
+        if side == "L":
+            side = "L"
+        else:
+            side = "R"
+
+        self.frontWheelSpin_side_PMA = pm.createNode(
+            "plusMinusAverage", n=self.getName("frontWheelSpin_" + side + "_PMA")
+        )
+        pm.connectAttr(
+            self.getName("frontWheelSpin_PMA") + ".output1D",
+            self.getName("frontWheelSpin_" + side + "_PMA") + ".input1D[0]",
+        )
+        pm.connectAttr(
+            self.steerDrive_att, self.getName("frontWheelSpin_" + side + "_PMA") + ".input1D[1]"
+        )
+        pm.connectAttr(
+            self.getName("frontWheelSpin_" + side + "_PMA") + ".output1D", self.wheel_npo.rotateX
+        )
+
+        # make steer control move the wheel with math
 
     # =====================================================
     # CONNECTOR
