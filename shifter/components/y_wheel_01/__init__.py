@@ -112,7 +112,7 @@ class Component(component.Main):
     def addAttributes(self):
         # self.spin_att = self.addSetupParam("spin", "Spin", "double", 0)
 
-        self.wheelRadius = self.addSetupParam("wheelRadius", "Wheel Radius", "double", 1)
+        self.wheelRadius = self.addSetupParam("wheelRadius", "Wheel Radius", "double", 35)
 
         self.wheelDrive = self.addSetupParam("wheelDrive", "Wheel Drive", "double", 0)
 
@@ -123,7 +123,7 @@ class Component(component.Main):
         )
 
         self.steerDrive_att = self.addSetupParam("steerDrive", "Steer Drive", "double", 0)
-        self.SteerRadius = self.addSetupParam("steerRadius", "Steer Radius", "double", 1)
+        self.SteerRadius = self.addSetupParam("steerRadius", "Steer Radius", "double", 35)
 
         """
         ex) michaels arm module
@@ -309,6 +309,11 @@ class Component(component.Main):
         )
         # connect steerDriveDistance to steer radius attribute
         pm.connectAttr(self.steerDriveDistance_MD.outputX, self.steerDrive_att)
+
+        # connect up wheels controls to steer radius.
+        # connect it up to steerDistance_and_invert MD so that it can be added in with the steer angle to get the final steer drive value.
+        # BUT I NEED TO HAVE THE RIGHT SIDE ONLY HOOK UP TO STEERDISTANCE_AND_INVERT MD INTO THE INPUTY AND THEN THE OUTPUTY GOES INTO THE WHEEL JNT
+        pm.connectAttr(self.SteerRadius, self.wheel_npo.translateX)
 
     # =====================================================
     # CONNECTOR
