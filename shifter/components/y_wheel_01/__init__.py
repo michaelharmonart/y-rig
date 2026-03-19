@@ -3,6 +3,7 @@
 
 import mgear.pymaya as pm
 # import maya.cmds as cmds
+import math
 
 from mgear.shifter import component
 from mgear.core import primitive
@@ -121,6 +122,7 @@ class Component(component.Main):
         )
 
         self.steerDrive_att = self.addSetupParam("steerDrive", "Steer Drive", "double", 0)
+        self.SteerRadius = self.addSetupParam("steerRadius", "Steer Radius", "double", 1)
 
         """
         ex) michaels arm module
@@ -248,6 +250,64 @@ class Component(component.Main):
         )
 
         # make steer control move the wheel with math
+        # create a lot of multiply divide nodes to compute the steer drive and then connect that up to the front wheel spin PMA so that it can be added in with the wheel drive to get the final front wheel spin value.
+        self.steerCircumferenceCalc_md = pm.createNode(
+            "multiplyDivide", n=self.getName("steerCircumferenceCalc_md")
+        )
+        pm.setAttr(self.steerCircumferenceCalc_md.operation, 1)
+        pm.setAttr(self.steerCircumferenceCalc_md.input2X, 2 * math.pi)
+        pm.connectAttr(self.SteerRadius, self.steerCircumferenceCalc_md.input1X)
+
+        self.steerCircumferenceFraction_MD = pm.createNode(
+            "multiplyDivide", n=self.getName("steerCircumferenceFraction_md")
+        )
+        pm.setAttr(self.steerCircumferenceFraction_MD.operation, 2)
+        pm.setAttr(self.steerCircumferenceFraction_MD.input2X, 360)
+        pm.connectAttr(self.steer_att, self.steerCircumferenceFraction_MD.input1X)
+
+        self.steerDistance_and_invert_MD = pm.createNode(
+            "multiplyDivide", n=self.getName("steerDistance_and_invert_md")
+        )
+        pm.setAttr(self.steerDistance_and_invert_MD.operation, 1)
+        pm.setAttr(self.steerDistance_and_invert_MD.input2Y, -1)
+        pm.setAttr(self.steerDistance_and_invert_MD.input2Z, -1)
+        pm.connectAttr(
+            self.steerCircumferenceFraction_MD.outputX, self.steerDistance_and_invert_MD.input1X
+        )
+        # get the distance the wheel travels based on the steer angle and the wheel radius and then invert that value so that it can be added in with the wheel drive to get the final front wheel spin value.
+        pm.connectAttr(
+            self.steerCircumferenceCalc_md.outputX, self.steerDistance_and_invert_MD.input2X
+        )
+
+        self.wheelCircmferenceCalc_md = pm.createNode(
+            "multiplyDivide", n=self.getName("wheelCircumferenceCalc_md")
+        )
+        pm.setAttr(self.wheelCircmferenceCalc_md.operation, 1)
+        pm.setAttr(self.wheelCircmferenceCalc_md.input2X, 2 * math.pi)
+        pm.connectAttr(self.wheelRadius, self.wheelCircmferenceCalc_md.input1X)
+
+        self.steerDriveCircumferenceFraction_MD = pm.createNode(
+            "multiplyDivide", n=self.getName("steerDriveCircumferenceFraction_md")
+        )
+        pm.setAttr(self.steerDriveCircumferenceFraction_MD.operation, 2)
+        pm.connectAttr(
+            self.steerDistance_and_invert_MD.outputX,
+            self.steerDriveCircumferenceFraction_MD.input1X,
+        )
+        pm.connectAttr(
+            self.wheelCircmferenceCalc_md.outputX, self.steerDriveCircumferenceFraction_MD.input2X
+        )
+
+        self.steerDriveDistance_MD = pm.createNode(
+            "multiplyDivide", n=self.getName("steerDriveDistance_md")
+        )
+        pm.setAttr(self.steerDriveDistance_MD.operation, 1)
+        pm.setAttr(self.steerDriveDistance_MD.input2X, -360)
+        pm.connectAttr(
+            self.steerDriveCircumferenceFraction_MD.outputX, self.steerDriveDistance_MD.input1X
+        )
+        # connect steerDriveDistance to steer radius attribute
+        pm.connectAttr(self.steerDriveDistance_MD.outputX, self.steerDrive_att)
 
     # =====================================================
     # CONNECTOR
