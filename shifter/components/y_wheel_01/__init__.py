@@ -110,7 +110,6 @@ class Component(component.Main):
     def addAttributes(self):
         # self.spin_att = self.addSetupParam("spin", "Spin", "double", 0)
 
-
         self.wheelRadius = self.addSetupParam("wheelRadius", "Wheel Radius", "double", 1)
 
         self.wheelDrive = self.addSetupParam("wheelDrive", "Wheel Drive", "double", 0)
