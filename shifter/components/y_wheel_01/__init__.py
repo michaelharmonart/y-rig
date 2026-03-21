@@ -123,8 +123,10 @@ class Component(component.Main):
         )
 
         self.steerDrive_att = self.addSetupParam("steerDrive", "Steer Drive", "double", 0)
+
         self.SteerRadius = self.addSetupParam("steerRadius", "Steer Radius", "double", 35)
 
+        self.deflate_att = self.addSetupParam("deflate", "Deflate", "double", 0)
         """
         ex) michaels arm module
         attribute.addProxyAttribute(self.roll_att, [self.ik_ctl, self.upv_ctl])
@@ -314,6 +316,17 @@ class Component(component.Main):
         # connect it up to steerDistance_and_invert MD so that it can be added in with the steer angle to get the final steer drive value.
         # BUT I NEED TO HAVE THE RIGHT SIDE ONLY HOOK UP TO STEERDISTANCE_AND_INVERT MD INTO THE INPUTY AND THEN THE OUTPUTY GOES INTO THE WHEEL JNT
         pm.connectAttr(self.SteerRadius, self.wheel_npo.translateX)
+
+        # make the deflate attribute connect to the remap node that willl control the y transtale of the chasis and make the lattice go up
+        self.deflate_remap = pm.createNode("remapValue", n=self.getName("deflate_remap"))
+        self.deflate_remap.inputMin.set(0)
+        self.deflate_remap.inputMax.set(-5)
+
+        self.deflate_remap.outputMin.set(0)
+        self.deflate_remap.outputMax.set(15)
+
+        pm.connectAttr(self.deflate_att, self.deflate_remap.inputValue)
+        # CONNECT UP REMAP OUTVALUE TO THE LATTICE GROUP TRANSLATEY ADN CONNECT THE DEFLATE ATTR TO THE CHASIS JOINT (BUT NOT REALLY THE CHASIS JOINT THE SECOND ROOT JOINT)
 
     # =====================================================
     # CONNECTOR
