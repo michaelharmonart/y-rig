@@ -1,13 +1,13 @@
 # type: ignore
 """Component Chain 01 module"""
 
-import mgear.pymaya as pm
+# import mgear.pymaya as pm
 
 # import maya.cmds as cmds
-import math
+# import math
 
 from mgear.shifter import component
-from mgear.core import primitive, attribute, transform
+from mgear.core import primitive, attribute
 # from mgear.core import transform
 
 
@@ -29,9 +29,11 @@ class Component(component.Main):
 
         self.root_npo = primitive.addTransform(self.root, self.getName("root_npo"), t)
 
-        self.chassis_npo = primitive.addTransform(self.root_npo, self.getName("chassis_npo"), t_chassis)
+        self.chassis_npo = primitive.addTransform(
+            self.root_npo, self.getName("chassis_npo"), t_chassis
+        )
 
-        #add controls
+        # add controls
         self.drive_ctl = self.addCtl(
             self.chassis_npo,
             "drive_ctl",
@@ -44,7 +46,7 @@ class Component(component.Main):
             tp=None,
         )
 
-        #add joints
+        # add joints
         self.jnt_pos.append([self.root_npo, "root", None, False])
         self.jnt_pos.append([self.chassis_npo, "chassis", "root", False])
 
@@ -52,12 +54,8 @@ class Component(component.Main):
     # ATTRIBUTES
     # =====================================================
 
-
     def addAttributes(self):
-
-        self.steer_att = attribute.addAttribute(
-            self.drive_ctl, "steer", "double", 0
-        )
+        self.steer_att = attribute.addAttribute(self.drive_ctl, "steer", "double", 0)
 
         self.frontWheel_spin_att = attribute.addAttribute(
             self.drive_ctl, "frontWheelSpin", "double", 0
@@ -67,21 +65,13 @@ class Component(component.Main):
             self.drive_ctl, "rearWheelSpin", "double", 0
         )
 
-        self.wheelDrive_att = attribute.addAttribute(
-            self.drive_ctl, "wheelDrive", "double", 0
-        )
+        self.wheelDrive_att = attribute.addAttribute(self.drive_ctl, "wheelDrive", "double", 0)
 
-        self.steerDrive_att = attribute.addAttribute(
-            self.drive_ctl, "steerDrive", "double", 0
-        )
+        self.steerDrive_att = attribute.addAttribute(self.drive_ctl, "steerDrive", "double", 0)
 
-        self.wheelRadius_att = attribute.addAttribute(
-            self.drive_ctl, "wheelRadius", "double", 35
-        )
+        self.wheelRadius_att = attribute.addAttribute(self.drive_ctl, "wheelRadius", "double", 35)
 
-        self.steerRadius_att = attribute.addAttribute(
-            self.drive_ctl, "steerRadius", "double", 35
-        )
+        self.steerRadius_att = attribute.addAttribute(self.drive_ctl, "steerRadius", "double", 35)
 
     # =====================================================
     # OPERATORS
@@ -103,7 +93,6 @@ class Component(component.Main):
         #             pm.connectAttr(self.frontWheel_spin_att, comp.frontWheel_spin_att)
         #         else:
         #             pm.connectAttr(self.rearWheel_spin_att, comp.frontWheel_spin_att)
-        
 
     # =====================================================
     # CONNECTOR
