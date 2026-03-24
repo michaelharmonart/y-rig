@@ -112,9 +112,9 @@ class Component(component.Main):
     def addAttributes(self):
         # self.spin_att = self.addSetupParam("spin", "Spin", "double", 0)
 
-        self.wheelRadius = self.addSetupParam("wheelRadius", "Wheel Radius", "double", 35)
+        self.wheelRadius_att = self.addSetupParam("wheelRadius", "Wheel Radius", "double", 35)
 
-        self.wheelDrive = self.addSetupParam("wheelDrive", "Wheel Drive", "double", 0)
+        self.wheelDrive_att = self.addSetupParam("wheelDrive", "Wheel Drive", "double", 0)
 
         self.steer_att = self.addSetupParam("steer", "Steer", "double", 0)
 
@@ -124,7 +124,7 @@ class Component(component.Main):
 
         self.steerDrive_att = self.addSetupParam("steerDrive", "Steer Drive", "double", 0)
 
-        self.SteerRadius = self.addSetupParam("steerRadius", "Steer Radius", "double", 35)
+        self.steerRadius_att = self.addSetupParam("steerRadius", "Steer Radius", "double", 35)
 
         self.deflate_att = self.addSetupParam("deflate", "Deflate", "double", 0)
         """
@@ -153,7 +153,7 @@ class Component(component.Main):
 
         self.radius_md = pm.createNode("multiplyDivide", n=self.getName("wheelRadius_md"))
 
-        pm.connectAttr(self.wheelRadius, self.radius_md.input1X)
+        pm.connectAttr(self.wheelRadius_att, self.radius_md.input1X)
 
         pm.setAttr(self.radius_md.input2X, 0.05)
 
@@ -226,7 +226,7 @@ class Component(component.Main):
         # add in the front wheel spin attribute and connect it to the wheel spin pivot
         pm.createNode("plusMinusAverage", n=self.getName("frontWheelSpin_PMA"))
         pm.connectAttr(self.frontWheel_spin_att, self.getName("frontWheelSpin_PMA") + ".input1D[0]")
-        pm.connectAttr(self.wheelDrive, self.getName("frontWheelSpin_PMA") + ".input1D[1]")
+        pm.connectAttr(self.wheelDrive_att, self.getName("frontWheelSpin_PMA") + ".input1D[1]")
         # pm.connectAttr(self.getName("frontWheelSpin_PMA") + ".output1D", self.wheel_npo.rotateX)
 
         # connect up front wheel spin up to another PMA so that the right and left wheel spin can be computed separately.
@@ -259,7 +259,7 @@ class Component(component.Main):
         )
         pm.setAttr(self.steerCircumferenceCalc_md.operation, 1)
         pm.setAttr(self.steerCircumferenceCalc_md.input2X, 2 * math.pi)
-        pm.connectAttr(self.SteerRadius, self.steerCircumferenceCalc_md.input1X)
+        pm.connectAttr(self.steerRadius_att, self.steerCircumferenceCalc_md.input1X)
 
         self.steerCircumferenceFraction_MD = pm.createNode(
             "multiplyDivide", n=self.getName("steerCircumferenceFraction_md")
@@ -287,7 +287,7 @@ class Component(component.Main):
         )
         pm.setAttr(self.wheelCircmferenceCalc_md.operation, 1)
         pm.setAttr(self.wheelCircmferenceCalc_md.input2X, 2 * math.pi)
-        pm.connectAttr(self.wheelRadius, self.wheelCircmferenceCalc_md.input1X)
+        pm.connectAttr(self.wheelRadius_att, self.wheelCircmferenceCalc_md.input1X)
 
         self.steerDriveCircumferenceFraction_MD = pm.createNode(
             "multiplyDivide", n=self.getName("steerDriveCircumferenceFraction_md")
@@ -315,7 +315,7 @@ class Component(component.Main):
         # connect up wheels controls to steer radius.
         # connect it up to steerDistance_and_invert MD so that it can be added in with the steer angle to get the final steer drive value.
         # BUT I NEED TO HAVE THE RIGHT SIDE ONLY HOOK UP TO STEERDISTANCE_AND_INVERT MD INTO THE INPUTY AND THEN THE OUTPUTY GOES INTO THE WHEEL JNT
-        pm.connectAttr(self.SteerRadius, self.wheel_npo.translateX)
+        pm.connectAttr(self.steerRadius_att, self.wheel_npo.translateX)
 
         # make the deflate attribute connect to the remap node that willl control the y transtale of the chasis and make the lattice go up
         self.deflate_remap = pm.createNode("remapValue", n=self.getName("deflate_remap"))
@@ -329,8 +329,47 @@ class Component(component.Main):
         # CONNECT UP REMAP OUTVALUE TO THE LATTICE GROUP TRANSLATEY ADN CONNECT THE DEFLATE ATTR TO THE CHASIS JOINT (BUT NOT REALLY THE CHASIS JOINT THE SECOND ROOT JOINT)
 
     # =====================================================
-    # CONNECTOR
+    # CONNECTION
     # =====================================================
+
+    def addConnection(self):
+        """Overloads the standard connection so wheel can wire parent body attrs."""
+        self.connections["standard"] = self.connect_wheel_to_parent
+
+    def connect_wheel_to_parent(self):
+        print("connecting wheel to parent")
+        self.connect_standard()
+
+        parent = getattr(self, "parent_comp", None)
+        if not parent:
+            return
+
+        # Match parent car body attributes if present
+        if hasattr(parent, "steer_att") and hasattr(self, "steer_att"):
+            pm.connectAttr(parent.steer_att, self.steer_att, force=True)
+
+        if hasattr(parent, "wheelDrive_att") and hasattr(self, "wheelDrive_att"):
+            pm.connectAttr(parent.wheelDrive_att, self.wheelDrive_att, force=True)
+
+        if hasattr(parent, "steerDrive_att") and hasattr(self, "steerDrive_att"):
+            pm.connectAttr(parent.steerDrive_att, self.steerDrive_att, force=True)
+
+        if hasattr(parent, "wheelRadius_att") and hasattr(self, "wheelRadius_att"):
+            pm.connectAttr(parent.wheelRadius_att, self.wheelRadius_att, force=True)
+
+        if hasattr(parent, "steerRadius_att") and hasattr(self, "steerRadius_att"):
+            pm.connectAttr(parent.steerRadius_att, self.steerRadius_att, force=True)
+
+        # Gently support the 4-wheel front/rear spin split
+        if (
+            hasattr(parent, "frontWheel_spin_att")
+            and hasattr(parent, "rearWheel_spin_att")
+            and hasattr(self, "frontWheel_spin_att")
+        ):
+            if "front" in self.name.lower() or "front" in self.fullName.lower():
+                pm.connectAttr(parent.frontWheel_spin_att, self.frontWheel_spin_att, force=True)
+            else:
+                pm.connectAttr(parent.rearWheel_spin_att, self.frontWheel_spin_att, force=True)
 
     def setRelation(self):
         self.relatives["root"] = self.ball_npo
