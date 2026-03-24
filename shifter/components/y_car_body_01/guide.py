@@ -43,6 +43,7 @@ class Guide(guide.ComponentGuide):
     def postInit(self):
         self.save_transform = ["root", "chassis"]
         self.connectors = ["wheels"]
+
     def addObjects(self):
         self.root = self.addRoot()
         vTemp = transform.getOffsetPosition(self.root, [0, 35, 0])
