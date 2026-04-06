@@ -73,6 +73,8 @@ class Component(component.Main):
                 self.rearWheel_spin_att,
                 self.wheelDrive_att,
                 self.steerDrive_att,
+                self.wheelRadius_att,
+                self.steerRadius_att,
             ],
             [self.drive_ctl],
         )
@@ -82,20 +84,6 @@ class Component(component.Main):
     # =====================================================
 
     def addOperators(self):
-        # for comp in self.parent.components:
-        #     if "wheel" in comp.name:
-
-        #         pm.connectAttr(self.steer_att, comp.steer_att)
-        #         pm.connectAttr(self.wheelDrive_att, comp.wheelDrive)
-        #         pm.connectAttr(self.steerDrive_att, comp.steerDrive_att)
-        #         pm.connectAttr(self.wheelRadius_att, comp.wheelRadius)
-        #         pm.connectAttr(self.steerRadius_att, comp.SteerRadius)
-
-        #         # front vs rear logic
-        #         if "front" in comp.name:
-        #             pm.connectAttr(self.frontWheel_spin_att, comp.frontWheel_spin_att)
-        #         else:
-        #             pm.connectAttr(self.rearWheel_spin_att, comp.frontWheel_spin_att)
         pass
 
     def connect_wheels(self):
@@ -131,6 +119,9 @@ class Component(component.Main):
                 else:
                     pm.connectAttr(self.rearWheel_spin_att, comp.frontWheel_spin_att, force=True)
 
+            pm.connectAttr(
+                comp.steerDriveDistance_md + ".outputX", self.drive_ctl.steerDrive, force=True
+            )
     def addConnection(self):
         print("adding connections")
         # Guide connector name is 'wheels' in y_car_body_01/guide.py

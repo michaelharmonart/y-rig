@@ -232,7 +232,7 @@ class Component(component.Main):
         # connect up front wheel spin up to another PMA so that the right and left wheel spin can be computed separately.
         # make this work when mirroring the component as well, so that the left and right wheel spin can be computed separately.
         # make right side plus minus average set to minus!!!!!!!!
-        side = "L"
+        side = self.side
         if side == "L":
             side = "L"
         else:
