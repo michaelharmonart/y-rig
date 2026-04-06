@@ -122,6 +122,7 @@ class Component(component.Main):
             pm.connectAttr(
                 comp.steerDriveDistance_md + ".outputX", self.drive_ctl.steerDrive, force=True
             )
+
     def addConnection(self):
         print("adding connections")
         # Guide connector name is 'wheels' in y_car_body_01/guide.py
