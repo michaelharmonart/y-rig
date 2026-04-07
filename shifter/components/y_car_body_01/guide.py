@@ -1,8 +1,5 @@
 """Guide Chain 01 module"""
 
-from functools import partial
-from pydoc import text
-
 from mgear.shifter.component import guide
 from mgear.core import pyqt
 from mgear.vendor.Qt import QtWidgets, QtCore  # type: ignore
