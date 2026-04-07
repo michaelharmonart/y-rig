@@ -1,6 +1,7 @@
 """Guide Chain 01 module"""
 
 from functools import partial
+from pydoc import text
 
 from mgear.shifter.component import guide
 from mgear.core import pyqt
@@ -12,7 +13,9 @@ from mgear.core import transform
 
 
 from . import settingsUI as sui
+import importlib
 
+importlib.reload(sui)
 
 # guide info
 AUTHOR = "Collin Verbanatz"
@@ -40,9 +43,11 @@ class Guide(guide.ComponentGuide):
     email = EMAIL
     version = VERSION
 
+    connectors = ["y_wheel_01"]
+
     def postInit(self):
         self.save_transform = ["root", "chassis"]
-        self.connectors = ["wheels"]
+        # self.connectors = ["y_wheel_01"]
 
     def addObjects(self):
         self.root = self.addRoot()
@@ -55,12 +60,13 @@ class Guide(guide.ComponentGuide):
     def addParameters(self):
         """Add the configurations settings"""
 
-        self.pType = self.addParam("mode", "long", 0, 0)
-        self.pBlend = self.addParam("blend", "double", 1, 0, 1)
-        self.pNeutralPose = self.addParam("neutralpose", "bool", True)
-        self.pIkRefArray = self.addParam("ikrefarray", "string", "")
+        # ===== REQUIRED BY MGEAR (DO NOT REMOVE) =====
         self.pUseIndex = self.addParam("useIndex", "bool", False)
         self.pParentJointIndex = self.addParam("parentJointIndex", "long", -1, None, None)
+
+        # ===== YOUR CUSTOM PARAMS =====
+        self.pSide = self.addParam("side", "long", 0, 0, 2)
+        self.pWheels = self.addParam("wheels", "string", "")
 
         # TODO: if have IK or IK/FK lock the axis position to
         # force 2D Planar IK solver
@@ -106,28 +112,16 @@ class componentSettings(MayaQWidgetDockableMixin, guide.componentMainSettings): 
         return
 
     def populate_componentControls(self):
-        """Populate Controls
-
-        Populate the controls values from the custom attributes of the
-        component.
-
-        """
-        # populate tab
+        # Add tab
         self.tabs.insertTab(1, self.settingsTab, "Component Settings")
 
-        # populate component settings
-        self.settingsTab.ikfk_slider.setValue(int(self.root.attr("blend").get() * 100))
-        self.settingsTab.ikfk_spinBox.setValue(int(self.root.attr("blend").get() * 100))
-        self.settingsTab.mode_comboBox.setCurrentIndex(self.root.attr("mode").get())
+        # Populate values
+        self.settingsTab.name_lineEdit.setText(self.root.name())
+        self.settingsTab.side_comboBox.setCurrentIndex(self.root.attr("side").get())
+        self.settingsTab.wheels_lineEdit.setText(self.root.attr("wheels").get())
 
-        if self.root.attr("neutralpose").get():
-            self.settingsTab.neutralPose_checkBox.setCheckState(QtCore.Qt.Checked)
-        else:
-            self.settingsTab.neutralPose_checkBox.setCheckState(QtCore.Qt.Unchecked)
-
-        ikRefArrayItems = self.root.attr("ikrefarray").get().split(",")
-        for item in ikRefArrayItems:
-            self.settingsTab.ikRefArray_listWidget.addItem(item)
+        for cnx in Guide.connectors:
+            self.mainSettingsTab.connector_comboBox.addItem(cnx)
 
     def create_componentLayout(self):
         self.settings_layout = QtWidgets.QVBoxLayout()
@@ -137,40 +131,22 @@ class componentSettings(MayaQWidgetDockableMixin, guide.componentMainSettings): 
         self.setLayout(self.settings_layout)
 
     def create_componentConnections(self):
-        self.settingsTab.ikfk_slider.valueChanged.connect(
-            partial(self.updateSlider, self.settingsTab.ikfk_slider, "blend")
-        )
-        self.settingsTab.ikfk_spinBox.valueChanged.connect(
-            partial(self.updateSlider, self.settingsTab.ikfk_spinBox, "blend")
+        # Name
+        self.settingsTab.name_lineEdit.textChanged.connect(self.updateName)
+
+        # Side
+        self.settingsTab.side_comboBox.currentIndexChanged.connect(
+            lambda val: self.root.attr("side").set(val)
         )
 
-        self.settingsTab.mode_comboBox.currentIndexChanged.connect(
-            partial(self.updateComboBox, self.settingsTab.mode_comboBox, "mode")
+        # Wheels
+        self.settingsTab.wheels_lineEdit.textChanged.connect(
+            lambda val: self.root.attr("wheels").set(val)
         )
 
-        self.settingsTab.neutralPose_checkBox.stateChanged.connect(
-            partial(self.updateCheck, self.settingsTab.neutralPose_checkBox, "neutralpose")
-        )
-
-        self.settingsTab.ikRefArrayAdd_pushButton.clicked.connect(
-            partial(self.addItem2listWidget, self.settingsTab.ikRefArray_listWidget, "ikrefarray")
-        )
-        self.settingsTab.ikRefArrayRemove_pushButton.clicked.connect(
-            partial(
-                self.removeSelectedFromListWidget,
-                self.settingsTab.ikRefArray_listWidget,
-                "ikrefarray",
-            )
-        )
-        self.settingsTab.ikRefArray_listWidget.installEventFilter(self)
-
-    def eventFilter(self, sender, event):
-        if event.type() == QtCore.QEvent.ChildRemoved:
-            if sender == self.settingsTab.ikRefArray_listWidget:
-                self.updateListAttr(sender, "ikrefarray")
-            return True
-        else:
-            return QtWidgets.QDialog.eventFilter(self, sender, event)
+    def updateName(self, text):
+        if text:
+            self.root.rename(text)
 
     def dockCloseEventTriggered(self):
         pyqt.deleteInstances(self, MayaQDockWidget)

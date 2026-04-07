@@ -119,14 +119,26 @@ class Component(component.Main):
                 else:
                     pm.connectAttr(self.rearWheel_spin_att, comp.frontWheel_spin_att, force=True)
 
-            pm.connectAttr(
-                comp.steerDriveDistance_md + ".outputX", self.drive_ctl.steerDrive, force=True
-            )
+            # disconnect existing connections to steerDrive before connecting
+            dest_attr = self.drive_ctl.steerDrive
+
+            # Check for existing incoming connections
+            inputs = pm.listConnections(dest_attr, plugs=True, source=True, destination=False)
+
+            if inputs:
+                for src in inputs:
+                    pm.disconnectAttr(src, dest_attr)
+                    print("disconnecting existing connection from {} to {}".format(src, dest_attr))
+
+            # Now connect safely
+            pm.connectAttr(comp.steerDriveDistance_md + ".outputX", dest_attr, force=True)
 
     def addConnection(self):
         print("adding connections")
         # Guide connector name is 'wheels' in y_car_body_01/guide.py
-        self.connections["wheels"] = self.connect_wheels
+        # self.connections["y_wheel_01"] = self.connect_wheels
+        # print("Connector on guide:", self.root.attr("connector").get())
+        # print("ending add conntion function")
 
     # =====================================================
     # CONNECTOR
@@ -141,3 +153,6 @@ class Component(component.Main):
 
         self.jointRelatives["root"] = 0
         self.jointRelatives["chassis"] = 1
+
+
+# idea for expression is you have the expression connect to a random node and then connect the nodes output to the drive control!!!

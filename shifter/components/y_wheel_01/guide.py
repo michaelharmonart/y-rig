@@ -39,6 +39,7 @@ class Guide(guide.ComponentGuide):
     url = URL
     email = EMAIL
     version = VERSION
+    connectors = ["y_car_body_01"]
 
     def postInit(self):
         self.save_transform = ["root", "ball", "steer", "wheel", "width"]
@@ -124,6 +125,9 @@ class componentSettings(MayaQWidgetDockableMixin, guide.componentMainSettings): 
         self.settingsTab.ikfk_slider.setValue(int(self.root.attr("blend").get() * 100))
         self.settingsTab.ikfk_spinBox.setValue(int(self.root.attr("blend").get() * 100))
         self.settingsTab.mode_comboBox.setCurrentIndex(self.root.attr("mode").get())
+
+        for cnx in Guide.connectors:
+            self.mainSettingsTab.connector_comboBox.addItem(cnx)
 
         if self.root.attr("neutralpose").get():
             self.settingsTab.neutralPose_checkBox.setCheckState(QtCore.Qt.Checked)

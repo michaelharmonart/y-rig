@@ -334,7 +334,7 @@ class Component(component.Main):
 
     def addConnection(self):
         """Overloads the standard connection so wheel can wire parent body attrs."""
-        self.connections["standard"] = self.connect_wheel_to_parent
+        self.connections["y_car_body_01"] = self.connect_wheel_to_parent
 
     def connect_wheel_to_parent(self):
         print("connecting wheel to parent")
@@ -370,6 +370,12 @@ class Component(component.Main):
                 pm.connectAttr(parent.frontWheel_spin_att, self.frontWheel_spin_att, force=True)
             else:
                 pm.connectAttr(parent.rearWheel_spin_att, self.frontWheel_spin_att, force=True)
+
+        # Connect wheel's computed steer drive into the body
+        if hasattr(parent, "steerDrive_att"):
+            pm.connectAttr(self.steerDriveDistance_MD.outputX, parent.steerDrive_att, force=True)
+
+        print("finished connecting wheel to parent")
 
     def setRelation(self):
         self.relatives["root"] = self.ball_npo
