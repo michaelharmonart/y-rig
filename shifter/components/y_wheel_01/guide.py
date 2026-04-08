@@ -46,13 +46,13 @@ class Guide(guide.ComponentGuide):
 
     def addObjects(self):
         self.root = self.addRoot()
-        vTemp = transform.getOffsetPosition(self.root, [53.130, 35, 121.403])
+        vTemp = transform.getOffsetPosition(self.root, [53.130, 0, 121.403])
         self.ball = self.addLoc("ball", self.root, vTemp)
-        vTemp = transform.getOffsetPosition(self.root, [53.130, 35, 94.763])
+        vTemp = transform.getOffsetPosition(self.root, [53.130, 0, 94.763])
         self.steer = self.addLoc("steer", self.root, vTemp)
-        vTemp = transform.getOffsetPosition(self.root, [88.130, 35, 121.403])
+        vTemp = transform.getOffsetPosition(self.root, [88.130, 0, 121.403])
         self.wheel = self.addLoc("wheel", self.root, vTemp)
-        vTemp = transform.getOffsetPosition(self.root, [20, 35, 121.403])
+        vTemp = transform.getOffsetPosition(self.root, [20, 0, 121.403])
         self.width = self.addLoc("width", self.root, vTemp)
 
         centers = [self.root, self.ball, self.steer, self.wheel]

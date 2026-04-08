@@ -343,13 +343,22 @@ class Component(component.Main):
         parent = getattr(self, "parent_comp", None)
         if not parent:
             return
+        print("found parent")
+
+        # pm.connectAttr(self.wheelDrive_att, parent.wheelDrive_att, force=True)
+        # print("connected drive from parent")
+        # pm.connectAttr(
+        #     parent.wheelDrive_att, self.drifrontWheelSpin_side_PMA + ".input1D[1]", force=True
+        # )
+
+        print("connected drive and steer drive from parent")
 
         # Match parent car body attributes if present
         if hasattr(parent, "steer_att") and hasattr(self, "steer_att"):
             pm.connectAttr(parent.steer_att, self.steer_att, force=True)
 
-        if hasattr(parent, "wheelDrive_att") and hasattr(self, "wheelDrive_att"):
-            pm.connectAttr(parent.wheelDrive_att, self.wheelDrive_att, force=True)
+        # if hasattr(parent, "wheelDrive_att") and hasattr(self, "wheelDrive_att"):
+        #     pm.connectAttr(parent.wheelDrive_att, self.wheelDrive_att, force=True)
 
         if hasattr(parent, "steerDrive_att") and hasattr(self, "steerDrive_att"):
             pm.connectAttr(parent.steerDrive_att, self.steerDrive_att, force=True)
@@ -371,9 +380,25 @@ class Component(component.Main):
             else:
                 pm.connectAttr(parent.rearWheel_spin_att, self.frontWheel_spin_att, force=True)
 
+
         # Connect wheel's computed steer drive into the body
         if hasattr(parent, "steerDrive_att"):
             pm.connectAttr(self.steerDriveDistance_MD.outputX, parent.steerDrive_att, force=True)
+
+        if pm.isConnected("global_C0_ctl.message", "car_body_C0_drive_ctl.uiHost_cnx"):
+            pm.disconnectAttr("global_C0_ctl.message", "car_body_C0_drive_ctl.uiHost_cnx")
+
+        # connect up the expression with the drive control
+        # pm.connectAttr(self.parent.drive_ctl.wheelDrive, self.wheelDrive_att, force=True)
+        # pm.connectAttr(
+        #     self.parent.drive_ctl.steerDrive, self.frontWheelSpin_side_PMA + ".input1D", force=True
+        # )
+
+        if hasattr(parent, "drive_ctl"):
+            pm.parentConstraint(parent.drive_ctl, self.root, maintainOffset=True)
+            print("parent constrained wheel root to drive_ctl")
+        else:
+            print("parent has no drive_ctl")
 
         print("finished connecting wheel to parent")
 
@@ -384,3 +409,7 @@ class Component(component.Main):
         self.jointRelatives["ball"] = 0
         self.jointRelatives["steer"] = 1
         self.jointRelatives["wheel"] = 2
+
+# don't let drive control override the wheel root steer drive so attribute is still connected.
+# next connect drivt control translate z into wheel root translate z
+# then connecte drive ctl wheel drive into the frontWheelSpin_R_PMA
