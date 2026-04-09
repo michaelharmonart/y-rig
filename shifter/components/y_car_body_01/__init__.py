@@ -37,7 +37,7 @@ class Component(component.Main):
 
         # add controls
         self.drive_ctl = self.addCtl(
-            self.chassis_npo,
+            self.root_npo,
             "drive_ctl",
             t_chassis,
             self.color_fk,
@@ -47,6 +47,7 @@ class Component(component.Main):
             d=self.size * 0.5,
             tp=None,
         )
+        pm.parent(self.chassis_npo, self.drive_ctl)
 
         # add joints
         self.jnt_pos.append([self.root_npo, "root", None, False])
@@ -66,6 +67,8 @@ class Component(component.Main):
         self.steerDrive_att = self.addAnimParam("steerDrive", "Steer Drive", "double", 0)
         self.wheelRadius_att = self.addSetupParam("wheelRadius", "Wheel Radius", "double", 35)
         self.steerRadius_att = self.addSetupParam("steerRadius", "Steer Radius", "double", 35)
+        pm.addAttr(self.drive_ctl, longName="wheelDrive2", attributeType="double", keyable=True)
+        pm.addAttr(self.drive_ctl, longName="wheelRadius2", attributeType="double", keyable=True)
         attribute.addProxyAttribute(
             [
                 self.steer_att,

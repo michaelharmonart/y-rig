@@ -22,6 +22,7 @@ class Component(component.Main):
     # =====================================================
     # OBJECTS
     # =====================================================
+    EXPR_NAME = "car_wheelDrive_expr"
 
     def addObjects(self):
         # Get the position of the guide locators
@@ -161,65 +162,67 @@ class Component(component.Main):
         pm.connectAttr(self.radius_md.outputX, self.frontWheel_display_ctl.scaleY)
         pm.connectAttr(self.radius_md.outputX, self.frontWheel_display_ctl.scaleZ)
 
-        expr = """
-        global vector $vPos = << 0, 0, 0 >>;
-        float $distance = 0.0;
-        int $direction = 1;
+        # create some varible name that is unique to each wheel and set that as the expression name so the expression will create a new expression for each wheel.
 
-        vector $vPosChange = << drive_ctrl.translateX, drive_ctrl.translateY, drive_ctrl.translateZ >>;
+        # expr = """
+        # global vector $vPos = << 0, 0, 0 >>;
+        # float $distance = 0.0;
+        # int $direction = 1;
 
-        float $cx = $vPosChange.x - $vPos.x;
-        float $cy = $vPosChange.y - $vPos.y;
-        float $cz = $vPosChange.z - $vPos.z;
+        # vector $vPosChange = << drive_ctrl.translateX, drive_ctrl.translateY, drive_ctrl.translateZ >>;
 
-        $distance = sqrt( ($cx * $cx) + ($cy * $cy) + ($cz * $cz) );
+        # float $cx = $vPosChange.x - $vPos.x;
+        # float $cy = $vPosChange.y - $vPos.y;
+        # float $cz = $vPosChange.z - $vPos.z;
 
-        float $angle = drive_ctrl.rotateY % 360;
+        # $distance = sqrt( ($cx * $cx) + ($cy * $cy) + ($cz * $cz) );
 
-        if ( ($vPosChange.x == $vPos.x) && ($vPosChange.y == $vPos.y) && ($vPosChange.z == $vPos.z) ) {}
-        else {
-            if ($angle == 0){
-                if ($vPosChange.z > $vPos.z) $direction = 1;
-                else $direction = -1;
-            }
+        # float $angle = drive_ctrl.rotateY % 360;
 
-            if ( ($angle > 0 && $angle <= 90) || ($angle < -180 && $angle >= -270) ){
-                if ($vPosChange.x > $vPos.x) $direction *= 1;
-                else $direction *= -1;
-            }
+        # if ( ($vPosChange.x == $vPos.x) && ($vPosChange.y == $vPos.y) && ($vPosChange.z == $vPos.z) ) {}
+        # else {
+        #     if ($angle == 0){
+        #         if ($vPosChange.z > $vPos.z) $direction = 1;
+        #         else $direction = -1;
+        #     }
 
-            if ( ($angle > 90 && $angle <= 180) || ($angle < -90 && $angle >= -180) ){
-                if ($vPosChange.z > $vPos.z) $direction *= -1;
-                else $direction *= 1;
-            }
+        #     if ( ($angle > 0 && $angle <= 90) || ($angle < -180 && $angle >= -270) ){
+        #         if ($vPosChange.x > $vPos.x) $direction *= 1;
+        #         else $direction *= -1;
+        #     }
 
-            if ( ($angle > 180 && $angle <= 270) || ($angle < 0 && $angle >= -90) ){
-                if ($vPosChange.x > $vPos.x) $direction *= -1;
-                else $direction *= 1;
-            }
+        #     if ( ($angle > 90 && $angle <= 180) || ($angle < -90 && $angle >= -180) ){
+        #         if ($vPosChange.z > $vPos.z) $direction *= -1;
+        #         else $direction *= 1;
+        #     }
 
-            if ( ($angle > 270 && $angle <= 360) || ($angle < -270 && $angle >= -360) ){
-                if ($vPosChange.z > $vPos.z) $direction *= 1;
-                else $direction *= -1;
-            }
+        #     if ( ($angle > 180 && $angle <= 270) || ($angle < 0 && $angle >= -90) ){
+        #         if ($vPosChange.x > $vPos.x) $direction *= -1;
+        #         else $direction *= 1;
+        #     }
 
-            drive_ctrl.wheelDrive = drive_ctrl.wheelDrive +
-                ( $direction * ( ($distance / (6.283185 * drive_ctrl.wheelRadius)) * 360.0 ) );
-        }
+        #     if ( ($angle > 270 && $angle <= 360) || ($angle < -270 && $angle >= -360) ){
+        #         if ($vPosChange.z > $vPos.z) $direction *= 1;
+        #         else $direction *= -1;
+        #     }
 
-        $vPos = << drive_ctrl.translateX, drive_ctrl.translateY, drive_ctrl.translateZ >>;
-        """
-        driver = self.root.longName()
-        expr = expr.replace("drive_ctrl", driver)
+        #     drive_ctrl.wheelDrive = drive_ctrl.wheelDrive +
+        #         ( $direction * ( ($distance / (6.283185 * drive_ctrl.wheelRadius)) * 360.0 ) );
+        # }
 
-        # driver = self.drive_ctrl.longName()
+        # $vPos = << drive_ctrl.translateX, drive_ctrl.translateY, drive_ctrl.translateZ >>;
+        # """
+        # driver = self.root.longName()
         # expr = expr.replace("drive_ctrl", driver)
 
-        pm.expression(
-            name=self.getName("wheelDrive_expr"),
-            string=expr,
-            alwaysEvaluate=True,
-        )
+        # # driver = self.drive_ctrl.longName()
+        # # expr = expr.replace("drive_ctrl", driver)
+
+        # pm.expression(
+        #     name=self.getName("wheelDrive_expr"),
+        #     string=expr,
+        #     alwaysEvaluate=True,
+        # )
 
         # pm.connectAttr(self.wheelDrive, self.wheel_npo.rotateX)
 
@@ -345,11 +348,85 @@ class Component(component.Main):
             return
         print("found parent")
 
-        # pm.connectAttr(self.wheelDrive_att, parent.wheelDrive_att, force=True)
-        # print("connected drive from parent")
-        # pm.connectAttr(
-        #     parent.wheelDrive_att, self.drifrontWheelSpin_side_PMA + ".input1D[1]", force=True
-        # )
+        # -----------------------------------
+        # FIND DRIVER
+        # -----------------------------------
+        if hasattr(parent, "drive_ctl"):
+            driver = parent.drive_ctl
+        else:
+            print("No drive_ctl found")
+            return
+
+        # -----------------------------------
+        # CREATE EXPRESSION ONLY ONCE
+        # -----------------------------------
+        if not pm.objExists(self.EXPR_NAME):
+            print("Creating global wheel expression")
+
+            expr = """
+            global vector $vPos = << 0, 0, 0 >>;
+            float $distance = 0.0;
+            int $direction = 1;
+
+            vector $vPosChange = << drive_ctrl.translateX, drive_ctrl.translateY, drive_ctrl.translateZ >>;
+
+            float $cx = $vPosChange.x - $vPos.x;
+            float $cy = $vPosChange.y - $vPos.y;
+            float $cz = $vPosChange.z - $vPos.z;
+
+            $distance = sqrt( ($cx * $cx) + ($cy * $cy) + ($cz * $cz) );
+
+            float $angle = drive_ctrl.rotateY % 360;
+
+            if ( ($vPosChange.x == $vPos.x) && ($vPosChange.y == $vPos.y) && ($vPosChange.z == $vPos.z) ) {}
+            else {
+                if ($angle == 0){
+                    if ($vPosChange.z > $vPos.z) $direction = 1;
+                    else $direction = -1;
+                }
+
+                if ( ($angle > 0 && $angle <= 90) || ($angle < -180 && $angle >= -270) ){
+                    if ($vPosChange.x > $vPos.x) $direction *= 1;
+                    else $direction *= -1;
+                }
+
+                if ( ($angle > 90 && $angle <= 180) || ($angle < -90 && $angle >= -180) ){
+                    if ($vPosChange.z > $vPos.z) $direction *= -1;
+                    else $direction *= 1;
+                }
+
+                if ( ($angle > 180 && $angle <= 270) || ($angle < 0 && $angle >= -90) ){
+                    if ($vPosChange.x > $vPos.x) $direction *= -1;
+                    else $direction *= 1;
+                }
+
+                if ( ($angle > 270 && $angle <= 360) || ($angle < -270 && $angle >= -360) ){
+                    if ($vPosChange.z > $vPos.z) $direction *= 1;
+                    else $direction *= -1;
+                }
+
+                drive_ctrl.wheelDrive = drive_ctrl.wheelDrive +
+                    ( $direction * ( ($distance / (6.283185 * drive_ctrl.wheelRadius)) * 360.0 ) );
+            }
+
+            $vPos = << drive_ctrl.translateX, drive_ctrl.translateY, drive_ctrl.translateZ >>;
+            """
+
+            # expr = expr.replace("DRIVER", driver.longName())
+            # expr = expr.replace("driveNode", driver.longName())
+
+            driver = driver.longName()
+            expr = expr.replace("drive_ctrl", driver)
+            expr = expr.replace("wheelDrive", "wheelDrive2")
+
+            pm.expression(
+                name=self.EXPR_NAME,
+                string=expr,
+                alwaysEvaluate=True,
+            )
+
+        else:
+            print("Expression already exists, skipping")
 
         print("connected drive and steer drive from parent")
 
@@ -380,13 +457,12 @@ class Component(component.Main):
             else:
                 pm.connectAttr(parent.rearWheel_spin_att, self.frontWheel_spin_att, force=True)
 
-
         # Connect wheel's computed steer drive into the body
         if hasattr(parent, "steerDrive_att"):
             pm.connectAttr(self.steerDriveDistance_MD.outputX, parent.steerDrive_att, force=True)
 
-        if pm.isConnected("global_C0_ctl.message", "car_body_C0_drive_ctl.uiHost_cnx"):
-            pm.disconnectAttr("global_C0_ctl.message", "car_body_C0_drive_ctl.uiHost_cnx")
+        # if pm.isConnected("global_C0_ctl.message", "car_body_C0_drive_ctl.uiHost_cnx"):
+        #     pm.disconnectAttr("global_C0_ctl.message", "car_body_C0_drive_ctl.uiHost_cnx")
 
         # connect up the expression with the drive control
         # pm.connectAttr(self.parent.drive_ctl.wheelDrive, self.wheelDrive_att, force=True)
@@ -394,11 +470,33 @@ class Component(component.Main):
         #     self.parent.drive_ctl.steerDrive, self.frontWheelSpin_side_PMA + ".input1D", force=True
         # )
 
+        # if hasattr(parent, "drive_ctl"):
+        #     pm.parentConstraint(parent.drive_ctl, self.root, maintainOffset=True)
+        #     print("parent constrained wheel root to drive_ctl")
+        # else:
+        #     print("parent has no drive_ctl")
+
+        # # connect drive control translate z into wheel root translate z
+        # if hasattr(parent, "drive_ctl"):
+        #     print("attemptintg to connect drive_ctl translateZ to wheel root translateZ")
+        #     pm.connectAttr(parent.drive_ctl.translateZ, self.ball_npo.translateZ, force=True)
+        #     print("connected drive_ctl translateZ to wheel root translateZ")
+        # else:
+        #     print("parent has no drive_ctl to connect translateZ")
+
+        # connect drive ctl to front wheel spin PNA input 1D
         if hasattr(parent, "drive_ctl"):
-            pm.parentConstraint(parent.drive_ctl, self.root, maintainOffset=True)
-            print("parent constrained wheel root to drive_ctl")
+            print("going to try and connect up frontWheelSpin_PMA")
+            pm.connectAttr(
+                parent.drive_ctl.wheelDrive2,
+                self.getName("frontWheelSpin_PMA") + ".input1D[1]",
+                force=True,
+            )
+            print("connected drive_ctl wheelDrive to frontWheelSpin_PMA input1D[1]")
         else:
-            print("parent has no drive_ctl")
+            print("parent has no drive_ctl to connect wheelDrive")
+
+        pm.parent(self.root, parent.drive_ctl)
 
         print("finished connecting wheel to parent")
 
@@ -411,5 +509,5 @@ class Component(component.Main):
         self.jointRelatives["wheel"] = 2
 
 # don't let drive control override the wheel root steer drive so attribute is still connected.
-# next connect drivt control translate z into wheel root translate z
+# next connect drive control translate z into wheel root translate z
 # then connecte drive ctl wheel drive into the frontWheelSpin_R_PMA
