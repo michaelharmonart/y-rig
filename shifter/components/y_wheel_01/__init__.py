@@ -508,6 +508,7 @@ class Component(component.Main):
         self.jointRelatives["steer"] = 1
         self.jointRelatives["wheel"] = 2
 
+
 # don't let drive control override the wheel root steer drive so attribute is still connected.
 # next connect drive control translate z into wheel root translate z
 # then connecte drive ctl wheel drive into the frontWheelSpin_R_PMA
