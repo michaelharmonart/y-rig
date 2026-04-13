@@ -66,7 +66,7 @@ class Component(component.Main):
         self.wheelDrive_att = self.addAnimParam("wheelDrive", "Wheel Drive", "double", 0)
         self.steerDrive_att = self.addAnimParam("steerDrive", "Steer Drive", "double", 0)
         self.wheelRadius_att = self.addSetupParam("wheelRadius", "Wheel Radius", "double", 35)
-        self.steerRadius_att = self.addSetupParam("steerRadius", "Steer Radius", "double", 35)
+        self.steerRadius_att = self.addSetupParam("steerRadius", "Steer Radius", "double", 0)
         pm.addAttr(self.drive_ctl, longName="wheelDrive2", attributeType="double", keyable=True)
         pm.addAttr(self.drive_ctl, longName="wheelRadius2", attributeType="double", keyable=True)
         attribute.addProxyAttribute(
@@ -91,55 +91,56 @@ class Component(component.Main):
 
     def connect_wheels(self):
         print("connecting wheels")
-        self.connect_standard()
 
-        for comp in self.rig.components:
-            if "wheel" not in comp.name:
-                continue
+        # self.connect_standard()
 
-            # Steering
-            if hasattr(comp, "steer_att"):
-                pm.connectAttr(self.steer_att, comp.steer_att, force=True)
+        # for comp in self.rig.components:
+        #     if "wheel" not in comp.name:
+        #         continue
 
-            # Drive
-            if hasattr(comp, "wheelDrive_att"):
-                pm.connectAttr(self.wheelDrive_att, comp.wheelDrive_att, force=True)
+        #     # Steering
+        #     if hasattr(comp, "steer_att"):
+        #         pm.connectAttr(self.steer_att, comp.steer_att, force=True)
 
-            if hasattr(comp, "steerDrive_att"):
-                pm.connectAttr(self.steerDrive_att, comp.steerDrive_att, force=True)
+        #     # Drive
+        #     if hasattr(comp, "wheelDrive_att"):
+        #         pm.connectAttr(self.wheelDrive_att, comp.wheelDrive_att, force=True)
 
-            # Radius (setup params)
-            if hasattr(comp, "wheelRadius_att"):
-                pm.connectAttr(self.wheelRadius_att, comp.wheelRadius_att, force=True)
+        #     if hasattr(comp, "steerDrive_att"):
+        #         pm.connectAttr(self.steerDrive_att, comp.steerDrive_att, force=True)
 
-            if hasattr(comp, "steerRadius_att"):
-                pm.connectAttr(self.steerRadius_att, comp.steerRadius_att, force=True)
+        #     # Radius (setup params)
+        #     if hasattr(comp, "wheelRadius_att"):
+        #         pm.connectAttr(self.wheelRadius_att, comp.wheelRadius_att, force=True)
 
-            # Front vs Rear spin
-            if hasattr(comp, "frontWheel_spin_att"):
-                if "front" in comp.name.lower():
-                    pm.connectAttr(self.frontWheel_spin_att, comp.frontWheel_spin_att, force=True)
-                else:
-                    pm.connectAttr(self.rearWheel_spin_att, comp.frontWheel_spin_att, force=True)
+        #     if hasattr(comp, "steerRadius_att"):
+        #         pm.connectAttr(self.steerRadius_att, comp.steerRadius_att, force=True)
 
-            # disconnect existing connections to steerDrive before connecting
-            dest_attr = self.drive_ctl.steerDrive
+        #     # Front vs Rear spin
+        #     if hasattr(comp, "frontWheel_spin_att"):
+        #         if "front" in comp.name.lower():
+        #             pm.connectAttr(self.frontWheel_spin_att, comp.frontWheel_spin_att, force=True)
+        #         else:
+        #             pm.connectAttr(self.rearWheel_spin_att, comp.frontWheel_spin_att, force=True)
 
-            # Check for existing incoming connections
-            inputs = pm.listConnections(dest_attr, plugs=True, source=True, destination=False)
+        #     # disconnect existing connections to steerDrive before connecting
+        #     dest_attr = self.drive_ctl.steerDrive
 
-            if inputs:
-                for src in inputs:
-                    pm.disconnectAttr(src, dest_attr)
-                    print("disconnecting existing connection from {} to {}".format(src, dest_attr))
+        #     # Check for existing incoming connections
+        #     inputs = pm.listConnections(dest_attr, plugs=True, source=True, destination=False)
 
-            # Now connect safely
-            pm.connectAttr(comp.steerDriveDistance_md + ".outputX", dest_attr, force=True)
+        #     if inputs:
+        #         for src in inputs:
+        #             pm.disconnectAttr(src, dest_attr)
+        #             print("disconnecting existing connection from {} to {}".format(src, dest_attr))
+
+        #     # Now connect safely
+        #     pm.connectAttr(comp.steerDriveDistance_md + ".outputX", dest_attr, force=True)
 
     def addConnection(self):
         print("adding connections")
         # Guide connector name is 'wheels' in y_car_body_01/guide.py
-        # self.connections["y_wheel_01"] = self.connect_wheels
+        self.connections["y_wheel_01"] = self.connect_wheels
         # print("Connector on guide:", self.root.attr("connector").get())
         # print("ending add conntion function")
 

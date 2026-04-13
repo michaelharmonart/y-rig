@@ -8,7 +8,7 @@ import math
 
 from mgear.shifter import component
 from mgear.core import primitive
-# from mgear.core import transform
+from mgear.core import transform
 
 
 ##########################################################
@@ -34,6 +34,29 @@ class Component(component.Main):
 
         # --- Hierarchy Setup (Transforms) ---
 
+        if self.side == "L":
+            txt = f"Creating left wheel: {self.side}"
+            print(txt)
+
+        else:
+            txt = f"Creating right wheel: {self.side}"
+            print(txt)
+            t_wheel = transform.setMatrixPosition(
+                t_wheel, [-t_wheel.translate.x, t_ball.translate.y, t_wheel.translate.z]
+            )
+            t_ball = transform.setMatrixPosition(
+                t_ball, [-t_ball.translate.x, t_ball.translate.y, t_ball.translate.z]
+            )
+            t_steer = transform.setMatrixPosition(
+                t_steer, [-t_steer.translate.x, t_steer.translate.y, t_steer.translate.z]
+            )
+            t_width = transform.setMatrixPosition(
+                t_width, [-t_width.translate.x, t_width.translate.y, t_width.translate.z]
+            )
+        # holder = t_wheel
+        # t_wheel = t_width
+        # t_width = holder
+
         # Ball pivot (Main parent for both steer and wheel)
         self.root_npo = primitive.addTransform(self.root, self.getName("root_npo"), t)
 
@@ -42,7 +65,9 @@ class Component(component.Main):
         )
 
         self.ball_npo = primitive.addTransform(
-            self.suspension_y_npo, self.getName("ball_npo"), t_ball
+            self.suspension_y_npo,
+            self.getName("ball_npo"),
+            t_ball,
         )
 
         # Steering offset pivot (Child of ball)
@@ -496,7 +521,31 @@ class Component(component.Main):
         else:
             print("parent has no drive_ctl to connect wheelDrive")
 
-        pm.parent(self.root, parent.drive_ctl)
+        # chagne the steer radius to be based off the wheel guide and not hard coded in car_body_01
+        if self.side == "R":
+            print("adjusting steer radius for right side")
+            pm.createNode("multiplyDivide", n=self.getName("steerRadius_invert_md"))
+
+            pm.setAttr(
+                self.getName("steerRadius_invert_md") + ".input2X", -1
+            )  # Invert the steer radius
+            pm.connectAttr(
+                parent.steerRadius_att,
+                self.getName("steerRadius_invert_md") + ".input1X",
+                force=True,
+            )
+            pm.connectAttr(
+                self.getName("steerRadius_invert_md") + ".outputX",
+                self.wheel_npo.translateX,
+                force=True,
+            )
+
+        wheel_pos = self.guide.pos["wheel"]
+        ball_pos = self.guide.pos["ball"]
+
+        steer_radius = wheel_pos.x - ball_pos.x
+
+        parent.drive_ctl.steerRadius.set(steer_radius)
 
         print("finished connecting wheel to parent")
 
