@@ -269,6 +269,11 @@ class Component(component.Main):
         self.frontWheelSpin_side_PMA = pm.createNode(
             "plusMinusAverage", n=self.getName("frontWheelSpin_" + side + "_PMA")
         )
+        if side == "L":
+            pm.setAttr(self.frontWheelSpin_side_PMA.operation, 1)
+
+        else:
+            pm.setAttr(self.frontWheelSpin_side_PMA.operation, 2)
         pm.connectAttr(
             self.getName("frontWheelSpin_PMA") + ".output1D",
             self.getName("frontWheelSpin_" + side + "_PMA") + ".input1D[0]",
