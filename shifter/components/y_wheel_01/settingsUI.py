@@ -89,6 +89,19 @@ class Ui_Form(object):
 
         self.formLayout.setLayout(1, QFormLayout.ItemRole.FieldRole, self.horizontalLayout_3)
 
+        # ---- Wheel Type ----
+        self.wheelType_label = QLabel(self.groupBox)
+        self.wheelType_label.setObjectName("wheelType_label")
+
+        self.formLayout.setWidget(2, QFormLayout.ItemRole.LabelRole, self.wheelType_label)
+
+        self.wheelType_comboBox = QComboBox(self.groupBox)
+        self.wheelType_comboBox.setObjectName("wheelType_comboBox")
+        self.wheelType_comboBox.addItem("")  # Front
+        self.wheelType_comboBox.addItem("")  # Rear
+
+        self.formLayout.setWidget(2, QFormLayout.ItemRole.FieldRole, self.wheelType_comboBox)
+
         self.verticalLayout.addLayout(self.formLayout)
 
         self.neutralPose_checkBox = QCheckBox(self.groupBox)
@@ -170,5 +183,9 @@ class Ui_Form(object):
         )
         self.ikRefArrayAdd_pushButton.setText(QCoreApplication.translate("Form", "<<", None))
         self.ikRefArrayRemove_pushButton.setText(QCoreApplication.translate("Form", ">>", None))
+
+        self.wheelType_label.setText(QCoreApplication.translate("Form", "Wheel Type:", None))
+        self.wheelType_comboBox.setItemText(0, QCoreApplication.translate("Form", "Front", None))
+        self.wheelType_comboBox.setItemText(1, QCoreApplication.translate("Form", "Rear", None))
 
     # retranslateUi

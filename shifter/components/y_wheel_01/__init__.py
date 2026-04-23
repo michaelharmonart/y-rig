@@ -71,7 +71,17 @@ class Component(component.Main):
         )
 
         # Steering offset pivot (Child of ball)
-        self.steer_npo = primitive.addTransform(self.ball_npo, self.getName("steer_npo"), t_steer)
+        wheel_type = self.settings.get("wheelType", 0)
+        print("wheel_type value:", wheel_type)
+        if wheel_type == 0:
+            print("front wheel")
+        else:
+            print("rear wheel")
+
+        if wheel_type == 0:
+            self.steer_npo = primitive.addTransform(
+                self.ball_npo, self.getName("steer_npo"), t_steer
+            )
 
         # Wheel spin pivot (Child of ball, NOT child of steer)
         self.wheel_npo = primitive.addTransform(self.ball_npo, self.getName("wheel_npo"), t_wheel)
@@ -114,6 +124,8 @@ class Component(component.Main):
             tp=None,
         )
 
+        self.frontWheel_display_ctl.rotateZ.set(90)
+
         self.frontWheel_ctl = self.addCtl(
             self.frontWheel_reset,
             "frontWheel_ctl",
@@ -128,7 +140,8 @@ class Component(component.Main):
 
         # Joint outputs
         self.jnt_pos.append([self.ball_npo, "ball", None, False])
-        self.jnt_pos.append([self.steer_npo, "steer", "ball", False])
+        if wheel_type == 0:
+            self.jnt_pos.append([self.steer_npo, "steer", "ball", False])
         self.jnt_pos.append([self.wheel_npo, "wheel", "ball", False])
 
     # =====================================================
@@ -461,14 +474,14 @@ class Component(component.Main):
         print("connected drive and steer drive from parent")
 
         # Match parent car body attributes if present
-        if hasattr(parent, "steer_att") and hasattr(self, "steer_att"):
-            pm.connectAttr(parent.steer_att, self.steer_att, force=True)
+        wheel_type = self.settings.get("wheelType", 0)
 
-        # if hasattr(parent, "wheelDrive_att") and hasattr(self, "wheelDrive_att"):
-        #     pm.connectAttr(parent.wheelDrive_att, self.wheelDrive_att, force=True)
+        if wheel_type == 0:
+            if hasattr(parent, "steer_att") and hasattr(self, "steer_att"):
+                pm.connectAttr(parent.steer_att, self.steer_att, force=True)
 
-        if hasattr(parent, "steerDrive_att") and hasattr(self, "steerDrive_att"):
-            pm.connectAttr(parent.steerDrive_att, self.steerDrive_att, force=True)
+            if hasattr(parent, "steerDrive_att") and hasattr(self, "steerDrive_att"):
+                pm.connectAttr(parent.steerDrive_att, self.steerDrive_att, force=True)
 
         if hasattr(parent, "wheelRadius_att") and hasattr(self, "wheelRadius_att"):
             pm.connectAttr(parent.wheelRadius_att, self.wheelRadius_att, force=True)
@@ -488,8 +501,14 @@ class Component(component.Main):
                 pm.connectAttr(parent.rearWheel_spin_att, self.frontWheel_spin_att, force=True)
 
         # Connect wheel's computed steer drive into the body
-        if hasattr(parent, "steerDrive_att"):
-            pm.connectAttr(self.steerDriveDistance_MD.outputX, parent.steerDrive_att, force=True)
+        if wheel_type == 0:
+            print(wheel_type)
+            print("connecting front wheel steer drive to parent")
+            if hasattr(parent, "steerDrive_att"):
+                print("connecting wheel steer drive to parent")
+                pm.connectAttr(
+                    self.steerDriveDistance_MD.outputX, parent.steerDrive_att, force=True
+                )
 
         # if pm.isConnected("global_C0_ctl.message", "car_body_C0_drive_ctl.uiHost_cnx"):
         #     pm.disconnectAttr("global_C0_ctl.message", "car_body_C0_drive_ctl.uiHost_cnx")

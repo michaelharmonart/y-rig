@@ -67,6 +67,7 @@ class Guide(guide.ComponentGuide):
         self.pIkRefArray = self.addParam("ikrefarray", "string", "")
         self.pUseIndex = self.addParam("useIndex", "bool", False)
         self.pParentJointIndex = self.addParam("parentJointIndex", "long", -1, None, None)
+        self.pWheelType = self.addParam("wheelType", "long", 0, 0, 1)
 
         # TODO: if have IK or IK/FK lock the axis position to
         # force 2D Planar IK solver
@@ -138,6 +139,9 @@ class componentSettings(MayaQWidgetDockableMixin, guide.componentMainSettings): 
         for item in ikRefArrayItems:
             self.settingsTab.ikRefArray_listWidget.addItem(item)
 
+        self.settingsTab.wheelType_comboBox.currentIndexChanged.connect(
+            partial(self.updateComboBox, self.settingsTab.wheelType_comboBox, "wheelType")
+        )
     def create_componentLayout(self):
         self.settings_layout = QtWidgets.QVBoxLayout()
         self.settings_layout.addWidget(self.tabs)
@@ -172,6 +176,12 @@ class componentSettings(MayaQWidgetDockableMixin, guide.componentMainSettings): 
             )
         )
         self.settingsTab.ikRefArray_listWidget.installEventFilter(self)
+
+        partial(
+            self.updateComboBox,
+            self.settingsTab.wheelType_comboBox,
+            "wheelType",
+        )
 
     def eventFilter(self, sender, event):
         if event.type() == QtCore.QEvent.ChildRemoved:
