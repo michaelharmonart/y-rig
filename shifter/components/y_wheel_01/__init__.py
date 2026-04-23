@@ -495,7 +495,7 @@ class Component(component.Main):
             and hasattr(parent, "rearWheel_spin_att")
             and hasattr(self, "frontWheel_spin_att")
         ):
-            if "front" in self.name.lower() or "front" in self.fullName.lower():
+            if wheel_type == 0:
                 pm.connectAttr(parent.frontWheel_spin_att, self.frontWheel_spin_att, force=True)
             else:
                 pm.connectAttr(parent.rearWheel_spin_att, self.frontWheel_spin_att, force=True)

@@ -35,6 +35,10 @@ class Component(component.Main):
             self.root_npo, self.getName("chassis_npo"), t_chassis
         )
 
+        self.body_npo = primitive.addTransform(
+            self.chassis_npo, self.getName("body_npo"), t_chassis
+        )
+
         # add controls
         self.drive_ctl = self.addCtl(
             self.root_npo,
@@ -42,9 +46,9 @@ class Component(component.Main):
             t_chassis,
             self.color_fk,
             "cube",
-            w=self.size * 0.3,
-            h=self.size * 0.2,
-            d=self.size * 0.5,
+            w=self.size * 1.3,
+            h=self.size * 0.00002,
+            d=self.size * 10.5,
             tp=None,
         )
         pm.parent(self.chassis_npo, self.drive_ctl)
@@ -52,6 +56,7 @@ class Component(component.Main):
         # add joints
         self.jnt_pos.append([self.root_npo, "root", None, False])
         self.jnt_pos.append([self.chassis_npo, "chassis", 0, False])
+        self.jnt_pos.append([self.body_npo, "body", 1, False])
 
     # =====================================================
     # ATTRIBUTES
