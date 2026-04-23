@@ -142,6 +142,7 @@ class componentSettings(MayaQWidgetDockableMixin, guide.componentMainSettings): 
         self.settingsTab.wheelType_comboBox.currentIndexChanged.connect(
             partial(self.updateComboBox, self.settingsTab.wheelType_comboBox, "wheelType")
         )
+
     def create_componentLayout(self):
         self.settings_layout = QtWidgets.QVBoxLayout()
         self.settings_layout.addWidget(self.tabs)
