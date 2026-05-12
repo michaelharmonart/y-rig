@@ -23,6 +23,7 @@ class Component(component.Main):
     # OBJECTS
     # =====================================================
     EXPR_NAME = "car_wheelDrive_expr"
+    # frontAxis_bool = True
 
     def addObjects(self):
         # Get the position of the guide locators
@@ -570,6 +571,49 @@ class Component(component.Main):
         steer_radius = wheel_pos.x - ball_pos.x
 
         parent.drive_ctl.steerRadius.set(steer_radius)
+
+        # front and back axis control position changed based off of wheel position. Position should be based off of the wheel position and not hard coded in the car body so that it can be adjusted for different wheel positions and sizes.
+        if wheel_type == 0:
+            if parent.frontAxis_bool:
+                print("adjusting front axis control position based on wheel position")
+                pm.parent(parent.frontAxis_ctrl_OFST, world=True)
+                pm.parent(parent.rearAxis_ctrl_OFST, world=True)
+                parent.frontAxis_bool = False
+                ball_z2 = self.guide.pos["ball"].z
+                parent.frontAxis_ctrl_OFST.translateZ.set(ball_z2)
+                print("setting front axis control position based on ball position:", ball_z2)
+                print("re-parenting front and rear axis controls to root")
+                pm.parent(parent.frontAxis_ctrl_OFST, parent.rolloffset)
+                pm.parent(parent.rearAxis_ctrl_OFST, parent.frontAxis_ctrl)
+
+            else:
+                print("front axis control position already set, skipping")
+
+        if wheel_type == 1:
+            if parent.backAxis_bool:
+                print("adjusting back axis control position based on wheel position")
+
+                parent.backAxis_bool = False
+
+                rear_ws_matrix = parent.rearAxis_ctrl_OFST.getMatrix(worldSpace=True)
+
+                pm.parent(parent.rearAxis_ctrl_OFST, world=True)
+                pm.parent(parent.body_ctrl, world=True)
+                pm.parent(parent.chassis_npo, world=True)
+
+                parent.rearAxis_ctrl_OFST.setMatrix(rear_ws_matrix, worldSpace=True)
+
+                ball_z2 = self.guide.pos["ball"].z
+
+                ws_pos = pm.xform(parent.rearAxis_ctrl_OFST, q=True, ws=True, t=True)
+
+                pm.xform(parent.rearAxis_ctrl_OFST, ws=True, t=[ws_pos[0], ws_pos[1], ball_z2])
+
+                pm.parent(parent.rearAxis_ctrl_OFST, parent.frontAxis_ctrl, absolute=True)
+                pm.parent(parent.body_ctrl, parent.rearAxis_ctrl, absolute=True)
+                pm.parent(parent.chassis_npo, parent.rearAxis_ctrl, absolute=True)
+
+                print("rear axis adjusted")
 
         print("finished connecting wheel to parent")
 

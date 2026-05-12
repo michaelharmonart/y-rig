@@ -9,6 +9,8 @@
 from mgear.shifter import component
 from mgear.core import primitive, attribute
 import mgear.pymaya as pm
+from mgear.core import transform
+
 
 # from mgear.core import transform
 
@@ -24,6 +26,8 @@ class Component(component.Main):
     # =====================================================
     # OBJECTS
     # =====================================================
+    frontAxis_bool = True
+    backAxis_bool = True
 
     def addObjects(self):
         t = self.guide.tra["root"]
@@ -53,10 +57,68 @@ class Component(component.Main):
         )
         pm.parent(self.chassis_npo, self.drive_ctl)
 
+        self.rolloffset = primitive.addTransform(self.root_npo, self.getName("rolloffset"), t)
+
+        pm.parent(self.rolloffset, self.drive_ctl)
+
+        pos = transform.getOffsetPosition(self.rolloffset, [0, 0, 218.403])
+        m = transform.setMatrixPosition(self.rolloffset.worldMatrix.get(), pos)
+
+        self.frontAxis_ctrl_OFST = primitive.addTransform(
+            self.rolloffset,
+            self.getName("frontAxis_ctrl_OFST"),
+            m,
+        )
+
+        self.frontAxis_ctrl = self.addCtl(
+            self.frontAxis_ctrl_OFST,
+            "frontAxis_ctrl",
+            m,
+            self.color_fk,
+            "circle",
+            w=self.size * 1.5,
+            h=self.size * 1.5,
+            d=self.size * 1.5,
+            tp=None,
+        )
+        pos2 = transform.getOffsetPosition(self.rolloffset, [0, 0, -137.08])
+        m2 = transform.setMatrixPosition(self.rolloffset.worldMatrix.get(), pos2)
+
+        self.rearAxis_ctrl_OFST = primitive.addTransform(
+            self.frontAxis_ctrl, self.getName("rearAxis_ctrl_OFST"), m2
+        )
+
+        self.rearAxis_ctrl = self.addCtl(
+            self.rearAxis_ctrl_OFST,
+            "rearAxis_ctrl",
+            m2,
+            self.color_fk,
+            "circle",
+            w=self.size * 1.5,
+            h=self.size * 1.5,
+            d=self.size * 1.5,
+            tp=None,
+        )
+
+        self.body_ctrl = self.addCtl(
+            self.drive_ctl,
+            "body_ctrl",
+            t_chassis,
+            self.color_fk,
+            "cube",
+            w=self.size * 8.3,
+            h=self.size * 0.00002,
+            d=self.size * 8.5,
+            tp=None,
+        )
+
+        pm.parent(self.body_ctrl, self.rearAxis_ctrl)
+        pm.parent(self.chassis_npo, self.rearAxis_ctrl)
+
         # add joints
         self.jnt_pos.append([self.root_npo, "root", None, False])
         self.jnt_pos.append([self.chassis_npo, "chassis", 0, False])
-        self.jnt_pos.append([self.body_npo, "body", 1, False])
+        self.jnt_pos.append([self.body_npo, "body", "body", False])
 
     # =====================================================
     # ATTRIBUTES
@@ -92,7 +154,26 @@ class Component(component.Main):
     # =====================================================
 
     def addOperators(self):
-        pass
+        # connect up suspension with the body jnt
+        pm.connectAttr(self.body_ctrl.translateY, self.body_npo.translateY, force=True)
+        pm.connectAttr(self.body_ctrl.rotateZ, self.body_npo.rotateZ, force=True)
+        pm.connectAttr(self.body_ctrl.rotateX, self.body_npo.rotateX, force=True)
+
+        pm.transformLimits(self.body_ctrl, ty=(-5, 5), ety=(True, True))
+        pm.transformLimits(self.body_ctrl, rx=(-5, 5), erx=(True, True))
+        pm.transformLimits(self.body_ctrl, rz=(-5, 5), erz=(True, True))
+
+        # Lock + hide translates
+        pm.setAttr(self.body_ctrl.tx, lock=True, keyable=False, channelBox=False)
+        pm.setAttr(self.body_ctrl.tz, lock=True, keyable=False, channelBox=False)
+
+        # Lock + hide rotates
+        pm.setAttr(self.body_ctrl.ry, lock=True, keyable=False, channelBox=False)
+
+        # Lock + hide scale (always do this unless needed)
+        pm.setAttr(self.body_ctrl.sx, lock=True, keyable=False, channelBox=False)
+        pm.setAttr(self.body_ctrl.sy, lock=True, keyable=False, channelBox=False)
+        pm.setAttr(self.body_ctrl.sz, lock=True, keyable=False, channelBox=False)
 
     def connect_wheels(self):
         print("connecting wheels")
