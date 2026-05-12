@@ -32,6 +32,10 @@ class Component(component.Main):
     def addObjects(self):
         t = self.guide.tra["root"]
         t_chassis = self.guide.tra["chassis"]
+        t_left = self.guide.tra["left"]
+        t_right = self.guide.tra["right"]
+        t_front = self.guide.tra["front"]
+        t_back = self.guide.tra["back"]
 
         self.root_npo = primitive.addTransform(self.root, self.getName("root_npo"), t)
 
@@ -112,14 +116,66 @@ class Component(component.Main):
             tp=None,
         )
 
+        self.root_pivot_npo = primitive.addTransform(
+            self.rolloffset, self.getName("root_pivot_npo"), t
+        )
+
+        self.left_pivot_npo = primitive.addTransform(
+            self.root_pivot_npo, self.getName("left_pivot_npo"), t_left
+        )
+
+        self.right_pivot_npo = primitive.addTransform(
+            self.left_pivot_npo, self.getName("right_pivot_npo"), t_right
+        )
+
+        self.front_pivot_npo = primitive.addTransform(
+            self.right_pivot_npo, self.getName("front_pivot_npo"), t_front
+        )
+
+        self.back_pivot_npo = primitive.addTransform(
+            self.front_pivot_npo, self.getName("back_pivot_npo"), t_back
+        )
+
+        self.child_pivot_npo = primitive.addTransform(
+            self.back_pivot_npo, self.getName("child_pivot_npo"), t_chassis
+        )
+
+        pos2 = transform.getOffsetPosition(self.rolloffset, [0, 200, 0])
+        m2 = transform.setMatrixPosition(self.rolloffset.worldMatrix.get(), pos2)
+
+        self.root_pivot_ctrl_GRP = primitive.addTransform(
+            self.drive_ctl,
+            self.getName("root_pivot_ctrl_GRP"),
+            m2,
+        )
+
+        self.root_pivot_ctrl = self.addCtl(
+            self.root_pivot_ctrl_GRP,
+            "root_pivot",
+            m2,
+            self.color_fk,
+            "circle",
+            w=self.size * 1.5,
+            h=self.size * 1.5,
+            d=self.size * 1.5,
+            tp=None,
+        )
+        pm.parent(self.root_pivot_npo, self.drive_ctl)
+        pm.parentConstraint(self.child_pivot_npo, self.rolloffset)
+
         pm.parent(self.body_ctrl, self.rearAxis_ctrl)
         pm.parent(self.chassis_npo, self.rearAxis_ctrl)
-        # comment
 
         # add joints
         self.jnt_pos.append([self.root_npo, "root", None, False])
         self.jnt_pos.append([self.chassis_npo, "chassis", 0, False])
-        self.jnt_pos.append([self.body_npo, "body", "body", False])
+        self.jnt_pos.append([self.body_npo, "body", "chassis", False])
+        self.jnt_pos.append([self.root_pivot_npo, "rootPivot", "None", False])
+        self.jnt_pos.append([self.left_pivot_npo, "leftPivot", None, False])
+        self.jnt_pos.append([self.right_pivot_npo, "rightPivot", None, False])
+        self.jnt_pos.append([self.front_pivot_npo, "frontPivot", None, False])
+        self.jnt_pos.append([self.back_pivot_npo, "backPivot", None, False])
+        self.jnt_pos.append([self.child_pivot_npo, "childPivot", None, False])
 
     # =====================================================
     # ATTRIBUTES
@@ -175,6 +231,67 @@ class Component(component.Main):
         pm.setAttr(self.body_ctrl.sx, lock=True, keyable=False, channelBox=False)
         pm.setAttr(self.body_ctrl.sy, lock=True, keyable=False, channelBox=False)
         pm.setAttr(self.body_ctrl.sz, lock=True, keyable=False, channelBox=False)
+
+        # logic for the pivot joints. root_pibot_ctrl translate X goes into mult divide that is set to input 2 X as -1. the mult divide goes into remap values then into the rotate Z for the right and left pivots. the front and back pivots just get the root_pivot_ctrl translate X directly connected to their rotate Y
+        pm.createNode("multiplyDivide", name=self.getName("pivotMD"))
+        pm.setAttr(self.getName("pivotMD") + ".input2X", -1)
+        pm.connectAttr(
+            self.root_pivot_ctrl.translateX, self.getName("pivotMD") + ".input1X", force=True
+        )
+
+        # create left side remap value and connect
+        pm.createNode("remapValue", name=self.getName("pivotRemap_left"))
+        pm.setAttr(self.getName("pivotRemap_left") + ".inputMax", -800)
+        pm.setAttr(self.getName("pivotRemap_left") + ".outputMax", -180)
+        pm.connectAttr(
+            self.getName("pivotMD") + ".outputX",
+            self.getName("pivotRemap_left") + ".inputValue",
+            force=True,
+        )
+        pm.connectAttr(
+            self.getName("pivotRemap_left") + ".outValue", self.left_pivot_npo.rotateZ, force=True
+        )
+
+        # create right side remap value and connect
+        pm.createNode("remapValue", name=self.getName("pivotRemap_right"))
+        pm.setAttr(self.getName("pivotRemap_right") + ".inputMax", 800)
+        pm.setAttr(self.getName("pivotRemap_right") + ".outputMax", 180)
+        pm.connectAttr(
+            self.getName("pivotMD") + ".outputX",
+            self.getName("pivotRemap_right") + ".inputValue",
+            force=True,
+        )
+        pm.connectAttr(
+            self.getName("pivotRemap_right") + ".outValue", self.right_pivot_npo.rotateZ, force=True
+        )
+
+        # creat front
+        pm.createNode("remapValue", name=self.getName("pivotRemap_front"))
+        pm.setAttr(self.getName("pivotRemap_front") + ".inputMax", 800)
+        pm.setAttr(self.getName("pivotRemap_front") + ".outputMax", 180)
+        pm.connectAttr(
+            self.root_pivot_ctrl.translateZ,
+            self.getName("pivotRemap_front") + ".inputValue",
+            force=True,
+        )
+        pm.connectAttr(
+            self.getName("pivotRemap_front") + ".outValue", self.front_pivot_npo.rotateX, force=True
+        )
+
+        # create back
+        pm.createNode("remapValue", name=self.getName("pivotRemap_back"))
+        pm.setAttr(self.getName("pivotRemap_back") + ".inputMax", -800)
+        pm.setAttr(self.getName("pivotRemap_back") + ".outputMax", -180)
+        pm.connectAttr(
+            self.root_pivot_ctrl.translateZ,
+            self.getName("pivotRemap_back") + ".inputValue",
+            force=True,
+        )
+        pm.connectAttr(
+            self.getName("pivotRemap_back") + ".outValue", self.back_pivot_npo.rotateX, force=True
+        )
+
+        # pm.parentConstraint(self.child_pivot_npo, self.rolloffset)
 
     def connect_wheels(self):
         print("connecting wheels")

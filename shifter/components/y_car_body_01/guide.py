@@ -43,15 +43,22 @@ class Guide(guide.ComponentGuide):
     connectors = ["y_wheel_01"]
 
     def postInit(self):
-        self.save_transform = ["root", "chassis"]
+        self.save_transform = ["root", "chassis", "left", "right", "front", "back"]
         # self.connectors = ["y_wheel_01"]
 
     def addObjects(self):
         self.root = self.addRoot()
         vTemp = transform.getOffsetPosition(self.root, [0, 35, 0])
         self.chassis = self.addLoc("chassis", self.root, vTemp)
-
-        centers = [self.root, self.chassis]
+        leftTemp = transform.getOffsetPosition(self.root, [88.13, 0, 0])
+        self.left = self.addLoc("left", self.root, leftTemp)
+        rightTemp = transform.getOffsetPosition(self.root, [-88.13, 0, 0])
+        self.right = self.addLoc("right", self.root, rightTemp)
+        frontTemp = transform.getOffsetPosition(self.root, [0, 0, 121.403])
+        self.front = self.addLoc("front", self.root, frontTemp)
+        backTemp = transform.getOffsetPosition(self.root, [0, 0, -121.403])
+        self.back = self.addLoc("back", self.root, backTemp)
+        centers = [self.root, self.chassis, self.left, self.right, self.front, self.back]
         self.dispcrv = self.addDispCurve("crv", centers)
 
     def addParameters(self):
