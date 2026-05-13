@@ -176,6 +176,7 @@ class Component(component.Main):
         self.jnt_pos.append([self.upperarm_npo, f"{width_side}_upper_arm", "width", False])
 
         self.jnt_pos.append([self.frontArm_npo, f"{width_side}_front_arm", "width", False])
+
     # =====================================================
     # ATTRIBUTES
     # =====================================================
