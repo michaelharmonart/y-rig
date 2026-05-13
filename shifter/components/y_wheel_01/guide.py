@@ -52,7 +52,7 @@ class Guide(guide.ComponentGuide):
         self.steer = self.addLoc("steer", self.root, vTemp)
         vTemp = transform.getOffsetPosition(self.root, [88.130, 0, 121.403])
         self.wheel = self.addLoc("wheel", self.root, vTemp)
-        vTemp = transform.getOffsetPosition(self.root, [20, 0, 121.403])
+        vTemp = transform.getOffsetPosition(self.root, [8, 0, 121.403])
         self.width = self.addLoc("width", self.root, vTemp)
 
         centers = [self.root, self.ball, self.steer, self.wheel]

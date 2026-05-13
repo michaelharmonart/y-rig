@@ -139,12 +139,43 @@ class Component(component.Main):
             tp=self.frontWheel_display_ctl,
         )
 
+        """
+        creating all suspension joints
+        """
+
+        width_side = "front" if wheel_type == 0 else "rear"
+        self.width_npo = primitive.addTransform(self.ball_npo, self.getName("width_npo"), t_width)
+
+        self.lower_arm_npo = primitive.addTransform(
+            self.ball_npo, self.getName(f"{width_side}_lower_arm_npo"), t_width
+        )
+        self.lower_ball_npo = primitive.addTransform(
+            self.lower_arm_npo, self.getName(f"{width_side}_lower_ball_npo"), t_width
+        )
+
+        self.upperarm_npo = primitive.addTransform(
+            self.ball_npo, self.getName(f"{width_side}_upper_arm_npo"), t_width
+        )
+
+        self.frontArm_npo = primitive.addTransform(
+            self.ball_npo, self.getName(f"{width_side}_front_arm_npo"), t_width
+        )
+
         # Joint outputs
         self.jnt_pos.append([self.ball_npo, "ball", None, False])
         if wheel_type == 0:
             self.jnt_pos.append([self.steer_npo, "steer", "ball", False])
         self.jnt_pos.append([self.wheel_npo, "wheel", "ball", False])
 
+        self.jnt_pos.append([self.width_npo, "width", "ball", False])
+
+        self.jnt_pos.append([self.lower_arm_npo, f"{width_side}_lower_arm", "width", False])
+
+        self.jnt_pos.append([self.lower_ball_npo, f"{width_side}_lower_ball", "width", False])
+
+        self.jnt_pos.append([self.upperarm_npo, f"{width_side}_upper_arm", "width", False])
+
+        self.jnt_pos.append([self.frontArm_npo, f"{width_side}_front_arm", "width", False])
     # =====================================================
     # ATTRIBUTES
     # =====================================================
@@ -391,6 +422,21 @@ class Component(component.Main):
         if not parent:
             return
         print("found parent")
+
+        def reparent_width_joint():
+            width_jnt = pm.PyNode(self.getName("width_jnt"))
+
+            body_jnt = pm.PyNode(parent.getName("body_jnt"))
+
+            pm.parent(width_jnt, body_jnt)
+
+        pm.evalDeferred(reparent_width_joint)
+
+        if hasattr(parent, "body_npo"):
+            pm.parent(self.width_npo, parent.body_npo, absolute=True)
+            print("reparented width_npo under parent.body_npo")
+        else:
+            print("parent has no body_npo; width_npo remains under ball_npo")
 
         # -----------------------------------
         # FIND DRIVER
