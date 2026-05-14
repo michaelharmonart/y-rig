@@ -32,6 +32,10 @@ class Component(component.Main):
         t_steer = self.guide.tra["steer"]
         t_wheel = self.guide.tra["wheel"]
         t_width = self.guide.tra["width"]
+        t_lower_arm = self.guide.tra["lower_arm"]
+        t_lower_ball = self.guide.tra["lower_ball"]
+        t_upper_arm = self.guide.tra["upper_arm"]
+        t_front_arm = self.guide.tra["front_arm"]
 
         # --- Hierarchy Setup (Transforms) ---
 
@@ -53,6 +57,34 @@ class Component(component.Main):
             )
             t_width = transform.setMatrixPosition(
                 t_width, [-t_width.translate.x, t_width.translate.y, t_width.translate.z]
+            )
+            t_lower_arm = transform.setMatrixPosition(
+                t_lower_arm,
+                [-t_lower_arm.translate.x, t_lower_arm.translate.y, t_lower_arm.translate.z],
+            )
+            t_lower_ball = transform.setMatrixPosition(
+                t_lower_ball,
+                [
+                    -t_lower_ball.translate.x,
+                    t_lower_ball.translate.y,
+                    t_lower_ball.translate.z,
+                ],
+            )
+            t_upper_arm = transform.setMatrixPosition(
+                t_upper_arm,
+                [
+                    -t_upper_arm.translate.x,
+                    t_upper_arm.translate.y,
+                    t_upper_arm.translate.z,
+                ],
+            )
+            t_front_arm = transform.setMatrixPosition(
+                t_front_arm,
+                [
+                    -t_front_arm.translate.x,
+                    t_front_arm.translate.y,
+                    t_front_arm.translate.z,
+                ],
             )
         # holder = t_wheel
         # t_wheel = t_width
@@ -147,18 +179,18 @@ class Component(component.Main):
         self.width_npo = primitive.addTransform(self.ball_npo, self.getName("width_npo"), t_width)
 
         self.lower_arm_npo = primitive.addTransform(
-            self.ball_npo, self.getName(f"{width_side}_lower_arm_npo"), t_width
+            self.width_npo, self.getName(f"{width_side}_lower_arm_npo"), t_lower_arm
         )
         self.lower_ball_npo = primitive.addTransform(
-            self.lower_arm_npo, self.getName(f"{width_side}_lower_ball_npo"), t_width
+            self.lower_arm_npo, self.getName(f"{width_side}_lower_ball_npo"), t_lower_ball
         )
 
         self.upperarm_npo = primitive.addTransform(
-            self.ball_npo, self.getName(f"{width_side}_upper_arm_npo"), t_width
+            self.width_npo, self.getName(f"{width_side}_upper_arm_npo"), t_upper_arm
         )
 
         self.frontArm_npo = primitive.addTransform(
-            self.ball_npo, self.getName(f"{width_side}_front_arm_npo"), t_width
+            self.width_npo, self.getName(f"{width_side}_front_arm_npo"), t_front_arm
         )
 
         # Joint outputs
@@ -168,10 +200,13 @@ class Component(component.Main):
         self.jnt_pos.append([self.wheel_npo, "wheel", "ball", False])
 
         self.jnt_pos.append([self.width_npo, "width", "ball", False])
+        self.jointRelatives["width"] = len(self.jnt_pos) - 1
 
         self.jnt_pos.append([self.lower_arm_npo, f"{width_side}_lower_arm", "width", False])
 
-        self.jnt_pos.append([self.lower_ball_npo, f"{width_side}_lower_ball", "width", False])
+        self.jnt_pos.append(
+            [self.lower_ball_npo, f"{width_side}_lower_ball", f"{width_side}_lower_arm", False]
+        )
 
         self.jnt_pos.append([self.upperarm_npo, f"{width_side}_upper_arm", "width", False])
 
@@ -407,6 +442,36 @@ class Component(component.Main):
         pm.connectAttr(self.deflate_att, self.deflate_remap.inputValue)
         # CONNECT UP REMAP OUTVALUE TO THE LATTICE GROUP TRANSLATEY ADN CONNECT THE DEFLATE ATTR TO THE CHASIS JOINT (BUT NOT REALLY THE CHASIS JOINT THE SECOND ROOT JOINT)
 
+        """
+        connect up and do all the suspension logic for the under part like springs n stuff
+        """
+        pm.connectAttr(self.frontArm_npo.rotateZ, self.upperarm_npo.rotateZ, force=True)
+        pm.connectAttr(self.frontArm_npo.rotateZ, self.lower_arm_npo.rotateZ, force=True)
+
+        pm.createNode("multiplyDivide", n=self.getName("frontArm_invert_md"))
+        pm.setAttr(self.getName("frontArm_invert_md") + ".input2X", -1)
+        pm.connectAttr(
+            self.frontArm_npo.rotateZ, self.getName("frontArm_invert_md") + ".input1X", force=True
+        )
+        pm.connectAttr(
+            self.getName("frontArm_invert_md") + ".outputX", self.lower_ball_npo.rotateZ, force=True
+        )
+
+        t_front_arm = self.guide.tra["front_arm"]
+        if self.side == "R":
+            t_front_arm = transform.setMatrixPosition(
+                t_front_arm,
+                [-t_front_arm.translate.x, t_front_arm.translate.y, t_front_arm.translate.z],
+            )
+
+        # create locator directly above the front arm and parent contraint it to the width npo
+        self.frontArm_locator = pm.spaceLocator(n=self.getName("frontArm_locator"))[0]
+        t_front_arm_locator = transform.setMatrixPosition(
+            t_front_arm, [t_front_arm.translate.x, 80, t_front_arm.translate.z]
+        )
+        self.frontArm_locator.setMatrix(t_front_arm_locator)
+        pm.parentConstraint(self.width_npo, self.frontArm_locator, maintainOffset=True)
+
     # =====================================================
     # CONNECTION
     # =====================================================
@@ -435,9 +500,13 @@ class Component(component.Main):
 
         if hasattr(parent, "body_npo"):
             pm.parent(self.width_npo, parent.body_npo, absolute=True)
-            print("reparented width_npo under parent.body_npo")
+            # pm.parent(self.lower_arm_npo, parent.body_npo, absolute=True)
+            # pm.parent(self.lower_ball_npo, parent.body_npo, absolute=True)
+            # pm.parent(self.upperarm_npo, parent.body_npo, absolute=True)
+            # pm.parent(self.frontArm_npo, parent.body_npo, absolute=True)
+            print("reparented all suspension NPOs under parent.body_npo")
         else:
-            print("parent has no body_npo; width_npo remains under ball_npo")
+            print("parent has no body_npo; suspension remains under ball_npo")
 
         # -----------------------------------
         # FIND DRIVER

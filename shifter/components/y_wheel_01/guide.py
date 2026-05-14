@@ -42,7 +42,17 @@ class Guide(guide.ComponentGuide):
     connectors = ["y_car_body_01"]
 
     def postInit(self):
-        self.save_transform = ["root", "ball", "steer", "wheel", "width"]
+        self.save_transform = [
+            "root",
+            "ball",
+            "steer",
+            "wheel",
+            "width",
+            "lower_arm",
+            "lower_ball",
+            "upper_arm",
+            "front_arm",
+        ]
 
     def addObjects(self):
         self.root = self.addRoot()
@@ -54,8 +64,26 @@ class Guide(guide.ComponentGuide):
         self.wheel = self.addLoc("wheel", self.root, vTemp)
         vTemp = transform.getOffsetPosition(self.root, [8, 0, 121.403])
         self.width = self.addLoc("width", self.root, vTemp)
+        vTemp = transform.getOffsetPosition(self.width, [10.642, -8.181, 0.044])
+        self.lower_arm = self.addLoc("lower_arm", self.width, vTemp)
+        vTemp = transform.getOffsetPosition(self.lower_arm, [22.408, -5.495, 0])
+        self.lower_ball = self.addLoc("lower_ball", self.lower_arm, vTemp)
+        vTemp = transform.getOffsetPosition(self.width, [10.646, 22.408, 0.044])
+        self.upper_arm = self.addLoc("upper_arm", self.width, vTemp)
+        vTemp = transform.getOffsetPosition(self.width, [10.646, 0, 0.044])
+        self.front_arm = self.addLoc("front_arm", self.width, vTemp)
 
-        centers = [self.root, self.ball, self.steer, self.wheel]
+        centers = [
+            self.root,
+            self.ball,
+            self.steer,
+            self.wheel,
+            self.width,
+            self.lower_arm,
+            self.lower_ball,
+            self.upper_arm,
+            self.front_arm,
+        ]
         self.dispcrv = self.addDispCurve("crv", centers)
 
     def addParameters(self):
