@@ -293,6 +293,13 @@ class Component(component.Main):
 
         # pm.parentConstraint(self.child_pivot_npo, self.rolloffset)
 
+        t_chassis = self.guide.tra["chassis"]
+        self.upVector_GRP = primitive.addTransform(
+            self.root,
+            self.getName("upVector_GRP"),
+            t_chassis,
+        )
+
     def connect_wheels(self):
         print("connecting wheels")
 

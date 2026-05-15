@@ -465,12 +465,26 @@ class Component(component.Main):
             )
 
         # create locator directly above the front arm and parent contraint it to the width npo
+
         self.frontArm_locator = pm.spaceLocator(n=self.getName("frontArm_locator"))[0]
         t_front_arm_locator = transform.setMatrixPosition(
             t_front_arm, [t_front_arm.translate.x, 80, t_front_arm.translate.z]
         )
         self.frontArm_locator.setMatrix(t_front_arm_locator)
         pm.parentConstraint(self.width_npo, self.frontArm_locator, maintainOffset=True)
+
+        # create aim constaints  with aim vector x at 1 and world up type as object up and the upvector is the locator we just created and only do the z axis and its with out ball joint and our front arm joint
+        axis = 1
+        if self.side == "R":
+            axis = -1
+        pm.aimConstraint(
+            self.ball_npo,
+            self.frontArm_npo,
+            aimVector=[axis, 0, 0],
+            worldUpType="object",
+            worldUpObject=self.frontArm_locator,
+            skip=["x", "y"],
+        )
 
     # =====================================================
     # CONNECTION
@@ -730,6 +744,9 @@ class Component(component.Main):
                 pm.parent(parent.chassis_npo, parent.rearAxis_ctrl, absolute=True)
 
                 print("rear axis adjusted")
+
+        # parent the upVector_grp with the frontArm Locators
+        pm.parent(self.frontArm_locator, parent.upVector_GRP, absolute=True)
 
         print("finished connecting wheel to parent")
 
