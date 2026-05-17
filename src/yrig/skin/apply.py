@@ -86,9 +86,12 @@ def skin_and_apply_weights_from_directory(
         for i, geo in enumerate(geometry):
             if skip_skinned_geometry and get_skin_clusters(geo):
                 continue
+            ng_skin_manifest_filepath: Path = directory / f"{geo}/manifest.json"
             ng_skin_filepath: Path = directory / f"{geo}.json"
             yskin_filepath: Path = directory / f"{geo}.yskin"
-            if ng_skin_filepath.exists():
+            if ng_skin_manifest_filepath.exists():
+                skin_and_apply_ng_weights(ng_skin_manifest_filepath, geo)
+            elif ng_skin_filepath.exists():
                 skin_and_apply_ng_weights(ng_skin_filepath, geo)
             elif yskin_filepath.exists():
                 skin_and_apply_weights(yskin_filepath, geo)
