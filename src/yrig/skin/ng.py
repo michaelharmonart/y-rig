@@ -212,7 +212,9 @@ def cleanup_ng_data_nodes() -> None:
         )
 
 
-def split_ng_skin_file_by_layers(skin_file: Path, output_path: Path) -> None:
+def split_ng_skin_file_by_layers(
+    skin_file: Path, output_path: Path, layers_to_write: set[str] | None = None
+) -> None:
     with open(skin_file, mode="rb") as file:
         data: dict = msgspec.json.decode(file.read())
     mesh: dict[str, list] = data["mesh"]
@@ -229,10 +231,13 @@ def split_ng_skin_file_by_layers(skin_file: Path, output_path: Path) -> None:
 
         if layer["parentId"] is None:
             layer_filepath = Path(f"{normalize_name(layer_name)}.nglayer")
-            layer_file_map[layer_filepath] = layer
             manifest_data["layers"].append(
                 {"id": layer_id, "name": layer_name, "path": layer_filepath.as_posix()}
             )
+            if layers_to_write is None:
+                layer_file_map[layer_filepath] = layer
+            elif layer["name"] in layers_to_write:
+                layer_file_map[layer_filepath] = layer
 
     output_path.mkdir(parents=True, exist_ok=True)
     with open(output_path / "manifest.json", mode="wb") as file:
@@ -282,7 +287,9 @@ def _combine_ng_skin_file_layers_data(manifest: Path) -> dict:
             local_index: int = influence["index"]
             if name not in influence_name_to_index:
                 influence_name_to_index[name] = next_influence_id
-                merged_influences.append({**influence, "index": next_influence_id})
+                new_influence = influence.copy()
+                new_influence["index"] = next_influence_id
+                merged_influences.append(new_influence)
                 next_influence_id += 1
             local_index_to_merged[local_index] = influence_name_to_index[name]
 
