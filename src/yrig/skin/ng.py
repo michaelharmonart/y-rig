@@ -8,6 +8,7 @@ import maya.cmds as cmds
 import msgspec
 
 from yrig.name import get_short_name, normalize_name
+from yrig.util import confirm_overwrite
 
 log = logging.getLogger(__name__)
 
@@ -113,6 +114,46 @@ def get_or_create_ng_layer(skin_cluster: str, layer_name: str) -> ng.Layer:
     return new_layer
 
 
+def _load_ng_skin_data(filepath: Path) -> dict:
+    if filepath.name == "manifest.json":
+        return _combine_ng_skin_file_layers_data(filepath)
+    with open(filepath, "rb") as f:
+        return msgspec.json.decode(f.read())
+
+
+def get_influences_from_ng_skin_weights(
+    filepath: Path,
+) -> list[str]:
+    """Return influence paths from an ngSkinTools2 JSON weights file.
+
+    Args:
+        filepath: Path to the weights file.
+    """
+    if not filepath.exists():
+        raise RuntimeError(f"{filepath} doesn't exist, unable to load data.")
+    data = _load_ng_skin_data(filepath)
+    return [influence["path"] for influence in data["influences"]]
+
+
+def _run_ng_import(filepath: Path, geometry: str) -> None:
+    config = ng.influenceMapping.InfluenceMappingConfig()
+    config.use_distance_matching = False
+    config.use_name_matching = True
+    ng.import_json(
+        target=geometry,
+        file=str(filepath),
+        vertex_transfer_mode=ng.transfer.VertexTransferMode.vertexId,
+        influences_mapping_config=config,
+    )
+
+
+def _apply_ng_skin_from_manifest(manifest: Path, geometry: str) -> None:
+    with tempfile.NamedTemporaryFile(suffix=".json") as file:
+        temp_path = Path(file.name)
+        combine_ng_skin_file_by_layers(manifest, temp_path)
+        _run_ng_import(temp_path, geometry)
+
+
 @require_ng_skin
 def apply_ng_skin_weights(weights_file: Path, geometry: str) -> None:
     """Apply an ngSkinTools2 JSON weights file to the specified geometry.
@@ -132,23 +173,9 @@ def apply_ng_skin_weights(weights_file: Path, geometry: str) -> None:
         raise RuntimeError(f"{weights_file} doesn't exist, unable to load weights.")
 
     if weights_file.name == "manifest.json":
-        with tempfile.NamedTemporaryFile() as file:
-            filepath = Path(file.name)
-            combine_ng_skin_file_by_layers(weights_file, filepath)
-            print(file.read(4096))
-            ng.import_json(
-                target=geometry,
-                file=str(filepath),
-                vertex_transfer_mode=ng.transfer.VertexTransferMode.vertexId,
-                influences_mapping_config=config,
-            )
+        _apply_ng_skin_from_manifest(weights_file, geometry)
     else:
-        ng.import_json(
-            target=geometry,
-            file=str(weights_file),
-            vertex_transfer_mode=ng.transfer.VertexTransferMode.vertexId,
-            influences_mapping_config=config,
-        )
+        _run_ng_import(weights_file, geometry)
 
 
 @require_ng_skin
@@ -162,45 +189,9 @@ def write_ng_skin_weights(filepath: Path, geometry: str, force: bool = False) ->
         force: If True, will automatically overwrite any existing file at the filepath specified.
 
     """
-
-    # If the file exists, only write it if force = True, or after asking for confirmation.
-    if filepath.exists():
-        if force:
-            pass
-        else:
-            confirm: str = cmds.confirmDialog(
-                title="File Overwrite",
-                message=f"{filepath} already exists and will be overwritten, are you sure you want to write the file?",
-                button=["Yes", "No"],
-                defaultButton="Yes",
-                cancelButton="No",
-                dismissString="No",
-            )
-            if confirm == "Yes":
-                pass
-            else:
-                return
-
+    if not confirm_overwrite(filepath):
+        return
     ng.export_json(target=geometry, file=str(filepath))
-    return
-
-
-def get_influences_from_ng_skin_weights(
-    filepath: Path,
-) -> list[str]:
-    """Return influence paths from an ngSkinTools2 JSON weights file.
-
-    Args:
-        filepath: Path to the weights file.
-    """
-    if not filepath.exists():
-        raise RuntimeError(f"{filepath} doesn't exist, unable to load weights.")
-    if filepath.name == "manifest.json":
-        data = _combine_ng_skin_file_layers_data(filepath)
-    else:
-        with open(filepath, mode="rb") as file:
-            data: dict = msgspec.json.decode(file.read())
-    return [influence["path"] for influence in data["influences"]]
 
 
 @require_ng_skin
