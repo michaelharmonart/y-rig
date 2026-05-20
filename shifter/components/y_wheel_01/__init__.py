@@ -88,6 +88,22 @@ class Component(component.Main):
                     t_front_arm.translate.z,
                 ],
             )
+            t_upperSpring = transform.setMatrixPosition(
+                t_upperSpring,
+                [
+                    -t_upperSpring.translate.x,
+                    t_upperSpring.translate.y,
+                    t_upperSpring.translate.z,
+                ],
+            )
+            t_lowerSpring = transform.setMatrixPosition(
+                t_lowerSpring,
+                [
+                    -t_lowerSpring.translate.x,
+                    t_lowerSpring.translate.y,
+                    t_lowerSpring.translate.z,
+                ],
+            )
         # holder = t_wheel
         # t_wheel = t_width
         # t_width = holder
@@ -198,11 +214,11 @@ class Component(component.Main):
         # make the upper and lower spring npos have z facing out and y facing out and x facing up
 
         self.upperSpring_npo = primitive.addTransform(
-            self.width_npo, self.getName(f"{width_side}_frontSpring_npo"), t_upperSpring
+            self.upperarm_npo, self.getName("frontSpring_npo"), t_upperSpring
         )
 
         self.lowerSpring_npo = primitive.addTransform(
-            self.width_npo, self.getName(f"{width_side}_lowerSpring_npo"), t_lowerSpring
+            self.lower_ball_npo, self.getName("lowerSpring_npo"), t_lowerSpring
         )
 
         # Joint outputs
@@ -215,14 +231,21 @@ class Component(component.Main):
         self.jointRelatives["width"] = len(self.jnt_pos) - 1
 
         self.jnt_pos.append([self.lower_arm_npo, f"{width_side}_lower_arm", "width", False])
-
+        self.jointRelatives[f"{width_side}_lower_arm"] = len(self.jnt_pos) - 1
         self.jnt_pos.append(
             [self.lower_ball_npo, f"{width_side}_lower_ball", f"{width_side}_lower_arm", False]
         )
+        self.jointRelatives[f"{width_side}_lower_ball"] = len(self.jnt_pos) - 1
 
         self.jnt_pos.append([self.upperarm_npo, f"{width_side}_upper_arm", "width", False])
-
+        self.jointRelatives[f"{width_side}_upper_arm"] = len(self.jnt_pos) - 1
         self.jnt_pos.append([self.frontArm_npo, f"{width_side}_front_arm", "width", False])
+        self.jnt_pos.append(
+            [self.upperSpring_npo, f"{width_side}_upperSpring", f"{width_side}_upper_arm", False]
+        )
+        self.jnt_pos.append(
+            [self.lowerSpring_npo, f"{width_side}_lowerSpring", f"{width_side}_lower_ball", False]
+        )
 
     # =====================================================
     # ATTRIBUTES

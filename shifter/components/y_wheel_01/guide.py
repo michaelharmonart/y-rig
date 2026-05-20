@@ -52,6 +52,8 @@ class Guide(guide.ComponentGuide):
             "lower_ball",
             "upper_arm",
             "front_arm",
+            "upperSpring",
+            "lowerSpring",
         ]
 
     def addObjects(self):
@@ -72,10 +74,10 @@ class Guide(guide.ComponentGuide):
         self.upper_arm = self.addLoc("upper_arm", self.width, vTemp)
         vTemp = transform.getOffsetPosition(self.width, [10.646, 0, 0.044])
         self.front_arm = self.addLoc("front_arm", self.width, vTemp)
-        vTemp = transform.getOffsetPosition(self.width, [0, 0, 14.53])
-        self.upperSpring = self.addLoc("upperSpring", self.width, vTemp)
-        vTemp = transform.getOffsetPosition(self.width, [0, 0, 14])
-        self.lowerSpring = self.addLoc("lowerSpring", self.width, vTemp)
+        vTemp = transform.getOffsetPosition(self.upper_arm, [0, 0, 14.53])
+        self.upperSpring = self.addLoc("upperSpring", self.upper_arm, vTemp)
+        vTemp = transform.getOffsetPosition(self.lower_ball, [0, 0, 14])
+        self.lowerSpring = self.addLoc("lowerSpring", self.lower_ball, vTemp)
 
         centers = [
             self.root,
@@ -87,6 +89,8 @@ class Guide(guide.ComponentGuide):
             self.lower_ball,
             self.upper_arm,
             self.front_arm,
+            self.upperSpring,
+            self.lowerSpring,
         ]
         self.dispcrv = self.addDispCurve("crv", centers)
 
