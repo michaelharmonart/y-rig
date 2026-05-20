@@ -834,6 +834,7 @@ class Component(component.Main):
 
         # parent the upVector_grp with the frontArm Locators
         pm.parent(self.frontArm_locator, parent.upVector_GRP, absolute=True)
+        pm.parent(self.upperSpring_locator, parent.upVector_GRP, absolute=True)
 
         print("finished connecting wheel to parent")
 
