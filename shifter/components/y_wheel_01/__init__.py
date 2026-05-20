@@ -211,7 +211,7 @@ class Component(component.Main):
             self.width_npo, self.getName(f"{width_side}_front_arm_npo"), t_front_arm
         )
 
-        # make the upper and lower spring npos have z facing out and y facing out and x facing up
+        # make the upper and lower spring npos have z facing forward
 
         self.upperSpring_npo = primitive.addTransform(
             self.upperarm_npo, self.getName("frontSpring_npo"), t_upperSpring
@@ -520,6 +520,58 @@ class Component(component.Main):
             worldUpObject=self.frontArm_locator,
             skip=["x", "y"],
         )
+
+        # do all the spring logic
+        # create locators where they have the same z translate, the same y traslate as the upper spring and the same x translate as the lower spring
+        t_upperSpring = self.guide.tra["upperSpring"]
+        t_lowerSpring = self.guide.tra["lowerSpring"]
+        if self.side == "R":
+            t_upperSpring = transform.setMatrixPosition(
+                t_upperSpring,
+                [
+                    -t_upperSpring.translate.x,
+                    t_upperSpring.translate.y,
+                    t_upperSpring.translate.z,
+                ],
+            )
+            t_lowerSpring = transform.setMatrixPosition(
+                t_lowerSpring,
+                [
+                    -t_lowerSpring.translate.x,
+                    t_lowerSpring.translate.y,
+                    t_lowerSpring.translate.z,
+                ],
+            )
+
+        self.upperSpring_locator = pm.spaceLocator(n=self.getName("upperSpring_locator"))[0]
+        t_upperSpring_locator = transform.setMatrixPosition(
+            t_upperSpring,
+            [t_lowerSpring.translate.x, t_upperSpring.translate.y, t_lowerSpring.translate.z],
+        )
+        self.upperSpring_locator.setMatrix(t_upperSpring_locator)
+        # create aim constraint with with maintain offset off,aim vector 1,0,0, up vector 0,1,0, world up type object with the upperSpring_locator as the object up, constraint axes with z checked off
+        pm.aimConstraint(
+            self.lowerSpring_npo,
+            self.upperarm_npo,
+            maintainOffset=False,
+            aimVector=[1, 0, 0],
+            upVector=[0, 1, 0],
+            worldUpType="object",
+            worldUpObject=self.upperSpring_locator,
+            skip=["x", "y"],
+        )
+
+        pm.aimConstraint(
+            self.upperarm_npo,
+            self.lowerSpring_npo,
+            maintainOffset=False,
+            aimVector=[-1, 0, 0],
+            upVector=[0, 1, 0],
+            worldUpType="object",
+            worldUpObject=self.upperSpring_locator,
+            skip=["x", "y"],
+        )
+        pm.parentConstraint(self.width_npo, self.upperSpring_locator, maintainOffset=True)
 
     # =====================================================
     # CONNECTION
