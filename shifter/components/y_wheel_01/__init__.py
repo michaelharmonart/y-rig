@@ -195,6 +195,8 @@ class Component(component.Main):
             self.width_npo, self.getName(f"{width_side}_front_arm_npo"), t_front_arm
         )
 
+        # make the upper and lower spring npos have z facing out and y facing out and x facing up
+
         self.upperSpring_npo = primitive.addTransform(
             self.width_npo, self.getName(f"{width_side}_frontSpring_npo"), t_upperSpring
         )
