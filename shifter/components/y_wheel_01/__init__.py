@@ -36,6 +36,8 @@ class Component(component.Main):
         t_lower_ball = self.guide.tra["lower_ball"]
         t_upper_arm = self.guide.tra["upper_arm"]
         t_front_arm = self.guide.tra["front_arm"]
+        t_upperSpring = self.guide.tra["upperSpring"]
+        t_lowerSpring = self.guide.tra["lowerSpring"]
 
         # --- Hierarchy Setup (Transforms) ---
 
@@ -191,6 +193,14 @@ class Component(component.Main):
 
         self.frontArm_npo = primitive.addTransform(
             self.width_npo, self.getName(f"{width_side}_front_arm_npo"), t_front_arm
+        )
+
+        self.upperSpring_npo = primitive.addTransform(
+            self.width_npo, self.getName(f"{width_side}_frontSpring_npo"), t_upperSpring
+        )
+
+        self.lowerSpring_npo = primitive.addTransform(
+            self.width_npo, self.getName(f"{width_side}_lowerSpring_npo"), t_lowerSpring
         )
 
         # Joint outputs

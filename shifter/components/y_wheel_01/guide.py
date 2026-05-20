@@ -72,6 +72,10 @@ class Guide(guide.ComponentGuide):
         self.upper_arm = self.addLoc("upper_arm", self.width, vTemp)
         vTemp = transform.getOffsetPosition(self.width, [10.646, 0, 0.044])
         self.front_arm = self.addLoc("front_arm", self.width, vTemp)
+        vTemp = transform.getOffsetPosition(self.width, [0, 0, 14.53])
+        self.upperSpring = self.addLoc("upperSpring", self.width, vTemp)
+        vTemp = transform.getOffsetPosition(self.width, [0, 0, 14])
+        self.lowerSpring = self.addLoc("lowerSpring", self.width, vTemp)
 
         centers = [
             self.root,
