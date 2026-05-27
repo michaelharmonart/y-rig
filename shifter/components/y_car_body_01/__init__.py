@@ -105,7 +105,7 @@ class Component(component.Main):
         )
 
         self.body_ctrl = self.addCtl(
-            self.drive_ctl,
+            self.rearAxis_ctrl,
             "body_ctrl",
             t_chassis,
             self.color_fk,
@@ -115,6 +115,8 @@ class Component(component.Main):
             d=self.size * 8.5,
             tp=None,
         )
+        # Ensure the body control Y starts at 0 (neutral suspension)
+        pm.setAttr(self.body_ctrl.ty, 0)
 
         self.root_pivot_npo = primitive.addTransform(
             self.rolloffset, self.getName("root_pivot_npo"), t
@@ -163,7 +165,7 @@ class Component(component.Main):
         pm.parent(self.root_pivot_npo, self.drive_ctl)
         pm.parentConstraint(self.child_pivot_npo, self.rolloffset)
 
-        pm.parent(self.body_ctrl, self.rearAxis_ctrl)
+        # pm.parent(self.body_ctrl, self.rearAxis_ctrl)
         pm.parent(self.chassis_npo, self.rearAxis_ctrl)
 
         # add joints
@@ -205,6 +207,7 @@ class Component(component.Main):
             ],
             [self.drive_ctl],
         )
+        pm.setAttr(self.body_ctrl.ty, 0)
 
     # =====================================================
     # OPERATORS
@@ -299,6 +302,8 @@ class Component(component.Main):
             self.getName("upVector_GRP"),
             t_chassis,
         )
+
+        pm.setAttr(self.body_ctrl.ty, 0)
 
     def connect_wheels(self):
         print("connecting wheels")

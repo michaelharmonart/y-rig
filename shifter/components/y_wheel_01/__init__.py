@@ -815,7 +815,7 @@ class Component(component.Main):
                 rear_ws_matrix = parent.rearAxis_ctrl_OFST.getMatrix(worldSpace=True)
 
                 pm.parent(parent.rearAxis_ctrl_OFST, world=True)
-                pm.parent(parent.body_ctrl, world=True)
+                # pm.parent(parent.body_ctrl, world=True)
                 pm.parent(parent.chassis_npo, world=True)
 
                 parent.rearAxis_ctrl_OFST.setMatrix(rear_ws_matrix, worldSpace=True)
@@ -827,7 +827,7 @@ class Component(component.Main):
                 pm.xform(parent.rearAxis_ctrl_OFST, ws=True, t=[ws_pos[0], ws_pos[1], ball_z2])
 
                 pm.parent(parent.rearAxis_ctrl_OFST, parent.frontAxis_ctrl, absolute=True)
-                pm.parent(parent.body_ctrl, parent.rearAxis_ctrl, absolute=True)
+                # pm.parent(parent.body_ctrl, parent.rearAxis_ctrl, absolute=True)
                 pm.parent(parent.chassis_npo, parent.rearAxis_ctrl, absolute=True)
 
                 print("rear axis adjusted")
