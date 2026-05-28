@@ -139,6 +139,7 @@ class Component(component.Main):
 
         # Deform locator (final output for binding)
         self.wheel_loc = pm.spaceLocator(n=self.getName("wheel_loc"))[0]
+        pm.setAttr(self.wheel_loc + ".v", 0)
 
         self.wheel_loc.setMatrix(t_ball)
         pm.parent(self.wheel_loc, self.frontWheel_reset)
@@ -497,6 +498,7 @@ class Component(component.Main):
         # create locator directly above the front arm and parent contraint it to the width npo
 
         self.frontArm_locator = pm.spaceLocator(n=self.getName("frontArm_locator"))[0]
+        pm.setAttr(self.frontArm_locator + ".v", 0)
         t_front_arm_locator = transform.setMatrixPosition(
             t_front_arm, [t_front_arm.translate.x, 80, t_front_arm.translate.z]
         )
@@ -539,6 +541,7 @@ class Component(component.Main):
             )
 
         self.upperSpring_locator = pm.spaceLocator(n=self.getName("upperSpring_locator"))[0]
+        pm.setAttr(self.upperSpring_locator + ".v", 0)
         t_upperSpring_locator = transform.setMatrixPosition(
             t_upperSpring,
             [t_lowerSpring.translate.x, t_upperSpring.translate.y, t_lowerSpring.translate.z],
