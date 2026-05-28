@@ -43,11 +43,9 @@ class Component(component.Main):
 
         if self.side == "L":
             txt = f"Creating left wheel: {self.side}"
-            print(txt)
 
         else:
             txt = f"Creating right wheel: {self.side}"
-            print(txt)
             t_wheel = transform.setMatrixPosition(
                 t_wheel, [-t_wheel.translate.x, t_ball.translate.y, t_wheel.translate.z]
             )
@@ -123,11 +121,11 @@ class Component(component.Main):
 
         # Steering offset pivot (Child of ball)
         wheel_type = self.settings.get("wheelType", 0)
-        print("wheel_type value:", wheel_type)
-        if wheel_type == 0:
-            print("front wheel")
-        else:
-            print("rear wheel")
+        # print("wheel_type value:", wheel_type)
+        # if wheel_type == 0:
+        #     print("front wheel")
+        # else:
+        #     print("rear wheel")
 
         if wheel_type == 0:
             self.steer_npo = primitive.addTransform(
@@ -552,7 +550,7 @@ class Component(component.Main):
         # create aim constraint with with maintain offset off,aim vector 1,0,0, up vector 0,1,0, world up type object with the upperSpring_locator as the object up, constraint axes with z checked off
         pm.aimConstraint(
             self.lowerSpring_npo,
-            self.upperarm_npo,
+            self.upperSpring_npo,
             maintainOffset=False,
             aimVector=[1, 0, 0],
             upVector=[0, 1, 0],
@@ -562,7 +560,7 @@ class Component(component.Main):
         )
 
         pm.aimConstraint(
-            self.upperarm_npo,
+            self.upperSpring_npo,
             self.lowerSpring_npo,
             maintainOffset=False,
             aimVector=[-1, 0, 0],
@@ -582,13 +580,13 @@ class Component(component.Main):
         self.connections["y_car_body_01"] = self.connect_wheel_to_parent
 
     def connect_wheel_to_parent(self):
-        print("connecting wheel to parent")
+        # print("connecting wheel to parent")
         self.connect_standard()
 
         parent = getattr(self, "parent_comp", None)
         if not parent:
             return
-        print("found parent")
+        # print("found parent")
 
         def reparent_width_joint():
             width_jnt = pm.PyNode(self.getName("width_jnt"))
@@ -605,9 +603,10 @@ class Component(component.Main):
             # pm.parent(self.lower_ball_npo, parent.body_npo, absolute=True)
             # pm.parent(self.upperarm_npo, parent.body_npo, absolute=True)
             # pm.parent(self.frontArm_npo, parent.body_npo, absolute=True)
-            print("reparented all suspension NPOs under parent.body_npo")
+            # print("reparented all suspension NPOs under parent.body_npo")
         else:
-            print("parent has no body_npo; suspension remains under ball_npo")
+            x = 6
+            # print("parent has no body_npo; suspension remains under ball_npo")
 
         # -----------------------------------
         # FIND DRIVER
@@ -615,14 +614,14 @@ class Component(component.Main):
         if hasattr(parent, "drive_ctl"):
             driver = parent.drive_ctl
         else:
-            print("No drive_ctl found")
+            # print("No drive_ctl found")
             return
 
         # -----------------------------------
         # CREATE EXPRESSION ONLY ONCE
         # -----------------------------------
         if not pm.objExists(self.EXPR_NAME):
-            print("Creating global wheel expression")
+            # print("Creating global wheel expression")
 
             expr = """
             global vector $vPos = << 0, 0, 0 >>;
@@ -687,9 +686,10 @@ class Component(component.Main):
             )
 
         else:
-            print("Expression already exists, skipping")
+            x = 5
+            # print("Expression already exists, skipping")
 
-        print("connected drive and steer drive from parent")
+        # print("connected drive and steer drive from parent")
 
         # Match parent car body attributes if present
         wheel_type = self.settings.get("wheelType", 0)
@@ -720,10 +720,11 @@ class Component(component.Main):
 
         # Connect wheel's computed steer drive into the body
         if wheel_type == 0:
-            print(wheel_type)
-            print("connecting front wheel steer drive to parent")
+            x = 7
+            # print(wheel_type)
+            # print("connecting front wheel steer drive to parent")
             if hasattr(parent, "steerDrive_att"):
-                print("connecting wheel steer drive to parent")
+                # print("connecting wheel steer drive to parent")
                 pm.connectAttr(
                     self.steerDriveDistance_MD.outputX, parent.steerDrive_att, force=True
                 )
@@ -753,19 +754,20 @@ class Component(component.Main):
 
         # connect drive ctl to front wheel spin PNA input 1D
         if hasattr(parent, "drive_ctl"):
-            print("going to try and connect up frontWheelSpin_PMA")
+            # print("going to try and connect up frontWheelSpin_PMA")
             pm.connectAttr(
                 parent.drive_ctl.wheelDrive2,
                 self.getName("frontWheelSpin_PMA") + ".input1D[1]",
                 force=True,
             )
-            print("connected drive_ctl wheelDrive to frontWheelSpin_PMA input1D[1]")
+            # print("connected drive_ctl wheelDrive to frontWheelSpin_PMA input1D[1]")
         else:
-            print("parent has no drive_ctl to connect wheelDrive")
+            x = 7
+            # print("parent has no drive_ctl to connect wheelDrive")
 
         # chagne the steer radius to be based off the wheel guide and not hard coded in car_body_01
         if self.side == "R":
-            print("adjusting steer radius for right side")
+            # print("adjusting steer radius for right side")
             pm.createNode("multiplyDivide", n=self.getName("steerRadius_invert_md"))
 
             pm.setAttr(
@@ -792,51 +794,51 @@ class Component(component.Main):
         # front and back axis control position changed based off of wheel position. Position should be based off of the wheel position and not hard coded in the car body so that it can be adjusted for different wheel positions and sizes.
         if wheel_type == 0:
             if parent.frontAxis_bool:
-                print("adjusting front axis control position based on wheel position")
+                # print("adjusting front axis control position based on wheel position")
                 pm.parent(parent.frontAxis_ctrl_OFST, world=True)
                 pm.parent(parent.rearAxis_ctrl_OFST, world=True)
                 parent.frontAxis_bool = False
                 ball_z2 = self.guide.pos["ball"].z
                 parent.frontAxis_ctrl_OFST.translateZ.set(ball_z2)
-                print("setting front axis control position based on ball position:", ball_z2)
-                print("re-parenting front and rear axis controls to root")
+                # print("setting front axis control position based on ball position:", ball_z2)
+                # print("re-parenting front and rear axis controls to root")
                 pm.parent(parent.frontAxis_ctrl_OFST, parent.rolloffset)
                 pm.parent(parent.rearAxis_ctrl_OFST, parent.frontAxis_ctrl)
 
             else:
-                print("front axis control position already set, skipping")
+                x = 1
+                # print("front axis control position already set, skipping")
 
-        if wheel_type == 1:
-            if parent.backAxis_bool:
-                print("adjusting back axis control position based on wheel position")
+        if wheel_type == 1 and parent.backAxis_bool:
+            # print("adjusting back axis control position based on wheel position")
 
-                parent.backAxis_bool = False
+            parent.backAxis_bool = False
 
-                rear_ws_matrix = parent.rearAxis_ctrl_OFST.getMatrix(worldSpace=True)
+            rear_ws_matrix = parent.rearAxis_ctrl_OFST.getMatrix(worldSpace=True)
 
-                pm.parent(parent.rearAxis_ctrl_OFST, world=True)
-                # pm.parent(parent.body_ctrl, world=True)
-                pm.parent(parent.chassis_npo, world=True)
+            pm.parent(parent.rearAxis_ctrl_OFST, world=True)
+            # pm.parent(parent.body_ctrl, world=True)
+            pm.parent(parent.chassis_npo, world=True)
 
-                parent.rearAxis_ctrl_OFST.setMatrix(rear_ws_matrix, worldSpace=True)
+            parent.rearAxis_ctrl_OFST.setMatrix(rear_ws_matrix, worldSpace=True)
 
-                ball_z2 = self.guide.pos["ball"].z
+            ball_z2 = self.guide.pos["ball"].z
 
-                ws_pos = pm.xform(parent.rearAxis_ctrl_OFST, q=True, ws=True, t=True)
+            ws_pos = pm.xform(parent.rearAxis_ctrl_OFST, q=True, ws=True, t=True)
 
-                pm.xform(parent.rearAxis_ctrl_OFST, ws=True, t=[ws_pos[0], ws_pos[1], ball_z2])
+            pm.xform(parent.rearAxis_ctrl_OFST, ws=True, t=[ws_pos[0], ws_pos[1], ball_z2])
 
-                pm.parent(parent.rearAxis_ctrl_OFST, parent.frontAxis_ctrl, absolute=True)
-                # pm.parent(parent.body_ctrl, parent.rearAxis_ctrl, absolute=True)
-                pm.parent(parent.chassis_npo, parent.rearAxis_ctrl, absolute=True)
+            pm.parent(parent.rearAxis_ctrl_OFST, parent.frontAxis_ctrl, absolute=True)
+            # pm.parent(parent.body_ctrl, parent.rearAxis_ctrl, absolute=True)
+            pm.parent(parent.chassis_npo, parent.rearAxis_ctrl, absolute=True)
 
-                print("rear axis adjusted")
+            # print("rear axis adjusted")
 
         # parent the upVector_grp with the frontArm Locators
         pm.parent(self.frontArm_locator, parent.upVector_GRP, absolute=True)
         pm.parent(self.upperSpring_locator, parent.upVector_GRP, absolute=True)
 
-        print("finished connecting wheel to parent")
+        # print("finished connecting wheel to parent")
 
     def setRelation(self):
         self.relatives["root"] = self.ball_npo
