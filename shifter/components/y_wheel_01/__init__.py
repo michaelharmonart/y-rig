@@ -1,15 +1,12 @@
 # type: ignore
 """Component Chain 01 module"""
 
-import mgear.pymaya as pm
-
 # import maya.cmds as cmds
 import math
 
+import mgear.pymaya as pm
+from mgear.core import primitive, transform
 from mgear.shifter import component
-from mgear.core import primitive
-from mgear.core import transform
-
 
 ##########################################################
 # COMPONENT
