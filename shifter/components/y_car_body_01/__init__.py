@@ -6,11 +6,9 @@
 # import maya.cmds as cmds
 # import math
 
-from mgear.shifter import component
-from mgear.core import primitive, attribute
 import mgear.pymaya as pm
-from mgear.core import transform
-
+from mgear.core import attribute, primitive, transform
+from mgear.shifter import component
 
 # from mgear.core import transform
 
@@ -305,8 +303,38 @@ class Component(component.Main):
 
         pm.setAttr(self.body_ctrl.ty, 0)
 
+        """
+        add in the ability to move the chassis up and down while adjusting the wheel radius
+        """
+        pm.createNode("multiplyDivide", name=self.getName("Chassis_y_adjust_MD"))
+        pm.setAttr(self.getName("Chassis_y_adjust_MD") + ".input2Y", 1.5)
+        pm.connectAttr(
+            self.drive_ctl + ".wheelRadius",
+            self.getName("Chassis_y_adjust_MD") + ".input1Y",
+            force=True,
+        )
+
+        pm.createNode("plusMinusAverage", name=self.getName("Chassis_y_adjust_PM"))
+        pm.setAttr(self.getName("Chassis_y_adjust_PM") + ".operation", 2)
+        pm.connectAttr(
+            self.getName("Chassis_y_adjust_MD") + ".outputY",
+            self.getName("Chassis_y_adjust_PM") + ".input1D[0]",
+            force=True,
+        )
+        pm.connectAttr(
+            self.drive_ctl + ".wheelRadius2",
+            self.getName("Chassis_y_adjust_PM") + ".input1D[1]",
+            force=True,
+        )
+        pm.connectAttr(
+            self.getName("Chassis_y_adjust_PM") + ".output1D",
+            self.chassis_npo + ".translateY",
+            force=True,
+        )
+
     def connect_wheels(self):
-        print("connecting wheels")
+        # print("connecting wheels")
+        x = 1
 
         # self.connect_standard()
 
@@ -354,7 +382,7 @@ class Component(component.Main):
         #     pm.connectAttr(comp.steerDriveDistance_md + ".outputX", dest_attr, force=True)
 
     def addConnection(self):
-        print("adding connections")
+        # print("adding connections")
         # Guide connector name is 'wheels' in y_car_body_01/guide.py
         self.connections["y_wheel_01"] = self.connect_wheels
         # print("Connector on guide:", self.root.attr("connector").get())
