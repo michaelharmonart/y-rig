@@ -189,10 +189,25 @@ class Component(component.Main):
         self.rearWheel_spin_att = self.addAnimParam("rearWheelSpin", "Rear Wheel Spin", "double", 0)
         self.wheelDrive_att = self.addAnimParam("wheelDrive", "Wheel Drive", "double", 0)
         self.steerDrive_att = self.addAnimParam("steerDrive", "Steer Drive", "double", 0)
-        self.wheelRadius_att = self.addSetupParam("wheelRadius", "Wheel Radius", "double", 35)
-        self.steerRadius_att = self.addSetupParam("steerRadius", "Steer Radius", "double", 0)
+        self.wheelRadius_att = self.addSetupParam(
+            "wheelRadius",
+            "Wheel Radius",
+            "double",
+            self.settings.get("wheelRadius", 35),
+        )
+        self.wheelRadius2_att = self.addSetupParam(
+            "wheelRadius2",
+            "Wheel Radius 2",
+            "double",
+            self.settings.get("wheelRadius2", 35),
+        )
+        self.steerRadius_att = self.addSetupParam(
+            "steerRadius",
+            "Steer Radius",
+            "double",
+            self.settings.get("steerRadius", 0),
+        )
         pm.addAttr(self.drive_ctl, longName="wheelDrive2", attributeType="double", keyable=True)
-        pm.addAttr(self.drive_ctl, longName="wheelRadius2", attributeType="double", keyable=True)
         attribute.addProxyAttribute(
             [
                 self.steer_att,
@@ -201,6 +216,7 @@ class Component(component.Main):
                 self.wheelDrive_att,
                 self.steerDrive_att,
                 self.wheelRadius_att,
+                self.wheelRadius2_att,
                 self.steerRadius_att,
             ],
             [self.drive_ctl],

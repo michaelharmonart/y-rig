@@ -1,16 +1,28 @@
 """Guide Chain 01 module"""
 
+import contextlib
+import importlib
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from maya.app.general.mayaMixin import MayaQDockWidget, MayaQWidgetDockableMixin  # type: ignore
+else:
+    try:
+        from maya.app.general.mayaMixin import MayaQDockWidget, MayaQWidgetDockableMixin
+    except ImportError:
+
+        class MayaQDockWidget:
+            pass
+
+        class MayaQWidgetDockableMixin:
+            pass
+
+
+from mgear.core import pyqt, transform
 from mgear.shifter.component import guide
-from mgear.core import pyqt
-from mgear.vendor.Qt import QtWidgets, QtCore  # type: ignore
-
-from maya.app.general.mayaMixin import MayaQWidgetDockableMixin  # type: ignore
-from maya.app.general.mayaMixin import MayaQDockWidget  # type: ignore
-from mgear.core import transform
-
+from mgear.vendor.Qt import QtCore, QtWidgets  # type: ignore
 
 from . import settingsUI as sui
-import importlib
 
 importlib.reload(sui)
 
@@ -71,6 +83,8 @@ class Guide(guide.ComponentGuide):
         # ===== YOUR CUSTOM PARAMS =====
         self.pSide = self.addParam("side", "long", 0, 0, 2)
         self.pWheels = self.addParam("wheels", "string", "")
+        self.pWheelRadius = self.addParam("wheelRadius", "double", 35)
+        self.pWheelRadius2 = self.addParam("wheelRadius2", "double", 35)
 
         # TODO: if have IK or IK/FK lock the axis position to
         # force 2D Planar IK solver
@@ -85,7 +99,7 @@ class Guide(guide.ComponentGuide):
 
 class settingsTab(QtWidgets.QDialog, sui.Ui_Form):
     def __init__(self, parent=None):
-        super(settingsTab, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
 
 
@@ -95,7 +109,7 @@ class componentSettings(MayaQWidgetDockableMixin, guide.componentMainSettings): 
         # Delete old instances of the componet settings window.
         pyqt.deleteInstances(self, MayaQDockWidget)
 
-        super(componentSettings, self).__init__(parent=parent)
+        super().__init__(parent=parent)
         self.settingsTab = settingsTab()
 
         self.setup_componentSettingWindow()
@@ -123,6 +137,8 @@ class componentSettings(MayaQWidgetDockableMixin, guide.componentMainSettings): 
         self.settingsTab.name_lineEdit.setText(self.root.name())
         self.settingsTab.side_comboBox.setCurrentIndex(self.root.attr("side").get())
         self.settingsTab.wheels_lineEdit.setText(self.root.attr("wheels").get())
+        self.settingsTab.wheelRadius_lineEdit.setText(str(self.root.attr("wheelRadius").get()))
+        self.settingsTab.wheelRadius2_lineEdit.setText(str(self.root.attr("wheelRadius2").get()))
 
         for cnx in Guide.connectors:
             self.mainSettingsTab.connector_comboBox.addItem(cnx)
@@ -148,9 +164,22 @@ class componentSettings(MayaQWidgetDockableMixin, guide.componentMainSettings): 
             lambda val: self.root.attr("wheels").set(val)
         )
 
+        self.settingsTab.wheelRadius_lineEdit.textChanged.connect(self.updateWheelRadius)
+        self.settingsTab.wheelRadius2_lineEdit.textChanged.connect(self.updateWheelRadius2)
+
     def updateName(self, text):
         if text:
             self.root.rename(text)
+
+    def updateWheelRadius(self, text):
+        if text:
+            with contextlib.suppress(ValueError):
+                self.root.attr("wheelRadius").set(float(text))
+
+    def updateWheelRadius2(self, text):
+        if text:
+            with contextlib.suppress(ValueError):
+                self.root.attr("wheelRadius2").set(float(text))
 
     def dockCloseEventTriggered(self):
         pyqt.deleteInstances(self, MayaQDockWidget)
