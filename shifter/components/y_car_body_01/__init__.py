@@ -1,5 +1,5 @@
 # type: ignore
-"""Component Chain 01 module"""
+"""Component y_car__body_01 module"""
 
 # import mgear.pymaya as pm
 
@@ -347,6 +347,36 @@ class Component(component.Main):
             self.chassis_npo + ".translateY",
             force=True,
         )
+
+        self.lock_and_hide_drive_control_attrs()
+
+    def lock_and_hide_drive_control_attrs(self):
+        if self.settings.get("lockAndHide", False):  # noqa: SIM102
+            if pm.objExists(self.drive_ctl + ".wheelRadius2"):
+                pm.setAttr(
+                    self.drive_ctl + ".wheelRadius2",
+                    lock=True,
+                    keyable=False,
+                    channelBox=False,
+                )
+                pm.setAttr(
+                    self.drive_ctl + ".wheelRadius",
+                    lock=True,
+                    keyable=False,
+                    channelBox=False,
+                )
+                # pm.setAttr(
+                #     self.drive_ctl + ".steerRadius",
+                #     lock=True,
+                #     keyable=False,
+                #     channelBox=False,
+                # )
+                pm.setAttr(
+                    self.drive_ctl + ".wheelDrive",
+                    lock=True,
+                    keyable=False,
+                    channelBox=False,
+                )
 
     def connect_wheels(self):
         # print("connecting wheels")

@@ -1,5 +1,6 @@
 from Qt.QtCore import QCoreApplication, QMetaObject
 from Qt.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QFormLayout,
     QGridLayout,
@@ -53,6 +54,13 @@ class Ui_Form:
         self.wheelRadius2_label.setText("Wheel Radius 2")
         self.wheelRadius2_lineEdit = QLineEdit(Form)
         self.formLayout.addRow(self.wheelRadius2_label, self.wheelRadius2_lineEdit)
+
+        # --- lock and hide drive controls for final build ---
+        self.lock_and_hide_label = QLabel(Form)
+        self.lock_and_hide_label.setText("lock and hide drive control attributes")
+        self.lock_and_hide_checkbox = QCheckBox(Form)
+        self.lock_and_hide_checkbox.setChecked(False)
+        self.formLayout.addRow(self.lock_and_hide_label, self.lock_and_hide_checkbox)
 
         # Add form to grid
         self.gridLayout.addLayout(self.formLayout, 0, 0, 1, 1)

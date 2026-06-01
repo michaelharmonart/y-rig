@@ -85,6 +85,7 @@ class Guide(guide.ComponentGuide):
         self.pWheels = self.addParam("wheels", "string", "")
         self.pWheelRadius = self.addParam("wheelRadius", "double", 35)
         self.pWheelRadius2 = self.addParam("wheelRadius2", "double", 35)
+        self.pLockAndHide = self.addParam("lockAndHide", "bool", False)
 
         # TODO: if have IK or IK/FK lock the axis position to
         # force 2D Planar IK solver
@@ -139,6 +140,7 @@ class componentSettings(MayaQWidgetDockableMixin, guide.componentMainSettings): 
         self.settingsTab.wheels_lineEdit.setText(self.root.attr("wheels").get())
         self.settingsTab.wheelRadius_lineEdit.setText(str(self.root.attr("wheelRadius").get()))
         self.settingsTab.wheelRadius2_lineEdit.setText(str(self.root.attr("wheelRadius2").get()))
+        self.settingsTab.lock_and_hide_checkbox.setChecked(self.root.attr("lockAndHide").get())
 
         for cnx in Guide.connectors:
             self.mainSettingsTab.connector_comboBox.addItem(cnx)
@@ -166,6 +168,9 @@ class componentSettings(MayaQWidgetDockableMixin, guide.componentMainSettings): 
 
         self.settingsTab.wheelRadius_lineEdit.textChanged.connect(self.updateWheelRadius)
         self.settingsTab.wheelRadius2_lineEdit.textChanged.connect(self.updateWheelRadius2)
+        self.settingsTab.lock_and_hide_checkbox.toggled.connect(
+            lambda val: self.root.attr("lockAndHide").set(val)
+        )
 
     def updateName(self, text):
         if text:
