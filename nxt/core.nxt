@@ -18,6 +18,12 @@
     },
     "nodes": {
         "/": {
+            "attrs": {
+                "dev_build": {
+                    "type": "bool",
+                    "value": "False"
+                }
+            },
             "code": [
                 "import yrig",
                 "from maya import cmds"

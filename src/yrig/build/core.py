@@ -33,7 +33,7 @@ def build_rig(
     with nxt_file_roots(root_paths):
         try:
             no_components = resolved_scope == BuildScope.FACE
-            execute_nxt_graph(build_path)
+            execute_nxt_graph(build_path, parameters={"dev_build": dev_build})
         except Exception as e:
             build_logger.error("Build failed: %s", e)
             raise RuntimeError(f"mGear Shifter build failed for '{build_path}': {e}") from e
