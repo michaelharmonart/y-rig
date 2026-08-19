@@ -29,14 +29,27 @@ def build_rig(
     build_scope: BuildScope | str | None = None,
     progress_callback: Callable[[float, str | None], None] | None = None,
 ) -> bool:
+    """Build a y-rig rig.
+
+    Args:
+        root_paths: Paths to rig build root directories. Should be in order of strongest -> weakest.
+        rig_path: Path to the rig's build directory relative to the root. For example characters/rig_name
+        dev_build: When true the rig build will not have working data stripped for final export.
+        progress_callback: A function to call at each step of the build for progress monitoring.
+            It will be called with a float (overall progress from 0-1) and a string (the current step)
+        build_scope: An optional BuildScope which will limit the build to that scope.
+
+    Returns:
+        bool: True if the build was successful, else False
+    """
     build_path = rig_path / "data/build.nxt"
     resolved_scope = resolve_build_scope(build_scope)
     build_step = ProgressStep("Rig Build", callback=progress_callback)
     with nxt_file_roots(root_paths), bind_progress_step(build_step):
         try:
             no_components = resolved_scope == BuildScope.FACE
-            execute_nxt_graph(build_path, parameters={"dev_build": dev_build})
+            execute_nxt_graph(build_path, parameters={"/.dev_build": dev_build})
         except Exception as e:
             build_logger.error("Build failed: %s", e)
-            raise RuntimeError(f"mGear Shifter build failed for '{build_path}': {e}") from e
-        return True
+            raise RuntimeError(f"y-rig build failed for '{build_path}': {e}") from e
+    return True

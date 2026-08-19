@@ -127,8 +127,9 @@ def build_from_path(
         rig_root_path: Path to an a rig file structure.
         dev_build: When true the mGear shifter build will be set to WIP mode.
         progress_callback: A function to call at each step of the build.
-        build_scope: An optional BuildScope which will limit the build to that scope.
             It will be called with a float (overall progress from 0-1) and a string (the current step)
+        build_scope: An optional BuildScope which will limit the build to that scope.
+
 
     Returns:
         bool: True if the build was successful, else False

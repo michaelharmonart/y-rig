@@ -1,0 +1,167 @@
+{
+    "version": "1.17",
+    "alias": "rig",
+    "color": "#0e8b5d",
+    "mute": false,
+    "solo": false,
+    "references": [
+        "/users/student/g/graphite/maya-python/y-rig/nxt/skin.nxt",
+        "$YRIG_NXT_DIR/core.nxt"
+    ],
+    "meta_data": {
+        "positions": {
+            "/cleanup": [
+                469.3577831887693,
+                -15.101461572512576
+            ],
+            "/cleanup/control_shapes": [
+                0.0,
+                0.0
+            ],
+            "/deformation": [
+                45.101567325149915,
+                -13.162854949084434
+            ],
+            "/middle": [
+                -396.0467648945946,
+                -12.903779307342678
+            ],
+            "/root": [
+                -831.6951421420665,
+                -13.679528134599906
+            ],
+            "/setup/rig_hierarchy": [
+                0.0,
+                0.0
+            ],
+            "/skin_geometry": [
+                -785.9072536198922,
+                -406.37266794444895
+            ]
+        },
+        "collapse": {
+            "/root": false,
+            "/root/rig_hierarchy": true
+        },
+        "locks": {
+            "$YRIG_NXT_DIR/core.nxt": true,
+            "/users/student/g/graphite/maya-python/y-rig/nxt/skin.nxt": true
+        }
+    },
+    "nodes": {
+        "/": {},
+        "/cleanup": {
+            "execute_in": "/deformation",
+            "child_order": [
+                "control_shapes"
+            ]
+        },
+        "/cleanup/control_shapes": {
+            "attrs": {
+                "control_shapes_filepath": {
+                    "type": "raw",
+                    "value": "${file::data/control_shapes.json}"
+                }
+            },
+            "code": [
+                "yrig.control.serialize.apply_control_shapes_file(Path(\"${control_shapes_filepath}\"))"
+            ]
+        },
+        "/deformation": {
+            "execute_in": "/middle",
+            "child_order": [
+                "skin"
+            ]
+        },
+        "/deformation/skin": {
+            "instance": "/skin_geometry",
+            "child_order": [
+                "split"
+            ],
+            "attrs": {
+                "geo_set": {
+                    "value": "${/root/model.model_set}"
+                }
+            }
+        },
+        "/deformation/skin/split": {
+            "instance": "/split_skin_weights"
+        },
+        "/middle": {
+            "instance": "/side",
+            "execute_in": "/root"
+        },
+        "/root": {
+            "start_point": true,
+            "child_order": [
+                "model",
+                "guides"
+            ],
+            "attrs": {
+                "rig_root": {
+                    "type": "raw",
+                    "value": "rig"
+                }
+            },
+            "code": [
+                "if not cmds.objExists(\"${rig_root}\"):",
+                "    self.rig_root = yrig.transform.create_transform(\"${rig_root}\")"
+            ]
+        },
+        "/root/guides": {},
+        "/root/model": {
+            "attrs": {
+                "model_filepath": {
+                    "type": "raw",
+                    "value": "${file::${rig_path}/assets/model.mb}"
+                },
+                "model_group": {
+                    "type": "raw",
+                    "value": "geo"
+                },
+                "model_set": {
+                    "type": "raw",
+                    "value": "rig_geo_grp"
+                }
+            },
+            "code": [
+                "imported_nodes: list[str] = cmds.file(\"${model_filepath}\", i=True, defaultNamespace=True, returnNewNodes=True)",
+                "",
+                "top_level_nodes: list[str] = cmds.ls(imported_nodes, assemblies=True)",
+                "",
+                "# # Case 1: exactly one root transform",
+                "if len(top_level_nodes) == 1:",
+                "    top_level_node = top_level_nodes[0]",
+                "    if cmds.nodeType(top_level_node) == \"transform\":",
+                "        geo_grp = top_level_node",
+                "    else:",
+                "        geo_grp = cmds.group(top_level_node, name=\"${model_group}\", world=True)",
+                "    if geo_grp != \"${model_group}\":",
+                "        geo_grp = cmds.rename(geo_grp)",
+                "else:",
+                "    # Case 2: multiple top level transforms (we need to group them)",
+                "    geo_grp = cmds.group(top_level_nodes, name=\"${model_group}\", world=True)  # type: ignore",
+                "",
+                "# Keep in mind the mgear rig object's \"model\" is actually the root rig transform.",
+                "cmds.parent(geo_grp, \"${rig_root}\")",
+                "cmds.reorder(geo_grp, front=True)",
+                "cmds.reorder(geo_grp, relative=1)",
+                "",
+                "# Get the imported meshes",
+                "meshes = cmds.listRelatives(geo_grp, allDescendents=True, type=\"mesh\")",
+                "mesh_transforms = (",
+                "    cmds.listRelatives(",
+                "        meshes,  # type: ignore",
+                "        parent=True,",
+                "        fullPath=True,",
+                "    )",
+                "    or []",
+                ")",
+                "# remove duplicates",
+                "mesh_transforms: list[str] = list(set(mesh_transforms))",
+                "# Put the geo in the set.",
+                "cmds.sets(mesh_transforms, add=\"${model_set}\")  # type: ignore"
+            ]
+        }
+    }
+}

@@ -25,13 +25,13 @@ def nxt_file_roots(
     file_roots: Sequence[Path], restore: bool = False
 ) -> Generator[None, None, None]:
     """Temporarily set the NXT_FILE_ROOTS env var, restoring it afterward if restore is True."""
-    default_value = os.environ["YRIG_NXT_DIR"]
-    os.environ["YRIG_NXT_DIR"] = os.pathsep.join(map(str, file_roots))
+    default_value = os.environ["NXT_FILE_ROOTS"]
+    os.environ["NXT_FILE_ROOTS"] = os.pathsep.join(map(str, file_roots))
     try:
         yield
     finally:
         if restore:
-            os.environ["YRIG_NXT_DIR"] = default_value
+            os.environ["NXT_FILE_ROOTS"] = default_value
 
 
 # We wrap the NXT execution so we can have nice progress reporting :)

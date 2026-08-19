@@ -7,12 +7,12 @@
     "meta_data": {
         "positions": {
             "/skin_geometry": [
-                -744.6558488015288,
-                -991.5030914981681
+                -787.0273622312808,
+                -406.37266794444895
             ],
             "/split_skin_weights": [
-                -832.0557148767426,
-                -748.8501433890684
+                -789.6842014469904,
+                -333.2057735543576
             ]
         }
     },
@@ -35,16 +35,15 @@
                 },
                 "skin_directory": {
                     "type": "raw",
-                    "value": "data/skin"
+                    "value": "${file::data/skin}"
                 }
             },
             "code": [
                 "from yrig.skin import skin_and_apply_weights_from_directory",
-                "from pathlib import Path",
                 "",
                 "def_joints = cmds.ls(\"${def_set}\", type=\"joint\")  # type: ignore    ",
                 "geo_list = ${geo_list}",
-                "skin_directory = STAGE.asset_path / \"${skin_directory}\"",
+                "skin_directory = Path(\"${skin_directory}\")",
                 "",
                 "if geo_list is None:",
                 "    geo_in_set: list[str] = cmds.sets(\"rig_geo_grp\", query=True)  # type: ignore",

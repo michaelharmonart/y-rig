@@ -1,0 +1,80 @@
+{
+    "version": "1.17",
+    "alias": "biped",
+    "color": "#7a9e2b",
+    "mute": false,
+    "solo": false,
+    "references": [
+        "$YRIG_NXT_DIR/rig.nxt"
+    ],
+    "meta_data": {
+        "positions": {
+            "/cleanup": [
+                1296.6643526537218,
+                -15.594755912117055
+            ],
+            "/deformation": [
+                856.0087940139424,
+                -9.668699423947338
+            ],
+            "/left": [
+                18.209666557736483,
+                -12.063569759815769
+            ],
+            "/middle": [
+                -396.0467648945946,
+                -12.903779307342678
+            ],
+            "/right": [
+                419.19959226227263,
+                -11.329718709791148
+            ],
+            "/root": [
+                -836.227393231747,
+                -13.679528134599906
+            ]
+        },
+        "collapse": {
+            "/left": false
+        },
+        "locks": {
+            "$YRIG_NXT_DIR/rig.nxt": true
+        }
+    },
+    "nodes": {
+        "/": {
+            "attrs": {
+                "rig_path": {
+                    "value": "character/biped"
+                }
+            }
+        },
+        "/cleanup": {
+            "execute_in": "/deformation"
+        },
+        "/deformation": {
+            "execute_in": "/right"
+        },
+        "/left": {
+            "instance": "/side",
+            "execute_in": "/middle",
+            "attrs": {
+                "side": {
+                    "value": "L"
+                }
+            }
+        },
+        "/right": {
+            "instance": "/left",
+            "execute_in": "/left",
+            "attrs": {
+                "side": {
+                    "value": "R"
+                },
+                "side_mult": {
+                    "value": "-1"
+                }
+            }
+        }
+    }
+}
