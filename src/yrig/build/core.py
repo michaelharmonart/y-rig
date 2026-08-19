@@ -3,6 +3,7 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 
 from yrig.build.nxt_api import execute_nxt_graph, nxt_file_roots
+from yrig.build.progress import ProgressStep, bind_progress_step
 from yrig.build.scope import BuildScope
 
 build_logger = logging.getLogger("yrig.build")
@@ -30,7 +31,8 @@ def build_rig(
 ) -> bool:
     build_path = rig_path / "data/build.nxt"
     resolved_scope = resolve_build_scope(build_scope)
-    with nxt_file_roots(root_paths):
+    build_step = ProgressStep("Rig Build", callback=progress_callback)
+    with nxt_file_roots(root_paths), bind_progress_step(build_step):
         try:
             no_components = resolved_scope == BuildScope.FACE
             execute_nxt_graph(build_path, parameters={"dev_build": dev_build})
