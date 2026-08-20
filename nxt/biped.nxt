@@ -50,11 +50,6 @@
         },
         "collapse": {
             "/left": false
-        },
-        "locks": {
-            "$YRIG_NXT_DIR/core.nxt": false,
-            "$YRIG_NXT_DIR/rig.nxt": false,
-            "/users/student/g/graphite/maya-python/y-rig/nxt/skin.nxt": false
         }
     },
     "nodes": {
