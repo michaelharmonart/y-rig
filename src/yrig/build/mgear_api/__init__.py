@@ -8,3 +8,4 @@ from . import log as log
 from . import reload as reload
 from . import rig_build as rig_build
 from .rig_build import build_from_path as build_from_path
+from .rig_build import build_from_shifter_file as build_from_shifter_file

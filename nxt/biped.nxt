@@ -5,10 +5,17 @@
     "mute": false,
     "solo": false,
     "references": [
+        "$YRIG_NXT_DIR/face.nxt",
+        "$YRIG_NXT_DIR/body.nxt",
+        "$YRIG_NXT_DIR/mgear.nxt",
         "$YRIG_NXT_DIR/rig.nxt"
     ],
     "meta_data": {
         "positions": {
+            "/apply": [
+                863.0669956752183,
+                -13.16285494908442
+            ],
             "/cleanup": [
                 1296.6643526537218,
                 -15.594755912117055
@@ -32,13 +39,23 @@
             "/root": [
                 -836.227393231747,
                 -13.679528134599906
+            ],
+            "/shifter_build": [
+                -1328.4283558944185,
+                -109.8002192791547
+            ],
+            "/shifter_component_build": [
+                -1333.8722592666647,
+                -13.21855392066065
             ]
         },
         "collapse": {
             "/left": false
         },
         "locks": {
-            "$YRIG_NXT_DIR/rig.nxt": true
+            "$YRIG_NXT_DIR/core.nxt": false,
+            "$YRIG_NXT_DIR/rig.nxt": false,
+            "/users/student/g/graphite/maya-python/y-rig/nxt/skin.nxt": false
         }
     },
     "nodes": {
@@ -49,11 +66,11 @@
                 }
             }
         },
-        "/cleanup": {
-            "execute_in": "/deformation"
-        },
-        "/deformation": {
+        "/apply": {
             "execute_in": "/right"
+        },
+        "/cleanup": {
+            "execute_in": "/apply"
         },
         "/left": {
             "instance": "/side",
@@ -75,6 +92,10 @@
                     "value": "-1"
                 }
             }
+        },
+        "/root": {
+            "start_point": false,
+            "execute_in": "/shifter_component_build"
         }
     }
 }

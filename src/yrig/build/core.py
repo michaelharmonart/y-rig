@@ -47,8 +47,9 @@ def build_rig(
     build_step = ProgressStep("Rig Build", callback=progress_callback)
     with nxt_file_roots(root_paths), bind_progress_step(build_step):
         try:
-            no_components = resolved_scope == BuildScope.FACE
-            execute_nxt_graph(build_path, parameters={"/.dev_build": dev_build})
+            execute_nxt_graph(
+                build_path, parameters={"/.dev_build": dev_build, "/.build_scope": resolved_scope}
+            )
         except Exception as e:
             build_logger.error("Build failed: %s", e)
             raise RuntimeError(f"y-rig build failed for '{build_path}': {e}") from e

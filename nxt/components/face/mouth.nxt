@@ -8,7 +8,7 @@
         "positions": {
             "/mouth_component": [
                 -1011.9459426257373,
-                318.98296017550416
+                318.3094795136238
             ]
         }
     },
@@ -100,9 +100,14 @@
             ]
         },
         "/mouth_component/skin_surface": {
+            "attrs": {
+                "mouth_surface_skin_filepath": {
+                    "type": "raw",
+                    "value": "${file::data/face/mouth_surface.yskin}"
+                }
+            },
             "code": [
-                "face_path = STAGE.face_path",
-                "mouth_surface_skin = face_path / \"mouth_surface.yskin\"",
+                "mouth_surface_skin = Path(\"${mouth_surface_skin_filepath}\")",
                 "",
                 "yrig.skin.skin_geometry(bind_joints=[\"face_jnt\", \"jaw_M_jnt\"], geometry=\"mouth_surface\")",
                 "yrig.skin.import_skin_weights(filepath=mouth_surface_skin, geometry=\"mouth_surface\")"

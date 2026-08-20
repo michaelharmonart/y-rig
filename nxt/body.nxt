@@ -1,0 +1,26 @@
+{
+    "version": "1.17",
+    "alias": "body",
+    "color": "#662d82",
+    "mute": false,
+    "solo": false,
+    "meta_data": {
+        "positions": {
+            "/shifter_component_build": [
+                -1095.9382886947733,
+                19.226987520960936
+            ]
+        }
+    },
+    "nodes": {
+        "/shifter_component_build": {
+            "start_point": true,
+            "instance": "/shifter_build",
+            "attrs": {
+                "guide_filepath": {
+                    "value": "${file::${rig_path}/data/guide.sgt}"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,225 @@
+{
+    "version": "1.17",
+    "alias": "face",
+    "color": "#b28f11",
+    "mute": false,
+    "solo": false,
+    "references": [
+        "$YRIG_NXT_DIR/components/face/eye.nxt",
+        "$YRIG_NXT_DIR/components/face/eyebrow.nxt",
+        "$YRIG_NXT_DIR/components/face/mouth.nxt",
+        "$YRIG_NXT_DIR/components/face/tongue.nxt",
+        "$YRIG_NXT_DIR/components/face/teeth.nxt",
+        "$YRIG_NXT_DIR/components/face/nose.nxt",
+        "$YRIG_NXT_DIR/components/face/ear.nxt"
+    ],
+    "meta_data": {
+        "positions": {
+            "/ear": [
+                318.8538364053693,
+                142.4484541260124
+            ],
+            "/ear_component": [
+                -1425.2567156554803,
+                1260.03748450161
+            ],
+            "/eye": [
+                318.8538364053693,
+                142.4484541260124
+            ],
+            "/eye_component": [
+                -1428.3425400638523,
+                664.0671076317803
+            ],
+            "/eye_def": [
+                -1439.119019057653,
+                782.3114917287597
+            ],
+            "/eyebrow": [
+                318.8538364053693,
+                142.4484541260124
+            ],
+            "/face": [
+                280,
+                20
+            ],
+            "/left": [
+                160.30801917363112,
+                39.76334630104233
+            ],
+            "/look": [
+                280,
+                20
+            ],
+            "/look_component": [
+                -1433.2274908013064,
+                870.8490428903142
+            ],
+            "/middle": [
+                -255.5748582118101,
+                28.76206986591498
+            ],
+            "/mouth": [
+                280,
+                20
+            ],
+            "/mouth_component": [
+                -1433.7360359736215,
+                408.7751187177105
+            ],
+            "/nose": [
+                280,
+                20
+            ],
+            "/nose_component": [
+                -1431.994115045787,
+                956.5386631565999
+            ],
+            "/root": [
+                -715.363213749061,
+                30.01523973772283
+            ],
+            "/teeth": [
+                280,
+                20
+            ],
+            "/teeth_component": [
+                -1431.0245956820474,
+                1051.8434777119703
+            ],
+            "/tongue": [
+                280,
+                20
+            ],
+            "/tongue_component": [
+                -1433.8359571241035,
+                1150.1481254917635
+            ]
+        },
+        "locks": {
+            "$YRIG_NXT_DIR/components/face/ear.nxt": true,
+            "$YRIG_NXT_DIR/components/face/eye.nxt": true,
+            "$YRIG_NXT_DIR/components/face/eyebrow.nxt": true,
+            "$YRIG_NXT_DIR/components/face/mouth.nxt": true,
+            "$YRIG_NXT_DIR/components/face/nose.nxt": true,
+            "$YRIG_NXT_DIR/components/face/teeth.nxt": true,
+            "$YRIG_NXT_DIR/components/face/tongue.nxt": true
+        }
+    },
+    "nodes": {
+        "/left/ear": {
+            "instance": "/ear_component"
+        },
+        "/left/eye": {
+            "instance": "/eye_component",
+            "child_order": [
+                "build"
+            ]
+        },
+        "/left/eye/build": {},
+        "/left/eyebrow": {
+            "instance": "/simple_eyebrow",
+            "child_order": [
+                "build"
+            ],
+            "attrs": {
+                "joint_parent": {
+                    "value": "face_jnt"
+                }
+            }
+        },
+        "/left/eyebrow/build": {},
+        "/middle/face": {
+            "attrs": {
+                "joint_parent": {
+                    "type": "raw",
+                    "value": "neck_M0_head_jnt"
+                },
+                "parent": {
+                    "type": "raw",
+                    "value": "neck_M0_head_ctl"
+                }
+            },
+            "code": [
+                "parent=\"${parent}\"",
+                "joint_parent=\"${joint_parent}\"",
+                "transform = \"face_M\" if cmds.objExists(\"face_M\") else None",
+                "",
+                "face_group = yrig.transform.create_transform(",
+                "    name=\"face_grp\", ",
+                "    parent=parent if cmds.objExists(parent) else None, ",
+                "    transform=transform",
+                ")",
+                "face_joint = yrig.joint.create_joint(",
+                "    \"face\", ",
+                "    parent=joint_parent if cmds.objExists(joint_parent) else None, ",
+                "    transform=transform, ",
+                "    connect=False)"
+            ]
+        },
+        "/middle/look": {
+            "instance": "/look_component",
+            "child_order": [
+                "build"
+            ]
+        },
+        "/middle/look/build": {},
+        "/middle/mouth": {
+            "instance": "/mouth_component",
+            "child_order": [
+                "build",
+                "skin_surface"
+            ],
+            "attrs": {
+                "control_size": {
+                    "value": "1"
+                },
+                "joint_parent": {
+                    "value": "face_jnt"
+                }
+            }
+        },
+        "/middle/mouth/build": {},
+        "/middle/mouth/skin_surface": {
+            "attrs": {
+                "mouth_surface_skin_filepath": {
+                    "value": "${file::${rig_path}/data/face/mouth_surface.yskin}"
+                }
+            }
+        },
+        "/middle/nose": {
+            "instance": "/nose_component",
+            "child_order": [
+                "build"
+            ],
+            "code": [
+                "group = yrig.transform.create_transform(name=\"${component_group}\", parent=\"${parent}\")",
+                "cmds.setAttr(f\"{group}.overrideEnabled\", True)",
+                "cmds.setAttr(f\"{group}.drawOverride.overrideRGBColors\", True)",
+                "cmds.connectAttr(\"${control_layer}.controlColor\", f\"{group}.drawOverride.overrideColorRGB\")"
+            ]
+        },
+        "/middle/nose/build": {},
+        "/middle/teeth": {
+            "instance": "/teeth_component"
+        },
+        "/middle/tongue": {
+            "instance": "/tongue_component",
+            "child_order": [
+                "build"
+            ]
+        },
+        "/middle/tongue/build": {},
+        "/root/guides/face": {
+            "attrs": {
+                "face_guides_filepath": {
+                    "type": "raw",
+                    "value": "${file::${rig_path}/data/face/guides.mb}"
+                }
+            },
+            "code": [
+                "imported_nodes = cmds.file(\"${face_guides_filepath}\", i=True, defaultNamespace=True, returnNewNodes=True)"
+            ]
+        }
+    }
+}

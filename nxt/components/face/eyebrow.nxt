@@ -1,0 +1,131 @@
+{
+    "version": "1.17",
+    "alias": "eyebrow",
+    "color": "#e83723",
+    "mute": false,
+    "solo": false,
+    "meta_data": {
+        "positions": {
+            "/build": [
+                280,
+                20
+            ],
+            "/simple_eyebrow": [
+                -1429.0613088666348,
+                554.1893528938148
+            ]
+        }
+    },
+    "nodes": {
+        "/simple_eyebrow": {
+            "instance": "/component",
+            "child_order": [
+                "build"
+            ],
+            "attrs": {
+                "control_parent": {
+                    "type": "raw",
+                    "value": "${component_group}"
+                },
+                "control_size": {
+                    "type": "float",
+                    "value": "0.5"
+                },
+                "name": {
+                    "value": "eyebrow"
+                },
+                "parent": {
+                    "type": "raw",
+                    "value": "face_grp"
+                }
+            }
+        },
+        "/simple_eyebrow/build": {
+            "code": [
+                "rotate_order = yrig.maya_api.enum.RotateOrder.XYZ",
+                "",
+                "with yrig.control.collect_controls() as component_controls:",
+                "    control_parent = \"${control_parent}\"",
+                "    ",
+                "    main_guide = \"${name}_${side}\"",
+                "    inner_guide = \"${name}_inner_${side}\"",
+                "    inner_mid_guide = \"${name}_inner_mid_${side}\"",
+                "    outer_mid_guide = \"${name}_outer_mid_${side}\"",
+                "    outer_guide = \"${name}_outer_${side}\"",
+                "    ",
+                "    main_control = yrig.control.create_control(",
+                "                main_guide, ",
+                "                parent = control_parent if control_parent else None, ",
+                "                transform = main_guide, ",
+                "                direction = \"z\", ",
+                "                size=${control_size},",
+                "                control_shape=\"round_square\",",
+                "                rotation_order=rotate_order,",
+                "            )",
+                "    main_joint = yrig.joint.create_joint(name=main_guide, parent=\"${joint_parent}\", transform=main_control)   ",
+                "    inner_control = yrig.control.create_control(",
+                "                inner_guide, ",
+                "                parent = main_control, ",
+                "                transform = inner_guide, ",
+                "                direction = \"z\", ",
+                "                size=${control_size} * 0.3,",
+                "                control_shape=\"round_square\",",
+                "                rotation_order=rotate_order,",
+                "            )",
+                "    mid_control = yrig.control.create_control(",
+                "                \"${name}_mid_${side}\", ",
+                "                parent = main_control, ",
+                "                transform = main_guide, ",
+                "                direction = \"z\", ",
+                "                size=${control_size} * 0.5,",
+                "                control_shape=\"round_square\",",
+                "                rotation_order=rotate_order,",
+                "            )",
+                "    inner_mid_control = yrig.control.create_control(",
+                "                inner_mid_guide, ",
+                "                parent = mid_control, ",
+                "                transform = inner_mid_guide, ",
+                "                direction = \"z\", ",
+                "                size=${control_size} * 0.3,",
+                "                control_shape=\"round_square\",",
+                "                rotation_order=rotate_order,",
+                "            )",
+                "    outer_mid_control = yrig.control.create_control(",
+                "                outer_mid_guide, ",
+                "                parent = mid_control, ",
+                "                transform = outer_mid_guide, ",
+                "                direction = \"z\", ",
+                "                size=0.5 * 0.3,",
+                "                control_shape=\"round_square\",",
+                "                rotation_order=rotate_order,",
+                "            )",
+                "    outer_control = yrig.control.create_control(",
+                "                outer_guide, ",
+                "                parent = main_control, ",
+                "                transform = outer_guide, ",
+                "                direction = \"z\", ",
+                "                size=${control_size} * 0.3,",
+                "                control_shape=\"round_square\",",
+                "                rotation_order=rotate_order,",
+                "            )",
+                "            ",
+                "    cv_transforms = [inner_control.transform, inner_mid_control.transform, outer_mid_control.transform, outer_control.transform]",
+                "    ",
+                "    joint_config = yrig.spline.matrix_spline.build.JointConfig(create=True, parent=main_joint, weight_split_influence=main_joint)",
+                "    yrig.spline.matrix_spline.build.matrix_spline_from_transforms(",
+                "        name= \"${name}_${side}_spline\",",
+                "        cv_transforms = cv_transforms ,",
+                "        pinned_transforms = 8,",
+                "        parent = main_control.transform,",
+                "        degree = 3,",
+                "        padded = True,",
+                "        stretch = False,",
+                "        primary_axis=(1,0,0),",
+                "        secondary_axis=(0,0,1),",
+                "        joint_config = joint_config,",
+                "    )",
+                "STAGE.control_list.extend(component_controls)"
+            ]
+        }
+    }
+}

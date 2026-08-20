@@ -5,34 +5,50 @@
     "mute": false,
     "solo": false,
     "references": [
-        "/users/student/g/graphite/maya-python/y-rig/nxt/skin.nxt",
+        "$YRIG_NXT_DIR/skin.nxt",
         "$YRIG_NXT_DIR/core.nxt"
     ],
     "meta_data": {
         "positions": {
+            "/apply": [
+                45.101567325149915,
+                -13.162854949084434
+            ],
             "/cleanup": [
-                469.3577831887693,
-                -15.101461572512576
+                464.7309816100551,
+                -10.474659993798152
             ],
             "/cleanup/control_shapes": [
                 0.0,
                 0.0
             ],
-            "/deformation": [
-                45.101567325149915,
-                -13.162854949084434
+            "/control_shapes": [
+                -2.4974733523247323,
+                95.12116921241874
             ],
             "/middle": [
                 -396.0467648945946,
                 -12.903779307342678
             ],
+            "/rest_pose": [
+                107.99415846869607,
+                265.1998166510077
+            ],
             "/root": [
-                -831.6951421420665,
-                -13.679528134599906
+                -834.0036602069565,
+                -12.525269102154974
             ],
             "/setup/rig_hierarchy": [
                 0.0,
                 0.0
+            ],
+            "/shifter_build": [
+                -745.8425286930325,
+                -513.4641872897497
+            ],
+            "/shifter_component_build": [
+                -1385.6737855003867,
+                -12.961234388183893
             ],
             "/skin_geometry": [
                 -785.9072536198922,
@@ -40,40 +56,60 @@
             ]
         },
         "collapse": {
+            "/cleanup/hide_joints": true,
             "/root": false,
             "/root/rig_hierarchy": true
         },
         "locks": {
-            "$YRIG_NXT_DIR/core.nxt": true,
-            "/users/student/g/graphite/maya-python/y-rig/nxt/skin.nxt": true
+            "$YRIG_NXT_DIR/core.nxt": false,
+            "/users/student/g/graphite/maya-python/y-rig/nxt/skin.nxt": false
         }
     },
     "nodes": {
-        "/": {},
-        "/cleanup": {
-            "execute_in": "/deformation",
+        "/": {
+            "attrs": {
+                "build_scope": {
+                    "type": "raw",
+                    "value": "full"
+                },
+                "dev_build": {
+                    "type": "bool",
+                    "value": "False"
+                },
+                "rig_path": {}
+            }
+        },
+        "/apply": {
+            "execute_in": "/middle",
             "child_order": [
-                "control_shapes"
+                "skin",
+                "control_shapes",
+                "rest_pose"
             ]
         },
-        "/cleanup/control_shapes": {
+        "/apply/control_shapes": {
             "attrs": {
                 "control_shapes_filepath": {
                     "type": "raw",
-                    "value": "${file::data/control_shapes.json}"
+                    "value": "${file::${rig_path}/data/control_shapes.json}"
                 }
             },
             "code": [
                 "yrig.control.serialize.apply_control_shapes_file(Path(\"${control_shapes_filepath}\"))"
             ]
         },
-        "/deformation": {
-            "execute_in": "/middle",
-            "child_order": [
-                "skin"
+        "/apply/rest_pose": {
+            "attrs": {
+                "rest_pose": {
+                    "type": "raw",
+                    "value": "dagPose1"
+                }
+            },
+            "code": [
+                "cmds.dagPose(STAGE.control_list, name=\"${rest_pose}\", addToPose=True)"
             ]
         },
-        "/deformation/skin": {
+        "/apply/skin": {
             "instance": "/skin_geometry",
             "child_order": [
                 "split"
@@ -81,11 +117,45 @@
             "attrs": {
                 "geo_set": {
                     "value": "${/root/model.model_set}"
+                },
+                "skin_directory": {
+                    "value": "${file::${rig_path}/data/skin}"
                 }
             }
         },
-        "/deformation/skin/split": {
+        "/apply/skin/split": {
             "instance": "/split_skin_weights"
+        },
+        "/cleanup": {
+            "execute_in": "/apply",
+            "child_order": [
+                "hide_joints",
+                "model_override",
+                "skin_tools_data"
+            ]
+        },
+        "/cleanup/hide_joints": {
+            "code": [
+                "if not ${dev_build}:",
+                "    # Hide Joints",
+                "    cmds.setAttr(\"${/root.rig_root}.jnt_vis\", False)  # type: ignore",
+                ""
+            ]
+        },
+        "/cleanup/model_override": {
+            "code": [
+                "if not ${dev_build}:",
+                "    geo_group = \"${/root/model.model_group}\"",
+                "    cmds.setAttr(f\"{geo_group}.overrideEnabled\", True)  # type: ignore",
+                "    cmds.setAttr(f\"{geo_group}.overrideDisplayType\", 2)  # type: ignore",
+                ""
+            ]
+        },
+        "/cleanup/skin_tools_data": {
+            "code": [
+                "if not ${dev_build}:",
+                "    yrig.skin.ng.cleanup_ng_data_nodes()"
+            ]
         },
         "/middle": {
             "instance": "/side",
@@ -95,20 +165,56 @@
             "start_point": true,
             "child_order": [
                 "model",
-                "guides"
+                "guides",
+                "controls",
+                "deformers"
             ],
             "attrs": {
                 "rig_root": {
                     "type": "raw",
                     "value": "rig"
+                },
+                "rig_set": {
+                    "type": "raw",
+                    "value": "${rig_root}_sets_grp"
                 }
             },
             "code": [
-                "if not cmds.objExists(\"${rig_root}\"):",
-                "    self.rig_root = yrig.transform.create_transform(\"${rig_root}\")"
+                "rig_root = \"${rig_root}\"",
+                "if not cmds.objExists(rig_root):",
+                "    self.rig_root = yrig.transform.create_transform(rig_root)",
+                "    ",
+                "rig_set = \"${rig_set}\"",
+                "if not cmds.objExists(rig_set):",
+                "    cmds.sets(name=rig_set)"
             ]
         },
-        "/root/guides": {},
+        "/root/controls": {
+            "code": [
+                "STAGE.control_list = []"
+            ]
+        },
+        "/root/deformers": {
+            "attrs": {
+                "deformers_set": {
+                    "type": "raw",
+                    "value": "${rig_root}_deformers_grp"
+                }
+            },
+            "code": [
+                "rig_set = \"${deformers_set}\"",
+                "if not cmds.objExists(rig_set):",
+                "    cmds.sets(name=rig_set)"
+            ]
+        },
+        "/root/guides": {
+            "attrs": {
+                "guides_filepath": {
+                    "type": "raw",
+                    "value": "${file::${rig_path}/data/guides.mb}"
+                }
+            }
+        },
         "/root/model": {
             "attrs": {
                 "model_filepath": {
@@ -121,7 +227,7 @@
                 },
                 "model_set": {
                     "type": "raw",
-                    "value": "rig_geo_grp"
+                    "value": "${rig_root}_geo_grp"
                 }
             },
             "code": [
@@ -160,7 +266,7 @@
                 "# remove duplicates",
                 "mesh_transforms: list[str] = list(set(mesh_transforms))",
                 "# Put the geo in the set.",
-                "cmds.sets(mesh_transforms, add=\"${model_set}\")  # type: ignore"
+                "yrig.sets.add_to_set(mesh_transforms, \"${model_set}\", parent=\"${rig_set}\")"
             ]
         }
     }

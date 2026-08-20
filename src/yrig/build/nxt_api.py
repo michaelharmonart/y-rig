@@ -25,13 +25,16 @@ def nxt_file_roots(
     file_roots: Sequence[Path], restore: bool = False
 ) -> Generator[None, None, None]:
     """Temporarily set the NXT_FILE_ROOTS env var, restoring it afterward if restore is True."""
-    default_value = os.environ["NXT_FILE_ROOTS"]
+    default_value = os.environ.get("NXT_FILE_ROOTS")
     os.environ["NXT_FILE_ROOTS"] = os.pathsep.join(map(str, file_roots))
     try:
         yield
     finally:
         if restore:
-            os.environ["NXT_FILE_ROOTS"] = default_value
+            if default_value is None:
+                os.environ.pop("NXT_FILE_ROOTS")
+            else:
+                os.environ["NXT_FILE_ROOTS"] = default_value
 
 
 # We wrap the NXT execution so we can have nice progress reporting :)
@@ -59,9 +62,9 @@ class ProgressStage(Stage):
             raise ValueError("Execute Nodes requires a comp layer.")  # noqa
         if not layer.runtime:
             dup_comp = self.build_stage(layer.layer_idx())
-            runtime_layer = self.setup_runtime_layer(dup_comp, parameters=parameters)
+            runtime_layer: CompLayer = self.setup_runtime_layer(dup_comp, parameters=parameters)
         else:
-            runtime_layer = layer
+            runtime_layer: CompLayer = layer
             if parameters:
                 self.set_runtime_parameters(parameters, runtime_layer)
 
