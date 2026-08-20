@@ -49,7 +49,10 @@
             ]
         },
         "collapse": {
-            "/left": false
+            "/left": false,
+            "/right/ear": true,
+            "/right/eye": true,
+            "/right/eyebrow": true
         }
     },
     "nodes": {
