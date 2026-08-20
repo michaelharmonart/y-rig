@@ -20,20 +20,20 @@
                 142.4484541260124
             ],
             "/ear_component": [
-                -1425.2567156554803,
-                1260.03748450161
+                -1418.8914960107354,
+                951.3243317314693
             ],
             "/eye": [
                 318.8538364053693,
                 142.4484541260124
             ],
             "/eye_component": [
-                -1428.3425400638523,
-                664.0671076317803
+                -1427.026750590168,
+                554.8565813159908
             ],
             "/eye_def": [
-                -1439.119019057653,
-                782.3114917287597
+                -1424.6453348471266,
+                615.206228570865
             ],
             "/eyebrow": [
                 318.8538364053693,
@@ -52,8 +52,8 @@
                 20
             ],
             "/look_component": [
-                -1433.2274908013064,
-                870.8490428903142
+                -1422.7011750118327,
+                680.0595692061038
             ],
             "/middle": [
                 -255.5748582118101,
@@ -72,28 +72,32 @@
                 20
             ],
             "/nose_component": [
-                -1431.994115045787,
-                956.5386631565999
+                -1418.8362203089448,
+                742.0649789460736
             ],
             "/root": [
                 -715.363213749061,
                 30.01523973772283
+            ],
+            "/simple_eyebrow": [
+                -1433.0086772876878,
+                475.24198447276217
             ],
             "/teeth": [
                 280,
                 20
             ],
             "/teeth_component": [
-                -1431.0245956820474,
-                1051.8434777119703
+                -1413.9193325241524,
+                813.685582975128
             ],
             "/tongue": [
                 280,
                 20
             ],
             "/tongue_component": [
-                -1433.8359571241035,
-                1150.1481254917635
+                -1422.6066704497766,
+                887.5412616299258
             ]
         },
         "locks": {
@@ -104,9 +108,46 @@
             "$YRIG_NXT_DIR/components/face/nose.nxt": true,
             "$YRIG_NXT_DIR/components/face/teeth.nxt": true,
             "$YRIG_NXT_DIR/components/face/tongue.nxt": true
+        },
+        "collapse": {
+            "/ear_component": true,
+            "/eye_component": true,
+            "/left/ear": true,
+            "/left/eye": true,
+            "/left/eyebrow": true,
+            "/look_component": true,
+            "/middle/face/look": true,
+            "/middle/face/mouth": true,
+            "/middle/face/nose": true,
+            "/middle/face/teeth": true,
+            "/middle/face/tongue": true,
+            "/mouth_component": true,
+            "/nose_component": true,
+            "/simple_eyebrow": true,
+            "/teeth_component": true,
+            "/tongue_component": true
         }
     },
     "nodes": {
+        "/cleanup": {
+            "child_order": [
+                "delete_face_guides",
+                "hide_joints",
+                "model_override",
+                "skin_tools_data"
+            ]
+        },
+        "/cleanup/delete_face_guides": {
+            "attrs": {
+                "face_guides_group": {
+                    "type": "raw",
+                    "value": "${/root/guides/face.face_guides_group}"
+                }
+            },
+            "code": [
+                "cmds.delete(\"${face_guides_group}\")"
+            ]
+        },
         "/left": {
             "child_order": [
                 "eye",
@@ -118,24 +159,16 @@
             "instance": "/ear_component"
         },
         "/left/eye": {
-            "instance": "/eye_component",
-            "child_order": [
-                "build"
-            ]
+            "instance": "/eye_component"
         },
-        "/left/eye/build": {},
         "/left/eyebrow": {
             "instance": "/simple_eyebrow",
-            "child_order": [
-                "build"
-            ],
             "attrs": {
                 "joint_parent": {
                     "value": "face_jnt"
                 }
             }
         },
-        "/left/eyebrow/build": {},
         "/middle/face": {
             "child_order": [
                 "nose",
@@ -172,16 +205,11 @@
             ]
         },
         "/middle/face/look": {
-            "instance": "/look_component",
-            "child_order": [
-                "build"
-            ]
+            "instance": "/look_component"
         },
-        "/middle/face/look/build": {},
         "/middle/face/mouth": {
             "instance": "/mouth_component",
             "child_order": [
-                "build",
                 "skin_surface"
             ],
             "attrs": {
@@ -193,7 +221,6 @@
                 }
             }
         },
-        "/middle/face/mouth/build": {},
         "/middle/face/mouth/skin_surface": {
             "attrs": {
                 "mouth_surface_skin_filepath": {
@@ -203,9 +230,6 @@
         },
         "/middle/face/nose": {
             "instance": "/nose_component",
-            "child_order": [
-                "build"
-            ],
             "code": [
                 "group = yrig.transform.create_transform(name=\"${component_group}\", parent=\"${parent}\")",
                 "cmds.setAttr(f\"{group}.overrideEnabled\", True)",
@@ -213,22 +237,21 @@
                 "cmds.connectAttr(\"${control_layer}.controlColor\", f\"{group}.drawOverride.overrideColorRGB\")"
             ]
         },
-        "/middle/face/nose/build": {},
         "/middle/face/teeth": {
             "instance": "/teeth_component"
         },
         "/middle/face/tongue": {
-            "instance": "/tongue_component",
-            "child_order": [
-                "build"
-            ]
+            "instance": "/tongue_component"
         },
-        "/middle/face/tongue/build": {},
         "/root/guides/face": {
             "attrs": {
                 "face_guides_filepath": {
                     "type": "raw",
                     "value": "${file::${rig_path}/data/face/guides.mb}"
+                },
+                "face_guides_group": {
+                    "type": "raw",
+                    "value": "face_guide"
                 }
             },
             "code": [

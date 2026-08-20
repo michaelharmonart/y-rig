@@ -27,11 +27,23 @@
         "/shifter_component_build": {
             "start_point": true,
             "instance": "/shifter_build",
+            "child_order": [
+                "attribute_defaults"
+            ],
             "attrs": {
                 "guide_filepath": {
                     "value": "${file::${rig_path}/data/guide.sgt}"
                 }
             }
+        },
+        "/shifter_component_build/attribute_defaults": {
+            "code": [
+                "for control in [\"armUI_L0_ctl\", \"armUI_R0_ctl\"]:",
+                "    cmds.setAttr(f\"{control}.arm_ikref\", 5)",
+                "",
+                "for control in [\"legUI_L0_ctl\", \"legUI_R0_ctl\"]:",
+                "    cmds.setAttr(f\"{control}.foot_angle_1\", -40)"
+            ]
         }
     }
 }

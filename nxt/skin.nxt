@@ -44,17 +44,19 @@
             },
             "code": [
                 "from yrig.skin import skin_and_apply_weights_from_directory",
+                "from yrig.skin.core import skin_geometry",
+                "def_in_set = cmds.sets(\"${def_set}\", query=True)",
+                "def_joints = cmds.ls(def_in_set, type=\"joint\")  # type: ignore    ",
                 "",
-                "def_joints = cmds.ls(\"${def_set}\", type=\"joint\")  # type: ignore    ",
                 "geo_list = ${geo_list}",
-                "skin_directory = Path(\"${skin_directory}\")",
+                "geo_to_skin = geo_list if geo_list else cmds.sets(\"${geo_set}\", query=True)",
                 "",
-                "if geo_list is None:",
-                "    geo_in_set: list[str] = cmds.sets(\"rig_geo_grp\", query=True)  # type: ignore",
-                "    def_in_set = cmds.sets(\"rig_deformers_grp\", query=True)",
-                "    skin_and_apply_weights_from_directory(skin_directory, geo_in_set)",
-                "else:",
-                "     skin_and_apply_weights_from_directory(skin_directory, geo_list)"
+                "def _fallback_skin(geometry: str):",
+                "    skin_geometry(def_joints, geometry)",
+                "",
+                "skin_directory = Path(\"${skin_directory}\")",
+                "skin_and_apply_weights_from_directory(skin_directory, geo_to_skin, fallback_skinning=_fallback_skin)",
+                ""
             ]
         },
         "/split_skin_weights": {
