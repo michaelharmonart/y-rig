@@ -107,6 +107,13 @@
         }
     },
     "nodes": {
+        "/left": {
+            "child_order": [
+                "eye",
+                "eyebrow",
+                "ear"
+            ]
+        },
         "/left/ear": {
             "instance": "/ear_component"
         },
@@ -130,6 +137,13 @@
         },
         "/left/eyebrow/build": {},
         "/middle/face": {
+            "child_order": [
+                "nose",
+                "mouth",
+                "tongue",
+                "teeth",
+                "look"
+            ],
             "attrs": {
                 "joint_parent": {
                     "type": "raw",
@@ -157,14 +171,14 @@
                 "    connect=False)"
             ]
         },
-        "/middle/look": {
+        "/middle/face/look": {
             "instance": "/look_component",
             "child_order": [
                 "build"
             ]
         },
-        "/middle/look/build": {},
-        "/middle/mouth": {
+        "/middle/face/look/build": {},
+        "/middle/face/mouth": {
             "instance": "/mouth_component",
             "child_order": [
                 "build",
@@ -179,15 +193,15 @@
                 }
             }
         },
-        "/middle/mouth/build": {},
-        "/middle/mouth/skin_surface": {
+        "/middle/face/mouth/build": {},
+        "/middle/face/mouth/skin_surface": {
             "attrs": {
                 "mouth_surface_skin_filepath": {
                     "value": "${file::${rig_path}/data/face/mouth_surface.yskin}"
                 }
             }
         },
-        "/middle/nose": {
+        "/middle/face/nose": {
             "instance": "/nose_component",
             "child_order": [
                 "build"
@@ -199,17 +213,17 @@
                 "cmds.connectAttr(\"${control_layer}.controlColor\", f\"{group}.drawOverride.overrideColorRGB\")"
             ]
         },
-        "/middle/nose/build": {},
-        "/middle/teeth": {
+        "/middle/face/nose/build": {},
+        "/middle/face/teeth": {
             "instance": "/teeth_component"
         },
-        "/middle/tongue": {
+        "/middle/face/tongue": {
             "instance": "/tongue_component",
             "child_order": [
                 "build"
             ]
         },
-        "/middle/tongue/build": {},
+        "/middle/face/tongue/build": {},
         "/root/guides/face": {
             "attrs": {
                 "face_guides_filepath": {

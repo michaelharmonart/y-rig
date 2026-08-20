@@ -51,8 +51,12 @@
                 -12.961234388183893
             ],
             "/skin_geometry": [
-                -785.9072536198922,
-                -406.37266794444895
+                -795.4972743705686,
+                -408.77017313211803
+            ],
+            "/split_skin_weights": [
+                -799.7965374561375,
+                -465.0107915925667
             ]
         },
         "collapse": {
@@ -82,9 +86,9 @@
         "/apply": {
             "execute_in": "/middle",
             "child_order": [
-                "skin",
                 "control_shapes",
-                "rest_pose"
+                "rest_pose",
+                "skin"
             ]
         },
         "/apply/control_shapes": {

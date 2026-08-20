@@ -4,6 +4,9 @@
     "color": "#662d82",
     "mute": false,
     "solo": false,
+    "references": [
+        "$YRIG_NXT_DIR/mgear.nxt"
+    ],
     "meta_data": {
         "positions": {
             "/shifter_component_build": [
@@ -13,6 +16,14 @@
         }
     },
     "nodes": {
+        "/apply/skin/transfer_sim_weights": {
+            "instance": "/transfer_skin_weights",
+            "attrs": {
+                "transfer_mapping": {
+                    "value": "{\"apron_sim\": \"apron_geo\", \"belt_sim\": \"belt_geo\", \"clothes_sim\": \"clothes_geo\", \"clothes_geo\": \"clothingdetails_geo\"}"
+                }
+            }
+        },
         "/shifter_component_build": {
             "start_point": true,
             "instance": "/shifter_build",

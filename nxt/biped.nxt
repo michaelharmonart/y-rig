@@ -7,7 +7,6 @@
     "references": [
         "$YRIG_NXT_DIR/face.nxt",
         "$YRIG_NXT_DIR/body.nxt",
-        "$YRIG_NXT_DIR/mgear.nxt",
         "$YRIG_NXT_DIR/rig.nxt"
     ],
     "meta_data": {
@@ -76,8 +75,18 @@
             "instance": "/side",
             "execute_in": "/middle",
             "attrs": {
+                "control_color": {
+                    "value": "[0.105, 0.447, 0.911]"
+                },
                 "side": {
                     "value": "L"
+                }
+            }
+        },
+        "/middle": {
+            "attrs": {
+                "control_color": {
+                    "value": "[1.0, 0.8786, 0.0]"
                 }
             }
         },
@@ -85,6 +94,9 @@
             "instance": "/left",
             "execute_in": "/left",
             "attrs": {
+                "control_color": {
+                    "value": "[0.811, 0.080, 0.108]"
+                },
                 "side": {
                     "value": "R"
                 },

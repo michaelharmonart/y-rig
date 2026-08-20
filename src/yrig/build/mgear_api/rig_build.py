@@ -98,21 +98,21 @@ def build_from_shifter_file(  # noqa: ANN201
         # Check if build was cancelled
         if rig.stopBuild:
             mgear_api_logger.info("\n" + "= SHIFTER BUILD CANCELLED " + "=" * 40)
-            return None
+            return False
 
         rig.from_dict_custom_step(merged_options, pre=False)
 
         # Check if build was cancelled/failed during custom steps
         if rig.stopBuild:
             mgear_api_logger.info("\n" + "= SHIFTER BUILD CANCELLED " + "=" * 40)
-            return None
+            return False
 
         # controls shapes buffer
         if guide_data["ctl_buffers_dict"]:
             curve.update_curve_from_data(
                 guide_data["ctl_buffers_dict"], rplStr=["_controlBuffer", ""]
             )
-    return rig
+    return True
 
 
 def build_from_path(

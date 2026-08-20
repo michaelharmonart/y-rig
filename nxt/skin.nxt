@@ -7,12 +7,16 @@
     "meta_data": {
         "positions": {
             "/skin_geometry": [
-                -787.0273622312808,
-                -406.37266794444895
+                -792.3446878650894,
+                -503.413860761456
             ],
             "/split_skin_weights": [
-                -789.6842014469904,
-                -333.2057735543576
+                -795.0015270807991,
+                -430.2469663713647
+            ],
+            "/transfer_skin_weights": [
+                -793.6108508459346,
+                -357.59014887362883
             ]
         }
     },
@@ -65,6 +69,19 @@
                 "",
                 "geo_in_set: list[str] = cmds.sets(\"${geo_set}\", query=True)  # type: ignore",
                 "auto_split_weights(geo_in_set)"
+            ]
+        },
+        "/transfer_skin_weights": {
+            "attrs": {
+                "transfer_mapping": {
+                    "type": "dict",
+                    "value": "{}"
+                }
+            },
+            "code": [
+                "transfer_mapping = ${transfer_mapping}",
+                "for source, target in transfer_mapping.items():",
+                "    yrig.skin.transfer_skin_weights(source, target)"
             ]
         }
     }

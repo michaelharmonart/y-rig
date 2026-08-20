@@ -12,7 +12,7 @@ from .apply import (
     skin_and_apply_weights,
     skin_and_apply_weights_from_directory,
 )
-from .core import skin_geometry
+from .core import skin_geometry, transfer_skin_weights
 from .export import (
     batch_export_skin_weights,
     export_skin_weights_for_selected,
@@ -36,5 +36,6 @@ __all__ = [
     "skin_and_apply_weights_from_directory",
     "skin_geometry",
     "split",
+    "transfer_skin_weights",
     "visualize",
 ]
