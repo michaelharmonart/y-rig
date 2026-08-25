@@ -51,7 +51,7 @@ class TongueSpine:
                 direction="x",
             )
 
-            ctrl_transform = ctrl.transform if hasattr(ctrl, "transform") else ctrl
+            ctrl_transform = ctrl.transform
 
             self.controls.append(ctrl)
 
@@ -60,7 +60,7 @@ class TongueSpine:
             joint = create_joint(
                 name=guide,
                 parent=joint_parent,
-                transform=ctrl_transform,
+                transform=ctrl,
                 connect=False,
             )
 
@@ -68,26 +68,6 @@ class TongueSpine:
 
             # Next joint is parented to this joint.
             joint_parent = joint
-
-            # CONTROL -> JOINT
-
-            cmds.parentConstraint(
-                ctrl_transform,
-                joint,
-                maintainOffset=False,
-            )
-
-        # ORIENT JOINT CHAIN
-
-        if self.joints:
-            cmds.joint(
-                self.joints[0],
-                edit=True,
-                orientJoint="xyz",
-                secondaryAxisOrient="yup",
-                children=True,
-                zeroScaleOrient=True,
-            )
 
         # CLEANUP
 
