@@ -25,10 +25,6 @@ class TongueSpine:
 
     def build_tongue_spine(self) -> None:
 
-        # ---------------------------------------------------------
-        # TONGUE GUIDES
-        # ---------------------------------------------------------
-
         guide_order = [
             "tongue_back",
             "tongue2",
@@ -38,23 +34,13 @@ class TongueSpine:
             "tongue_front",
         ]
 
-        # ---------------------------------------------------------
-        # CREATE CONTROLS AND JOINTS
-        #
-        # Controls are all direct children of control_grp.
-        #
-        # Joints remain parented in a chain.
-        # ---------------------------------------------------------
-
         self.controls = []
         self.joints = []
 
         joint_parent = self.joint_parent if cmds.objExists(self.joint_parent) else None
 
         for guide in guide_order:
-            # -----------------------------------------------------
             # CONTROL
-            # -----------------------------------------------------
 
             ctrl = create_control(
                 name=f"{guide}_ctrl",
@@ -69,9 +55,7 @@ class TongueSpine:
 
             self.controls.append(ctrl)
 
-            # -----------------------------------------------------
             # JOINT
-            # -----------------------------------------------------
 
             joint = create_joint(
                 name=guide,
@@ -85,9 +69,7 @@ class TongueSpine:
             # Next joint is parented to this joint.
             joint_parent = joint
 
-            # -----------------------------------------------------
             # CONTROL -> JOINT
-            # -----------------------------------------------------
 
             cmds.parentConstraint(
                 ctrl_transform,
@@ -95,9 +77,7 @@ class TongueSpine:
                 maintainOffset=False,
             )
 
-        # ---------------------------------------------------------
         # ORIENT JOINT CHAIN
-        # ---------------------------------------------------------
 
         if self.joints:
             cmds.joint(
@@ -109,9 +89,7 @@ class TongueSpine:
                 zeroScaleOrient=True,
             )
 
-        # ---------------------------------------------------------
         # CLEANUP
-        # ---------------------------------------------------------
 
         self.curve = None
         self.ik_handle = None
