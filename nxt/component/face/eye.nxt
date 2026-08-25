@@ -1,0 +1,100 @@
+{
+    "version": "1.17",
+    "alias": "eye",
+    "color": "#c91781",
+    "mute": false,
+    "solo": false,
+    "meta_data": {
+        "positions": {
+            "/eye_def": [
+                -694.9069891928125,
+                671.3286967044602
+            ],
+            "/look_component": [
+                -677.0648238874182,
+                728.5641617222554
+            ]
+        }
+    },
+    "nodes": {
+        "/eye_component": {
+            "instance": "/component",
+            "child_order": [
+                "build"
+            ],
+            "attrs": {
+                "joint_parent": {
+                    "value": "face_jnt"
+                },
+                "look_parent": {
+                    "type": "raw",
+                    "value": "Look_M_ctl"
+                },
+                "name": {
+                    "value": "eye"
+                },
+                "parent": {
+                    "value": "face_grp"
+                }
+            }
+        },
+        "/eye_component/build": {
+            "code": [
+                "from yrig.component.eye.eye import Eye",
+                "",
+                "eye = Eye(",
+                "    part=\"${name}\",",
+                "    side=\"${side}\",",
+                "    parent=\"${component_group}\",",
+                "    control_parent=\"${control_parent}\",",
+                "    parent_jnt=\"${joint_parent}\",",
+                "    control_size=1,",
+                "    look_parent='${look_parent}'",
+                ")",
+                "",
+                "eye.build()"
+            ]
+        },
+        "/eye_def": {},
+        "/look_component": {
+            "instance": "/component",
+            "child_order": [
+                "build"
+            ],
+            "attrs": {
+                "joint_parent": {
+                    "value": "face_jnt"
+                },
+                "look_parent": {
+                    "type": "raw",
+                    "value": "Look_M_ctrl"
+                },
+                "name": {
+                    "type": "raw",
+                    "value": "look"
+                },
+                "parent": {
+                    "value": "face_grp"
+                },
+                "parent_spaces": {
+                    "type": "list",
+                    "value": "[\"neck_M0_head_ctl\", \"spine_M0_chest_ctl\", \"body_M0_ctl\", \"local_M0_ctl\",]"
+                }
+            }
+        },
+        "/look_component/build": {
+            "code": [
+                "from yrig.component.eye.aim import Look",
+                "parent_spaces = ${parent_spaces}",
+                "look_rig = Look(",
+                "    parent = \"${component_group}\",",
+                "    part=\"${name}\",",
+                "    side=\"${side}\",",
+                "    control_parent=\"${control_parent}\",",
+                "    parent_spaces=parent_spaces,",
+                ")",
+                "look_rig.build()"
+            ]
+        }
+    }
+}

@@ -7,12 +7,12 @@
     "meta_data": {
         "positions": {
             "/component": [
-                -837.1238353059683,
-                -516.4394988667842
+                -837.8869932007051,
+                -236.98495341223884
             ],
             "/side": [
-                -208.82123418296544,
-                -291.92356207210474
+                -834.5843920777024,
+                -166.47619365105209
             ]
         }
     },
@@ -20,7 +20,8 @@
         "/": {
             "code": [
                 "import yrig",
-                "from maya import cmds"
+                "from maya import cmds",
+                "from pathlib import Path"
             ]
         },
         "/component": {

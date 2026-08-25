@@ -1,4 +1,4 @@
-import maya.cmds as cmds
+from maya import cmds
 from maya.api.OpenMaya import (
     MDoubleArray,
     MFnNurbsCurve,

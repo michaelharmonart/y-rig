@@ -59,13 +59,13 @@ class Guide(guide.ComponentGuide):
     email = EMAIL
     version = VERSION
 
-    joint_names_description = [
+    joint_names_description = (
         "thigh",
         "calf",
         "thigh_twist_##",
         "calf_twist_##",
         "foot",
-    ]
+    )
 
     def postInit(self) -> None:
         """Initialize the position for the guide"""

@@ -1,7 +1,7 @@
 import logging
 
 import maya.api.OpenMaya as om2
-import maya.cmds as cmds
+from maya import cmds
 from maya.api.OpenMaya import MColor, MFnMesh, MSelectionList
 
 from yrig.color.convert import linear_srgb_to_rec2020, srgb_to_linear_color

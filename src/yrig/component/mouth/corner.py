@@ -11,7 +11,7 @@ from yrig.surface import surface_slide_constraint
 class MouthCorner:
     def __init__(
         self,
-        side: Literal["L"] | Literal["R"],
+        side: Literal["L", "R"],
         guide: str,
         mouth_surface: str,
         control_parent: Control | str,
@@ -62,13 +62,13 @@ class MouthCorner:
             default=0,
             min=0,
         )
-        upper_roundness_scaled = MultiplyNode(f"{self.main_control}_upper_roundness")
+        upper_roundness_scaled = MultiplyNode.create(f"{self.main_control}_upper_roundness")
         upper_roundness_scaled.input[0].connect_from(self.roundness_attr)
         upper_roundness_scaled.input[1].set(0.5)
-        lower_roundness_scaled = MultiplyNode(f"{self.main_control}_roundness_invert")
+        lower_roundness_scaled = MultiplyNode.create(f"{self.main_control}_roundness_invert")
         lower_roundness_scaled.input[0].connect_from(self.roundness_attr)
         lower_roundness_scaled.input[1].set(-0.5)
-        roundness_side_offset = MultiplyNode(f"{self.main_control}_roundness_side_offset")
+        roundness_side_offset = MultiplyNode.create(f"{self.main_control}_roundness_side_offset")
         roundness_side_offset.input[0].connect_from(self.roundness_attr)
         roundness_side_offset.input[1].set(-0.25)
 

@@ -1,0 +1,30 @@
+{
+    "version": "1.17",
+    "alias": "mgear",
+    "color": "#991c24",
+    "mute": false,
+    "solo": false,
+    "meta_data": {
+        "positions": {
+            "/shifter_build": [
+                -702.7225770097671,
+                -573.8845792637115
+            ]
+        }
+    },
+    "nodes": {
+        "/shifter_build": {
+            "attrs": {
+                "guide_filepath": {
+                    "type": "raw",
+                    "value": "${file::guide.sgt}"
+                }
+            },
+            "code": [
+                "guide_path = Path(\"${guide_filepath}\")",
+                "",
+                "yrig.build.mgear_api.build_from_shifter_file(guide_path, dev_build=${dev_build})"
+            ]
+        }
+    }
+}

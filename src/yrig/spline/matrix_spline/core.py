@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-import maya.cmds as cmds
+from maya import cmds
 from maya.api.OpenMaya import (
     MDoubleArray,
     MFnNurbsCurve,
@@ -59,29 +59,29 @@ class MatrixSpline:
         for _index, cv_transform in enumerate(cv_transforms):
             # Remove scale and shear from matrix since they will interfere with the
             # linear interpolation of the basis vectors (causing flipping)
-            pick_matrix = node.PickMatrixNode(name=f"{cv_transform}_pick_matrix")
+            pick_matrix = node.PickMatrixNode.create(name=f"{cv_transform}_pick_matrix")
             pick_matrix.input_matrix.connect_from(f"{cv_transform}.matrix")
             pick_matrix.use_shear.set(False)
             pick_matrix.use_scale.set(False)
             # Add nodes to connect individual values from the matrix,
             # I don't know why maya makes us do this instead of just connecting directly
             deconstruct_matrix_attribute = pick_matrix.output_matrix
-            row1 = node.RowFromMatrixNode(name=f"{cv_transform}_row1")
+            row1 = node.RowFromMatrixNode.create(name=f"{cv_transform}_row1")
             row1.matrix.connect_from(deconstruct_matrix_attribute)
             row1.input.set(0)
-            row2 = node.RowFromMatrixNode(name=f"{cv_transform}_row2")
+            row2 = node.RowFromMatrixNode.create(name=f"{cv_transform}_row2")
             row2.matrix.connect_from(deconstruct_matrix_attribute)
             row2.input.set(1)
-            row3 = node.RowFromMatrixNode(name=f"{cv_transform}_row3")
+            row3 = node.RowFromMatrixNode.create(name=f"{cv_transform}_row3")
             row3.matrix.connect_from(deconstruct_matrix_attribute)
             row3.input.set(2)
-            row4 = node.RowFromMatrixNode(name=f"{cv_transform}_row4")
+            row4 = node.RowFromMatrixNode.create(name=f"{cv_transform}_row4")
             row4.matrix.connect_from(deconstruct_matrix_attribute)
             row4.input.set(3)
 
             # Rebuild the matrix but encode the scale into the empty values in the matrix
             # (this needs to be extracted after the weighted matrix sum)
-            cv_matrix = node.FourByFourMatrixNode(name=f"{cv_transform}_cv_matrix")
+            cv_matrix = node.FourByFourMatrixNode.create(name=f"{cv_transform}_cv_matrix")
             row1.output.x.connect_to(cv_matrix.in_00)
             row1.output.y.connect_to(cv_matrix.in_01)
             row1.output.z.connect_to(cv_matrix.in_02)
@@ -216,7 +216,7 @@ def closest_parameter_on_matrix_spline(
     Returns:
         float: The curve parameter value (in knot space) at the closest point to the input position.
     """
-    fn_curve, data_obj = get_matrix_spline_mfn_curve(matrix_spline)
+    fn_curve, _data_obj = get_matrix_spline_mfn_curve(matrix_spline)
     test_point = position if isinstance(position, MPoint) else MPoint(*position)
     parameter: float = fn_curve.closestPoint(test_point, space=MSpace.kObject)[1]
 

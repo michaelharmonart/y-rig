@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 
-import maya.cmds as cmds
+from maya import cmds
 from maya.api.OpenMaya import (
     MDagPath,
     MDagPathArray,
@@ -228,7 +228,7 @@ def get_weights_of_influence(skin_cluster: str, joint: str) -> dict[int, float]:
     index_weights: dict[int, float] = {}
     affected_indices: list[int] = []
     for i in range(components.length()):
-        dag_path, component = components.getComponent(i)
+        _dag_path, component = components.getComponent(i)
         fn_comp: MFnSingleIndexedComponent = MFnSingleIndexedComponent(component)
         indices: list[int] = fn_comp.getElements()
         affected_indices.extend(indices)
@@ -347,9 +347,9 @@ def set_skin_weights(
         resolved_skin_cluster = skin_cluster
 
     # Ensure all influences in new_weights exist on the skinCluster
-    all_influences_in_data: set[str] = set(
+    all_influences_in_data: set[str] = {
         influence_name for point_weights in weights.values() for influence_name in point_weights
-    )
+    }
     existing_influences = set(
         cmds.skinCluster(resolved_skin_cluster, query=True, influence=True) or []  # type: ignore
     )

@@ -362,7 +362,7 @@ class NurbsCurveShapeState:
                 cmds.setAttr(f"{shape_node}.alwaysDrawOnTop", self.display_on_top)  # type: ignore
         if self.drawing_override != default_state.drawing_override:
             cmds.setAttr(f"{shape_node}.overrideEnabled", self.drawing_override)  # type: ignore
-        if self.color_mode_rgb != default_state.drawing_override:  # noqa
+        if self.color_mode_rgb != default_state.drawing_override:
             cmds.setAttr(f"{shape_node}.drawOverride.overrideRGBColors", self.color_mode_rgb)  # type: ignore
         if self.color_index != default_state.color_index:
             cmds.setAttr(

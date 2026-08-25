@@ -373,13 +373,13 @@ class Component(component.Main):
             pm.connectAttr(f"{control}.rotateOrder", f"{rotation_transform}.rotateOrder")
 
         length_curve_shape = pm.listRelatives(self.length_curve, shapes=True)[0]
-        length_curve_info = CurveInfoNode(name=self.getName("length_info"))
+        length_curve_info = CurveInfoNode.create(name=self.getName("length_info"))
         length_curve_info.input_curve.connect_from(f"{length_curve_shape}.local")
         rest_length = length_curve_info.arc_length.get()
-        length_offset = SubtractNode(name=self.getName("length_offset"))
+        length_offset = SubtractNode.create(name=self.getName("length_offset"))
         length_offset.input1.set(rest_length)
         length_offset.input2.connect_from(length_curve_info.arc_length)
-        length_offset_blend = MultiplyNode(name=self.getName("length_offset_blend"))
+        length_offset_blend = MultiplyNode.create(name=self.getName("length_offset_blend"))
         length_offset_blend.input[0].connect_from(self.preserve_length_att)
         length_offset.output.connect_to(length_offset_blend.input[1])
 

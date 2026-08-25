@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-import maya.cmds as cmds
+from maya import cmds
 
 from yrig.maya_api import node
 from yrig.maya_api.attribute import (
@@ -47,7 +47,7 @@ def _scale_vector(
         create_mult = True
 
     if create_mult:
-        scale_node = node.MultiplyDivideNode(name=node_name)
+        scale_node = node.MultiplyDivideNode.create(name=node_name)
         scale_node.input1.x.connect_from(vector_attr.x)
         scale_node.input1.y.connect_from(vector_attr.y)
         scale_node.input1.z.connect_from(vector_attr.z)
@@ -61,9 +61,9 @@ def _scale_vector(
 
 def _create_tangent_scale(segment_name: str, tangent_vector: Vector3Attribute) -> ScalarAttribute:
     # Get tangent vector magnitude
-    tangent_vector_length = node.LengthNode(name=f"{segment_name}_tangent_vector_length")
+    tangent_vector_length = node.LengthNode.create(name=f"{segment_name}_tangent_vector_length")
     tangent_vector.connect_to(tangent_vector_length.input)
-    tangent_vector_length_scaled: node.MultiplyNode = node.MultiplyNode(
+    tangent_vector_length_scaled: node.MultiplyNode = node.MultiplyNode.create(
         name=f"{segment_name}_tangent_vector_length_scaled"
     )
     tangent_vector_length.output.connect_to(tangent_vector_length_scaled.input[0])
@@ -89,7 +89,7 @@ def _create_align_tangent(
     twist: bool,
     axis_to_row: dict[tuple[int, int, int], node.RowFromMatrixNode],
 ) -> tuple[AimMatrixNode, MatrixAttribute, Vector3Attribute]:
-    blended_tangent_matrix = node.WtAddMatrixNode(name=f"{segment_name}_tangent_matrix")
+    blended_tangent_matrix = node.WtAddMatrixNode.create(name=f"{segment_name}_tangent_matrix")
     tangent_weights = tangent_on_spline_weights(
         cvs=cv_matrices, t=parameter, degree=degree, knots=knots, normalize=normalize_parameter
     )
@@ -97,13 +97,13 @@ def _create_align_tangent(
         blended_tangent_matrix.weight_matrix[index].weight_in.set(tangent_weight[1])
         blended_tangent_matrix.weight_matrix[index].matrix_in.connect_from(tangent_weight[0])
 
-    tangent_vector_node = node.MultiplyPointByMatrixNode(
+    tangent_vector_node = node.MultiplyPointByMatrixNode.create(
         name=f"{blended_tangent_matrix}_tangent_vector"
     )
     blended_tangent_matrix.matrix_sum.connect_to(tangent_vector_node.input_matrix)
 
     # Create aim matrix node.
-    aim_matrix = node.AimMatrixNode(name=f"{segment_name}_aim_matrix")
+    aim_matrix = node.AimMatrixNode.create(name=f"{segment_name}_aim_matrix")
     aim_matrix.primary.mode.set(2)
     aim_matrix.primary.input_axis.set(primary_axis)
     tangent_vector_node.output.connect_to(aim_matrix.primary.target_vector)
@@ -123,7 +123,7 @@ def _create_align_tangent(
 def _create_pick_matrix(
     segment_name: str, input_matrix: MatrixAttribute, interpolate_rotation: bool
 ) -> PickMatrixNode:
-    pick_matrix = node.PickMatrixNode(name=f"{segment_name}_ortho")
+    pick_matrix = node.PickMatrixNode.create(name=f"{segment_name}_ortho")
     pick_matrix.use_translate.set(True)
     pick_matrix.use_rotate.set(interpolate_rotation)
     pick_matrix.use_scale.set(False)
@@ -190,7 +190,7 @@ def pin_to_matrix_spline(
     segment_name: str = pinned_transform
 
     # Create node that blends the matrices based on the calculated DeBoor weights.
-    blended_matrix = node.WtAddMatrixNode(name=f"{segment_name}_base_matrix")
+    blended_matrix = node.WtAddMatrixNode.create(name=f"{segment_name}_base_matrix")
     point_weights = point_on_spline_weights(
         cvs=cv_matrices, t=parameter, degree=degree, knots=knots, normalize=normalize_parameter
     )
@@ -215,19 +215,19 @@ def pin_to_matrix_spline(
         return
 
     # Create nodes to access the values of the blended matrix node.
-    blended_matrix_row1 = node.RowFromMatrixNode(name=f"{blended_matrix}_row1")
+    blended_matrix_row1 = node.RowFromMatrixNode.create(name=f"{blended_matrix}_row1")
     blended_matrix_row1.input.set(0)
     blended_matrix_row1.matrix.connect_from(blended_matrix_attribute)
 
-    blended_matrix_row2 = node.RowFromMatrixNode(name=f"{blended_matrix}_row2")
+    blended_matrix_row2 = node.RowFromMatrixNode.create(name=f"{blended_matrix}_row2")
     blended_matrix_row2.input.set(1)
     blended_matrix_row2.matrix.connect_from(blended_matrix_attribute)
 
-    blended_matrix_row3 = node.RowFromMatrixNode(name=f"{blended_matrix}_row3")
+    blended_matrix_row3 = node.RowFromMatrixNode.create(name=f"{blended_matrix}_row3")
     blended_matrix_row3.input.set(2)
     blended_matrix_row3.matrix.connect_from(blended_matrix_attribute)
 
-    blended_matrix_row4 = node.RowFromMatrixNode(name=f"{blended_matrix}_row4")
+    blended_matrix_row4 = node.RowFromMatrixNode.create(name=f"{blended_matrix}_row4")
     blended_matrix_row4.input.set(3)
     blended_matrix_row4.matrix.connect_from(blended_matrix_attribute)
 
@@ -267,15 +267,15 @@ def pin_to_matrix_spline(
         tangent_scale_attr = _create_tangent_scale(segment_name, tangent_vector)
 
     # Create nodes to access the values of the rigid matrix (aim matrix or pick matrix) node.
-    rigid_matrix_row1 = node.RowFromMatrixNode(name=f"{rigid_matrix}_row1")
+    rigid_matrix_row1 = node.RowFromMatrixNode.create(name=f"{rigid_matrix}_row1")
     rigid_matrix_row1.matrix.connect_from(rigid_matrix_output)
     rigid_matrix_row1.input.set(0)
 
-    rigid_matrix_row2 = node.RowFromMatrixNode(name=f"{rigid_matrix}_row2")
+    rigid_matrix_row2 = node.RowFromMatrixNode.create(name=f"{rigid_matrix}_row2")
     rigid_matrix_row2.matrix.connect_from(rigid_matrix_output)
     rigid_matrix_row2.input.set(1)
 
-    rigid_matrix_row3 = node.RowFromMatrixNode(name=f"{rigid_matrix}_row3")
+    rigid_matrix_row3 = node.RowFromMatrixNode.create(name=f"{rigid_matrix}_row3")
     rigid_matrix_row3.matrix.connect_from(rigid_matrix_output)
     rigid_matrix_row3.input.set(2)
 
@@ -315,7 +315,7 @@ def pin_to_matrix_spline(
     )
 
     # Rebuild the matrix
-    output_matrix = node.FourByFourMatrixNode(name=f"{segment_name}_output_matrix")
+    output_matrix = node.FourByFourMatrixNode.create(name=f"{segment_name}_output_matrix")
     x_scaled.x.connect_to(output_matrix.in_00)
     x_scaled.y.connect_to(output_matrix.in_01)
     x_scaled.z.connect_to(output_matrix.in_02)

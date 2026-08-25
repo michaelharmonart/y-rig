@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import maya.api.OpenMaya as om
-import maya.cmds as cmds
+from maya import cmds
 
 
 @dataclass

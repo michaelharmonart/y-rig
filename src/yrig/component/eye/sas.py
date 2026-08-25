@@ -1,4 +1,4 @@
-import maya.cmds as cmds
+from maya import cmds
 
 from yrig.transform.utils import match_location
 
@@ -60,7 +60,7 @@ class Socket:
         cube_size = diameter * offset_size
 
         # 4. create cube
-        cube: tuple[str | str] = cmds.polyCube(  # type:ignore
+        cube: tuple[str] = cmds.polyCube(  # type:ignore
             width=cube_size,
             height=cube_size,
             depth=cube_size,

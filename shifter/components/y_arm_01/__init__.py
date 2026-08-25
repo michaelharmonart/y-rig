@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 import mgear.pymaya as pm
 
@@ -18,7 +18,7 @@ else:
 class Component(LimbComponent):
     """Shifter component Class"""
 
-    GUIDE_MAP = {"mid": "elbow", "end": "wrist"}
+    GUIDE_MAP: ClassVar[dict[str, str]] = {"mid": "elbow", "end": "wrist"}
 
     # =====================================================
     # OBJECTS

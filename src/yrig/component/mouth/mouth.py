@@ -109,7 +109,7 @@ class Mouth:
         matrix_constraint(self.jaw_blend_local, self.left_corner.main_control.offset)
         matrix_constraint(self.jaw_blend_local, self.right_corner.main_control.offset)
 
-        mouth_uv_pin = UvPinNode("mouth_surface_uvPin")
+        mouth_uv_pin = UvPinNode.create("mouth_surface_uvPin")
         primary_shape, original_shape, shape_output = get_surface_shapes(self.mouth_surface)
         mouth_uv_pin.original_geometry.connect_from(f"{original_shape}.{shape_output}")
         mouth_uv_pin.deformed_geometry.connect_from(f"{primary_shape}.{shape_output}")

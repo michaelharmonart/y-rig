@@ -1,0 +1,94 @@
+{
+    "version": "1.17",
+    "alias": "skin",
+    "color": "#e83723",
+    "mute": false,
+    "solo": false,
+    "meta_data": {
+        "positions": {
+            "/skin_geometry": [
+                -792.3446878650894,
+                -503.413860761456
+            ],
+            "/split_skin_weights": [
+                -795.0015270807991,
+                -430.2469663713647
+            ],
+            "/transfer_skin_weights": [
+                -793.6108508459346,
+                -357.59014887362883
+            ]
+        }
+    },
+    "nodes": {
+        "/": {},
+        "/skin_geometry": {
+            "instance": "",
+            "attrs": {
+                "def_set": {
+                    "type": "raw",
+                    "value": "rig_deformers_grp"
+                },
+                "geo_list": {
+                    "type": "NoneType",
+                    "value": "None"
+                },
+                "geo_set": {
+                    "type": "raw",
+                    "value": "rig_geo_grp"
+                },
+                "resolved_skin_directories": {
+                    "type": "raw",
+                    "value": "${filelist::${skin_directory}}"
+                },
+                "skin_directory": {
+                    "type": "raw",
+                    "value": "${file::data/skin}"
+                }
+            },
+            "code": [
+                "from yrig.skin import skin_and_apply_weights_from_directories",
+                "from yrig.skin.core import skin_geometry",
+                "def_in_set = cmds.sets(\"${def_set}\", query=True)",
+                "def_joints = cmds.ls(def_in_set, type=\"joint\")  # type: ignore    ",
+                "",
+                "geo_list = ${geo_list}",
+                "geo_to_skin = geo_list if geo_list else cmds.sets(\"${geo_set}\", query=True)",
+                "",
+                "def _fallback_skin(geometry: str):",
+                "    skin_geometry(def_joints, geometry)",
+                "",
+                "skin_directories = [Path(dir) for dir in ${resolved_skin_directories}]",
+                "skin_and_apply_weights_from_directories(skin_directories, geo_to_skin, fallback_skinning=_fallback_skin)",
+                ""
+            ]
+        },
+        "/split_skin_weights": {
+            "attrs": {
+                "geo_set": {
+                    "type": "raw",
+                    "value": "rig_geo_grp"
+                }
+            },
+            "code": [
+                "from yrig.skin.split import auto_split_weights",
+                "",
+                "geo_in_set: list[str] = cmds.sets(\"${geo_set}\", query=True)  # type: ignore",
+                "auto_split_weights(geo_in_set)"
+            ]
+        },
+        "/transfer_skin_weights": {
+            "attrs": {
+                "transfer_mapping": {
+                    "type": "dict",
+                    "value": "{}"
+                }
+            },
+            "code": [
+                "transfer_mapping = ${transfer_mapping}",
+                "for source, target in transfer_mapping.items():",
+                "    yrig.skin.transfer_skin_weights(source, target)"
+            ]
+        }
+    }
+}

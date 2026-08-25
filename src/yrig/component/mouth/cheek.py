@@ -95,7 +95,7 @@ class CheekInterpolateMid:
             joint = create_joint(segment_name, parent=joint_parent)
             self.joints.append(joint)
             _, index = uv_pin(surface, joint, uv_pin_node=uv_pin_node)
-            blend_node = BlendColorsNode(f"{segment_name}_blend")
+            blend_node = BlendColorsNode.create(f"{segment_name}_blend")
             blend_node.color1.r.connect_from(lip_point.parameter_u)
             blend_node.color1.g.connect_from(lip_point.parameter_v)
             blend_node.color2.r.set(max_point.u.get())

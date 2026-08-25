@@ -43,7 +43,7 @@ extraPaths = [
     "third_party/mgear/release/scripts/",
     "src"
 ]
-ignore = ["third_party"]
+ignore = ["third_party", "shifter/components/**/settingsUI.py"]
 typeCheckingMode = "standard"
 reportMissingModuleSource = "information"
 
@@ -55,7 +55,7 @@ extra-paths = [
 ]
 
 [tool.ty.src]
-exclude = ["third_party"]
+exclude = ["third_party", "shifter/components/**/settingsUI.py"]
 
 [tool.ty.analysis]
 allowed-unresolved-imports = ["ngSkinTools2.**"]

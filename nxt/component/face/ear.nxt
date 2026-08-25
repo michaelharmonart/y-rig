@@ -1,0 +1,57 @@
+{
+    "version": "1.17",
+    "alias": "ear",
+    "color": "#01697f",
+    "mute": false,
+    "solo": false,
+    "meta_data": {
+        "positions": {
+            "/ear_component": [
+                -856.6346739575091,
+                893.1845543738862
+            ]
+        }
+    },
+    "nodes": {
+        "/ear_component": {
+            "instance": "/component",
+            "child_order": [
+                "build"
+            ],
+            "attrs": {
+                "joint_parent": {
+                    "value": "face_jnt"
+                },
+                "name": {
+                    "type": "raw",
+                    "value": "ear"
+                },
+                "parent": {
+                    "value": "face_grp"
+                }
+            },
+            "code": [
+                "group = yrig.transform.create_transform(name=\"${component_group}\", parent=\"${parent}\")",
+                "cmds.setAttr(f\"{group}.overrideEnabled\", True)",
+                "cmds.setAttr(f\"{group}.drawOverride.overrideRGBColors\", True)",
+                "cmds.connectAttr(\"${control_layer}.controlColor\", f\"{group}.drawOverride.overrideColorRGB\")"
+            ]
+        },
+        "/ear_component/build": {
+            "code": [
+                "from yrig.component.ear.ear import Ear",
+                "",
+                "ear = Ear(",
+                "    part=\"${name}\",",
+                "    side=\"${side}\",",
+                "    parent=\"${component_group}\",",
+                "    control_parent=\"${control_parent}\",",
+                "    parent_jnt=\"${joint_parent}\",",
+                "    control_size=1,",
+                ")",
+                "",
+                "ear.build()"
+            ]
+        }
+    }
+}

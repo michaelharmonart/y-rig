@@ -161,7 +161,7 @@ def add_ctl(  # noqa: ANN201
     if component is not None:
         component_node = pm.PyNode(component)
         ni = attribute.get_next_available_index(component_node.compCtl)
-        pm.connectAttr(ctl.message, component_node.attr(f"compCtl[{str(ni)}]"))  # type: ignore
+        pm.connectAttr(ctl.message, component_node.attr(f"compCtl[{ni!s}]"))  # type: ignore
 
         ctl.addAttr("compRoot", at="message", m=False)
         component_node.message >> ctl.compRoot

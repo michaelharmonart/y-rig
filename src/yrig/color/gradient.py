@@ -70,9 +70,9 @@ def get_gradient_knots(gradient: Gradient) -> list[float]:
     clamp_end = [stop_positions[-1]] * (degree + 1)
 
     num_internal = len(gradient.stops) - degree - 1
-    internal_knots = list(
+    internal_knots = [
         (sum(stop_positions[j : j + degree]) / degree) for j in range(1, num_internal + 1)
-    )
+    ]
     clamped_knots = clamp_start + internal_knots + clamp_end
     return [float(knot) for knot in clamped_knots]
 

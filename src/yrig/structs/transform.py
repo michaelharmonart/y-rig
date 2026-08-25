@@ -35,7 +35,7 @@ class Vector3:
         """Return a string representation suitable for debugging."""
         return f"({self.x},{self.y},{self.z})"
 
-    def __add__(self, other: Vector3 | float | int) -> Vector3:
+    def __add__(self, other: Vector3 | float) -> Vector3:
         """Add another ``Vector3`` or a scalar to this vector (component-wise).
 
         Args:
@@ -53,7 +53,7 @@ class Vector3:
         else:
             return self
 
-    def __radd__(self, other: float | int) -> Vector3:
+    def __radd__(self, other: float) -> Vector3:
         """Support ``scalar + Vector3`` by delegating to `__add__`.
 
         Args:
@@ -84,7 +84,7 @@ class Vector3:
         else:
             return self
 
-    def __mul__(self, other: Vector3 | float | int) -> Vector3:
+    def __mul__(self, other: Vector3 | float) -> Vector3:
         """Multiply by another ``Vector3`` (component-wise) or a scalar.
 
         Args:
@@ -102,7 +102,7 @@ class Vector3:
         else:
             return self
 
-    def __rmul__(self, other: float | int) -> Vector3:
+    def __rmul__(self, other: float) -> Vector3:
         """Support ``scalar * Vector3`` by delegating to `__mul__`.
 
         Args:
@@ -117,7 +117,7 @@ class Vector3:
         else:
             return self
 
-    def __truediv__(self, other: Vector3 | float | int) -> Vector3:
+    def __truediv__(self, other: Vector3 | float) -> Vector3:
         """Divide by another ``Vector3`` (component-wise) or a scalar.
 
         Args:

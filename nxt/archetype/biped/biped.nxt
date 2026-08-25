@@ -1,0 +1,120 @@
+{
+    "version": "1.17",
+    "alias": "biped",
+    "color": "#7a9e2b",
+    "mute": false,
+    "solo": false,
+    "references": [
+        "./face.nxt",
+        "./body.nxt",
+        "archetype/anim_rig.nxt"
+    ],
+    "meta_data": {
+        "positions": {
+            "/apply": [
+                863.0669956752183,
+                -13.16285494908442
+            ],
+            "/cleanup": [
+                1296.6643526537218,
+                -15.594755912117055
+            ],
+            "/deformation": [
+                856.0087940139424,
+                -9.668699423947338
+            ],
+            "/left": [
+                18.209666557736483,
+                -12.063569759815769
+            ],
+            "/middle": [
+                -396.0467648945946,
+                -12.903779307342678
+            ],
+            "/right": [
+                419.19959226227263,
+                -11.329718709791148
+            ],
+            "/root": [
+                -836.227393231747,
+                -13.679528134599906
+            ],
+            "/shifter_build": [
+                -1328.4283558944185,
+                -109.8002192791547
+            ],
+            "/shifter_component_build": [
+                -1333.8722592666647,
+                -13.21855392066065
+            ]
+        },
+        "collapse": {
+            "/left": false,
+            "/right/ear": true,
+            "/right/eye": true,
+            "/right/eyebrow": true
+        }
+    },
+    "nodes": {
+        "/": {
+            "attrs": {
+                "rig_path": {
+                    "value": "character/biped"
+                }
+            }
+        },
+        "/apply": {
+            "execute_in": "/right"
+        },
+        "/cleanup": {
+            "execute_in": "/apply"
+        },
+        "/left": {
+            "instance": "/side",
+            "execute_in": "/middle",
+            "attrs": {
+                "control_color": {
+                    "value": "[0.105, 0.447, 0.911]"
+                },
+                "side": {
+                    "value": "L"
+                }
+            }
+        },
+        "/middle": {
+            "attrs": {
+                "control_color": {
+                    "value": "[1.0, 0.8786, 0.0]"
+                }
+            }
+        },
+        "/right": {
+            "instance": "/left",
+            "execute_in": "/left",
+            "attrs": {
+                "control_color": {
+                    "value": "[0.811, 0.080, 0.108]"
+                },
+                "side": {
+                    "value": "R"
+                },
+                "side_mult": {
+                    "value": "-1"
+                }
+            }
+        },
+        "/root": {
+            "start_point": false,
+            "execute_in": "/shifter_component_build"
+        },
+        "/shifter_component_build/finger_meta_fix": {
+            "code": [
+                "for side in [\"L\", \"R\"]:",
+                "    for num in range(4):",
+                "        control_name = f\"meta_{side}0_meta{num}_ctl\"",
+                "        group_name = f\"finger_{side}{num}_root\"",
+                "        cmds.parent(group_name, control_name)"
+            ]
+        }
+    }
+}

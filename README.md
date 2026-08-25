@@ -4,9 +4,9 @@
 
 This repository contains three main parts:
 
-1. A set of custom mGear Shifter components.
-2. A library of tools that can be used by those components or mGear custom step scripts.
-3. A set of custom NXT graphs for facial rigging that can be executed by custom step scripts.
+1. A set of custom NXT graphs defining reusable rig components and archetypes.
+2. A library of tools that can be used by components NXT graphs.
+3. A set of custom mGear Shifter components.
 
 The main aim being to expand on the feature set of an established rig build system (mGear),
 without needing the high maintanence burden of a fork.

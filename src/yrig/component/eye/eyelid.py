@@ -2,7 +2,7 @@ import math
 from dataclasses import dataclass
 from typing import Any, Literal
 
-import maya.cmds as cmds
+from maya import cmds
 from maya.api.OpenMaya import MEulerRotation, MMatrix, MSpace, MTransformationMatrix, MVector
 
 from yrig.control import ControlShape, create_control
@@ -253,10 +253,10 @@ class Eyelid:
 
         # shared logic to check how close our two drivers are
 
-        pma_calc = PlusMinusAverageNode(name=f"{upper_driver}_{lower_driver}_PMA")
+        pma_calc = PlusMinusAverageNode.create(name=f"{upper_driver}_{lower_driver}_PMA")
         pma_calc.operation.set(2)
 
-        condition = ConditionNode(name=f"{upper_driver}_{lower_driver}_COND")
+        condition = ConditionNode.create(name=f"{upper_driver}_{lower_driver}_COND")
         condition.operation.set(2)
         condition.color_if_false.set((0, 0, 0))
 
@@ -266,13 +266,13 @@ class Eyelid:
         # cmds.connectAttr(f"{pma_calc}.output1D", f"{condition}.colorIfTrueR")
         # cmds.connectAttr(f"{pma_calc}.output1D", f"{condition}.firstTerm")
 
-        rot_md = MultiplyDivideNode(name=f"{upper_driver}_{lower_driver}_MD")
+        rot_md = MultiplyDivideNode.create(name=f"{upper_driver}_{lower_driver}_MD")
 
         for ctrl in ctrl_list:
             cmds.addAttr(ctrl, longName="push", at="double", dv=push, k=True)  # type:ignore
             cmds.addAttr(ctrl, longName="rot_mult_DEV", at="double", dv=rot_mult, k=True)  # type:ignore
-            mult_matrix = MultMatrixNode(name=f"{ctrl}_{self.side}_MM")
-            dec_matrix = DecomposeMatrixNode(name=f"{ctrl}_{self.side}_DM")
+            mult_matrix = MultMatrixNode.create(name=f"{ctrl}_{self.side}_MM")
+            dec_matrix = DecomposeMatrixNode.create(name=f"{ctrl}_{self.side}_DM")
 
             # Connect world matrix → multMatrix
             mult_matrix.matrix_in[0].connect_from(f"{ctrl}.worldMatrix[0]")
@@ -299,7 +299,7 @@ class Eyelid:
             # -------------------------
             # push multiplyDivide
             # -------------------------
-            push_mult = MultiplyDivideNode(name=f"{ctrl}_{self.side}_MD")
+            push_mult = MultiplyDivideNode.create(name=f"{ctrl}_{self.side}_MD")
 
             push_mult.input2.x.set(0.5 if ctrl == ctrl_list[0] else -0.5)
             push_mult.operation.set(1)  # assuming multiply
@@ -309,7 +309,7 @@ class Eyelid:
             # -------------------------
             # PlusMinusAverageNode driver
             # -------------------------
-            pma_drive = PlusMinusAverageNode(name=f"{ctrl}_{self.side}_PMA")
+            pma_drive = PlusMinusAverageNode.create(name=f"{ctrl}_{self.side}_PMA")
             pma_drive.operation.set(2)
 
             dec_matrix.output_translate.y.connect_to(pma_drive.input_1d[0])
@@ -536,7 +536,7 @@ class Eyelid:
 
                 ##### Adding x translate control funtionality to the controls
 
-                x_md = MultiplyDivideNode(name=f"{sub_blink}_{side}_{self.side}_MD")
+                x_md = MultiplyDivideNode.create(name=f"{sub_blink}_{side}_{self.side}_MD")
 
                 x_md.input1.x.connect_from(
                     f"{self.main_eyelid_controls[f'{side}_{sub_blink}'].blink_transform}.translateX"
@@ -612,7 +612,7 @@ class Eyelid:
                 direction="z",
                 dimensions=(1, 1, 1 if side == "upper" else -1),
             )
-            twist_md = MultiplyDivideNode(name=f"{self.side}_{side}_twist_DM")
+            twist_md = MultiplyDivideNode.create(name=f"{self.side}_{side}_twist_DM")
             cmds.connectAttr(f"{blink_ctrl.transform}.translateX", f"{twist_md.input1.x}")
             cmds.setAttr(f"{twist_md.input2.x}", 15)  # type:ignore
 
@@ -628,8 +628,8 @@ class Eyelid:
                 ["inner_corner", "inner_01", "inner_02", "outer_02", "outer_01", "outer_corner"]
             ):
                 mod: float = mod_values[i]
-                input_mult = MultiplyDivideNode(name=f"{self.side}_{side}_{sub}_input_MD")
-                sum_node: SumNode = SumNode(name=f"{self.side}_{side}_{sub}_sum")
+                input_mult = MultiplyDivideNode.create(name=f"{self.side}_{side}_{sub}_input_MD")
+                sum_node: SumNode = SumNode.create(name=f"{self.side}_{side}_{sub}_sum")
                 input_mult.input1.x.connect_from(f"{blink_ctrl.transform}.rotateZ")
                 cmds.setAttr(f"{input_mult.input2.x}", 0.03 * mod)  # type:ignore
                 cmds.connectAttr(f"{blink_ctrl.transform}.translateY", f"{sum_node.input[0]}")

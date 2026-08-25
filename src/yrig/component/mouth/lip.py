@@ -37,6 +37,7 @@ class LipMidpoint:
         parent: str,
         distance_transform: str,
         control_size: float = 1,
+        mirror: bool = False,
     ):
         self.main_control = create_control(
             name,
@@ -45,6 +46,7 @@ class LipMidpoint:
             size=control_size,
             direction="z",
             rotation_order=RotateOrder.ZXY,
+            limit_min_scale=False,
         )
         cmds.setAttr(f"{self.main_control.transform}.translateZ", lock=True)
         self.main_control_rest = create_transform(
@@ -60,7 +62,7 @@ class LipMidpoint:
             zero_at_rest=True,
             axes=(True, False, False),
         )
-        corner_distance_scale = MultiplyNode(f"{name}_distance_scale")
+        corner_distance_scale = MultiplyNode.create(f"{name}_distance_scale")
         corner_distance_scale.input[0].connect_from(corner_distance)
         corner_distance_scale.input[1].set(0.75)
         corner_distance_scale.output.connect_to(f"{self.main_control_driven}.translateX")
@@ -84,6 +86,15 @@ class LipMidpoint:
             driver_transform=self.main_control.transform,
             slider_transform=self.sub_control.offset,
         )
+
+        if mirror:
+            cmds.setAttr(f"{self.main_control.transform}.scaleY", -1)  # type:ignore
+            cmds.setAttr(f"{self.main_control.transform}.scaleX", -1)  # type:ignore
+        for axis in ["X", "Y", "Z"]:
+            cmds.setAttr(
+                f"{self.main_control.transform}.scale{axis}",
+                lock=True,
+            )
 
 
 class LipSpline:
@@ -139,6 +150,8 @@ class LipSpline:
                 name=segment_name, transform=driver, parent=joint_parent, radius=0.5
             )
             self.joints.append(joint)
+        cmds.setAttr(f"{self.curve}.overrideEnabled", 1)  # type:ignore
+        cmds.setAttr(f"{self.curve}.overrideDisplayType", 2)  # type:ignore
 
 
 class Lip:
@@ -206,6 +219,7 @@ class Lip:
             control_parent=control_parent,
             parent=self.slider,
             distance_transform=self.slider,
+            mirror=True,
         )
 
         self.sub_controls: list[Control] = [

@@ -1,6 +1,9 @@
 import logging
 import os
+from collections.abc import Generator, Iterable
+from contextlib import contextmanager
 from pathlib import Path
+from typing import Any
 
 from nxt.nxt_layer import CompLayer
 from nxt.nxt_node import get_node_enabled
@@ -13,8 +16,26 @@ log = logging.getLogger(__name__)
 
 YRIG_NXT_DIR = (  # Get the path (resolve symlinks first though)
     Path(__file__).resolve().parents[3] / "nxt"
-)
-os.environ["YRIG_NXT_DIR"] = str(YRIG_NXT_DIR.resolve())
+).resolve()
+os.environ["YRIG_NXT_DIR"] = str(YRIG_NXT_DIR)
+os.environ["NXT_FILE_ROOTS"] = str(YRIG_NXT_DIR)
+
+
+@contextmanager
+def nxt_file_roots(
+    file_roots: Iterable[Path], restore: bool = False
+) -> Generator[None, None, None]:
+    """Temporarily set the NXT_FILE_ROOTS env var, restoring it afterward if restore is True."""
+    default_value = os.environ.get("NXT_FILE_ROOTS")
+    os.environ["NXT_FILE_ROOTS"] = os.pathsep.join(map(str, file_roots))
+    try:
+        yield
+    finally:
+        if restore:
+            if default_value is None:
+                os.environ.pop("NXT_FILE_ROOTS")
+            else:
+                os.environ["NXT_FILE_ROOTS"] = default_value
 
 
 # We wrap the NXT execution so we can have nice progress reporting :)
@@ -39,12 +60,12 @@ class ProgressStage(Stage):
         :rtype: CompLayer
         """
         if not isinstance(layer, CompLayer):
-            raise ValueError("Execute Nodes requires a comp layer.")
+            raise ValueError("Execute Nodes requires a comp layer.")  # noqa
         if not layer.runtime:
             dup_comp = self.build_stage(layer.layer_idx())
-            runtime_layer = self.setup_runtime_layer(dup_comp, parameters=parameters)
+            runtime_layer: CompLayer = self.setup_runtime_layer(dup_comp, parameters=parameters)
         else:
-            runtime_layer = layer
+            runtime_layer: CompLayer = layer
             if parameters:
                 self.set_runtime_parameters(parameters, runtime_layer)
 
@@ -76,6 +97,6 @@ class ProgressStage(Stage):
         return runtime_layer
 
 
-def execute_nxt_graph(filepath: Path) -> None:
-    stage = ProgressStage.load_from_filepath(str(filepath))
-    stage.execute()
+def execute_nxt_graph(filepath: Path, parameters: dict[str, Any] | None = None) -> None:
+    stage: ProgressStage = ProgressStage.load_from_filepath(str(filepath))
+    stage.execute(parameters=parameters)

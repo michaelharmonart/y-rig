@@ -90,7 +90,6 @@ class Component(component.Main):
     # =====================================================
     def addAttributes(self) -> None:
         """Setup rig attributes for the component"""
-        pass
 
     # =====================================================
     # OPERATORS
@@ -103,7 +102,6 @@ class Component(component.Main):
         we shouldn't create any new object in this method.
 
         """
-        pass
 
     # =====================================================
     # CONNECTOR
@@ -115,7 +113,7 @@ class Component(component.Main):
         self.relatives["root"] = self.cv_ctls[0]
         self.controlRelatives["root"] = self.cv_ctls[0]
         self.jointRelatives["root"] = 0
-        for i in range(0, len(self.guide.apos) - 1):
+        for i in range(len(self.guide.apos) - 1):
             self.relatives[f"{i}_cv"] = self.cv_ctls[-1]
             self.controlRelatives[f"{i}_cv"] = self.cv_ctls[-1]
             self.jointRelatives[f"{i}_cv"] = i + 1

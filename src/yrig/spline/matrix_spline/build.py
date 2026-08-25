@@ -115,7 +115,7 @@ def matrix_spline_from_transforms(
     pins: list[str] = []
     segment_names: list[str] = []
     if isinstance(pinned_transforms, str):
-        raise ValueError(
+        raise TypeError(
             f'pinned_transforms expects a sequence of strings, but was given the string "{pinned_transforms}"'
         )
     if isinstance(pinned_transforms, int):

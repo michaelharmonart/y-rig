@@ -1,4 +1,4 @@
-import maya.cmds as cmds
+from maya import cmds
 
 from yrig.control import create_control
 from yrig.joint import create_joint
@@ -140,15 +140,15 @@ class Eye:
 
         self.eyeball.build_eyeball()
 
-        self.eye_look_offset_node = BlendColorsNode(name=f"look_blend_{self.side}_BC")
+        self.eye_look_offset_node = BlendColorsNode.create(name=f"look_blend_{self.side}_BC")
 
         if self.side == "R":
-            mirroraim = MultiplyDivideNode(name=f"{self.side}_aim_mirror_MD")
+            mirroraim = MultiplyDivideNode.create(name=f"{self.side}_aim_mirror_MD")
             mirroraim.input2.set((-1, -1, -1))
             mirroraim.input1.connect_from(f"{self.eyeball.look_root}.rotate")
             # add_node.input[0].connect_from(f"{self.eyeball.look_root}.rotate{axes}")
         for axes in ["X", "Y", "Z"]:
-            add_node = SumNode(name=f"look_{axes}_{self.side}_ADL")
+            add_node = SumNode.create(name=f"look_{axes}_{self.side}_ADL")
             if self.side == "R":
                 add_node.input[0].connect_from(f"{mirroraim.output}{axes}")
             else:

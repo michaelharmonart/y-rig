@@ -1,0 +1,57 @@
+{
+    "version": "1.17",
+    "alias": "nose",
+    "color": "#6e33bb",
+    "mute": false,
+    "solo": false,
+    "meta_data": {
+        "positions": {
+            "/nose_component": [
+                -379.5629026323409,
+                921.2094231455193
+            ]
+        }
+    },
+    "nodes": {
+        "/nose_component": {
+            "instance": "/component",
+            "child_order": [
+                "build"
+            ],
+            "attrs": {
+                "joint_parent": {
+                    "value": "face_jnt"
+                },
+                "name": {
+                    "type": "raw",
+                    "value": "nose"
+                },
+                "parent": {
+                    "value": "face_grp"
+                }
+            },
+            "code": [
+                "group = yrig.transform.create_transform(name=\"${component_group}\", parent=\"${parent}\")",
+                "cmds.setAttr(f\"{group}.overrideEnabled\", True)",
+                "cmds.setAttr(f\"{group}.drawOverride.overrideRGBColors\", True)",
+                "cmds.connectAttr(\"${control_layer}.controlColor\", f\"{group}.drawOverride.overrideColorRGB\")"
+            ]
+        },
+        "/nose_component/build": {
+            "code": [
+                "from yrig.component.nose.nose import Nose",
+                "",
+                "nose = Nose(",
+                "    part=\"${name}\",",
+                "    side=\"${side}\",",
+                "    parent=\"${component_group}\",",
+                "    control_parent=\"${control_parent}\",",
+                "    parent_jnt=\"${joint_parent}\",",
+                "    control_size=1,",
+                ")",
+                "",
+                "nose.build()"
+            ]
+        }
+    }
+}

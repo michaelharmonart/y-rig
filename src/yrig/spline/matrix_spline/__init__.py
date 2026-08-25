@@ -11,11 +11,11 @@ from .core import (
 from .pin import pin_to_matrix_spline
 
 __all__ = [
-    "build",
-    "core",
-    "pin",
     "MatrixSpline",
     "bound_curve_from_matrix_spline",
+    "build",
     "closest_parameter_on_matrix_spline",
+    "core",
+    "pin",
     "pin_to_matrix_spline",
 ]

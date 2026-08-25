@@ -69,8 +69,8 @@ def skin_and_apply_ng_weights(filepath: Path, mesh: str) -> str:
     return skin_cluster
 
 
-def skin_and_apply_weights_from_directory(
-    directory: Path,
+def skin_and_apply_weights_from_directories(
+    directories: Sequence[Path],
     geometry: Sequence[str],
     skip_skinned_geometry: bool = True,
     fallback_skinning: Callable[[str], Any] | None = None,
@@ -87,13 +87,16 @@ def skin_and_apply_weights_from_directory(
         for i, geo in enumerate(geometry):
             if skip_skinned_geometry and get_skin_clusters(geo):
                 continue
-            ng_skin_filepath: Path = directory / f"{geo}.json"
-            yskin_filepath: Path = directory / f"{geo}.yskin"
-            if ng_skin_filepath.exists():
-                skin_and_apply_ng_weights(ng_skin_filepath, geo)
-            elif yskin_filepath.exists():
-                skin_and_apply_weights(yskin_filepath, geo)
-            else:
-                if fallback_skinning is not None:
-                    fallback_skinning(geo)
+            skinned: bool = False
+            for directory in directories:
+                ng_skin_filepath: Path = directory / f"{geo}.json"
+                yskin_filepath: Path = directory / f"{geo}.yskin"
+                if ng_skin_filepath.exists():
+                    skin_and_apply_ng_weights(ng_skin_filepath, geo)
+                    skinned = True
+                elif yskin_filepath.exists():
+                    skin_and_apply_weights(yskin_filepath, geo)
+                    skinned = True
+            if not skinned and fallback_skinning is not None:
+                fallback_skinning(geo)
             progress.update_progress(i / total)

@@ -63,14 +63,14 @@ class Guide(guide.ComponentGuide):
     email = EMAIL
     version = VERSION
 
-    connectors = ["shoulder_01"]
-    joint_names_description = [
+    connectors = "shoulder_01"
+    joint_names_description = (
         "upper",
         "lower",
         "upper_twist_##",
         "lower_twist_##",
         "end",
-    ]
+    )
 
     def postInit(self) -> None:
         """Initialize the position for the guide"""
@@ -129,7 +129,6 @@ class Guide(guide.ComponentGuide):
 
     def postDraw(self) -> None:
         "Add post guide draw elements to the guide"
-        pass
 
 
 ##########################################################

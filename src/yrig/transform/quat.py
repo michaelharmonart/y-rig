@@ -15,7 +15,7 @@ def drive_rotation_with_quat(transform: str, quat_attribute: QuatAttribute) -> N
     """
     Drive the rotation of a transform using a QuatAttribute via a QuatToEuler node.
     """
-    euler_angles = QuatToEulerNode(f"{get_short_name(transform)}_euler")
+    euler_angles = QuatToEulerNode.create(f"{get_short_name(transform)}_euler")
     euler_angles.input_rotate_order.connect_from(f"{transform}.rotateOrder")
     quat_attribute.connect_to(euler_angles.input_quat)
     euler_angles.output_rotate.connect_to(f"{transform}.rotate")
@@ -49,7 +49,7 @@ def twist_extract_euler(transform: str, reference_space: str, axis: Axis) -> Qua
     """
     name = f"{get_short_name(transform)}_twist"
     decompose = localize_and_decompose_matrix(transform, reference_space)
-    euler_output = QuatToEulerNode(f"{name}_euler")
+    euler_output = QuatToEulerNode.create(f"{name}_euler")
     _connect_twist_quat(decompose.output_quat, euler_output.input_quat, axis)
     return euler_output
 
@@ -68,7 +68,7 @@ def twist_extract_quat(transform: str, reference_space: str, axis: Axis) -> Quat
     """
     name = f"{get_short_name(transform)}_twist"
     decompose = localize_and_decompose_matrix(transform, reference_space)
-    output = QuatNormalizeNode(name)
+    output = QuatNormalizeNode.create(name)
     _connect_twist_quat(decompose.output_quat, output.input_quat, axis)
     return output.output_quat
 
@@ -87,9 +87,9 @@ def swing_extract_quat(transform: str, reference_space: str, axis: Axis) -> Quat
     """
     name = f"{get_short_name(transform)}_swing"
     decompose = localize_and_decompose_matrix(transform, reference_space)
-    inverse = QuatInvertNode(f"{get_short_name(transform)}_twist_inverse")
+    inverse = QuatInvertNode.create(f"{get_short_name(transform)}_twist_inverse")
     _connect_twist_quat(decompose.output_quat, inverse.input_quat, axis)
-    swing = QuatProdNode(name)
+    swing = QuatProdNode.create(name)
     inverse.output_quat.connect_to(swing.input1_quat)
     decompose.output_quat.connect_to(swing.input2_quat)
     return swing.output_quat

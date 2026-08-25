@@ -110,7 +110,7 @@ def _temporary_log_handler(logger: logging.Logger, handler: logging.Handler) -> 
 class BuildStepFilter(logging.Filter):
     def __init__(self, build_steps: Sequence[BuildStep]) -> None:
         super().__init__()
-        self._build_prefix_set: set[str] = set(f"{step.name} : " for step in build_steps)
+        self._build_prefix_set: set[str] = {f"{step.name} : " for step in build_steps}
         self._custom_step_prefix_set: set[str] = {
             "EXEC: Executing custom step: ",
             "SUCCEED: Custom Shifter Step Class: ",
@@ -130,7 +130,7 @@ class ProgressLogHandler(logging.Handler):
         build_steps: Sequence[BuildStep],
         post_steps: Sequence[BuildStep],
         number_of_components: int,
-        no_components: bool = False,
+        components: bool = True,
         progress_callback: Callable[[float, str | None], None] | None = None,
     ) -> None:
         super().__init__()
@@ -159,7 +159,7 @@ class ProgressLogHandler(logging.Handler):
         # Main Build Steps
         self.build_step = ProgressStep("Main Build", 10)
         self.build_step_map: dict[str, ProgressStep] = {}
-        if not no_components:
+        if components:
             self.root_step.add_child_step(self.build_step)
         for step in self.build_steps:
             step_progress = ProgressStep(step.name, weight=step.weight)

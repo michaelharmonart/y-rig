@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
-import maya.cmds as cmds
+from maya import cmds
 from maya.api.OpenMaya import (
     MDagPath,
     MFnDagNode,
@@ -312,7 +312,7 @@ def distance_reader(
     else:
         transform2_local = transform2_matrices[0]
 
-    distance_node = DistanceBetweenNode(distance_name)
+    distance_node = DistanceBetweenNode.create(distance_name)
     if isinstance(transform1_local, MatrixAttribute):
         distance_node.input_matrix1.connect_from(transform1_local)
     else:
@@ -323,7 +323,7 @@ def distance_reader(
         distance_node.input_matrix2.set(transform2_local)
 
     if zero_at_rest:
-        zero_at_rest_distance = SubtractNode(f"{distance_name}_zeroed")
+        zero_at_rest_distance = SubtractNode.create(f"{distance_name}_zeroed")
         zero_at_rest_distance.input1.connect_from(distance_node.distance)
         zero_at_rest_distance.input2.set(distance_node.distance.get())
         output = zero_at_rest_distance.output
@@ -407,7 +407,7 @@ def create_space_switch(
     )  # type: ignore
 
     for index, (parent, weight_attr) in enumerate(zip(parents, weight_aliases, strict=True)):
-        condition = ConditionNode(name=f"{target_transform}_{parent}_spaceSwitch_COND")
+        condition = ConditionNode.create(name=f"{target_transform}_{parent}_spaceSwitch_COND")
 
         # Equal operation
         # 0 == Equal in Maya condition node

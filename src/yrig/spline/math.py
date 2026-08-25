@@ -314,7 +314,7 @@ def point_on_spline_weights(
         cv_weights = None
 
     # Filter out cvs we won't be using
-    filtered_ids = [cvs_ids[j + segment - degree] for j in range(0, degree + 1)]
+    filtered_ids = [cvs_ids[j + segment - degree] for j in range(degree + 1)]
 
     # Run a modified version of de Boors algorithm
     out_weights = deboor_weights(
@@ -477,7 +477,7 @@ def tangent_on_spline_weights(
 
     # Take the lower order weights and match them to our actual cvs
     remapped_weights: list[tuple[int, float]] = []
-    for j in range(0, lower_degree + 1):
+    for j in range(lower_degree + 1):
         weight: float = weights[j]
         cv0: int = j + segment - lower_degree
         cv1: int = j + segment - lower_degree - 1

@@ -64,7 +64,7 @@ def bound_curve_from_transforms(
 
     for index, transform in enumerate(extended_cvs):
         localize = localize_world_matrix(transform, curve_transform)
-        translation = MultiplyPointByMatrixNode(f"{curve_transform}_cv{index}_position")
+        translation = MultiplyPointByMatrixNode.create(f"{curve_transform}_cv{index}_position")
         translation.input_matrix.connect_from(localize.matrix_sum)
         translation.output.connect_to(f"{curve_transform}.controlPoints[{index}]")
     return curve_transform
@@ -92,9 +92,9 @@ def get_curve_cvs(curve: str, world_space: bool = True) -> list[MPoint]:
     sel.add(shape)
     dag_path: MDagPath = sel.getDagPath(0)
     curve_fn = MFnNurbsCurve(dag_path)
-    return list(
+    return [
         MPoint(cv) for cv in curve_fn.cvPositions(MSpace.kWorld if world_space else MSpace.kObject)
-    )
+    ]
 
 
 def create_transforms_at_curve_cvs(
@@ -157,7 +157,7 @@ def pin_to_curve_with_motion_path(
     curve_shape = get_shape(curve)
     if curve_shape is None:
         raise RuntimeError(f"{curve} had no curve shape")
-    motion_path = MotionPathNode(f"{pinned_transform}_motion_path")
+    motion_path = MotionPathNode.create(f"{pinned_transform}_motion_path")
     motion_path.geometry_path.connect_from(f"{curve_shape}.local")
     motion_path.u_value.set(parameter)
     motion_path.fraction_mode.set(arc_length)

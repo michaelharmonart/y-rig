@@ -1,7 +1,7 @@
 # type: ignore
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 import mgear.pymaya as pm
 from mgear.core import attribute, primitive, transform
@@ -19,7 +19,7 @@ else:
 class Component(LimbComponent):
     """Shifter component Class"""
 
-    GUIDE_MAP = {"mid": "knee", "end": "ankle"}
+    GUIDE_MAP: ClassVar[dict[str, str]] = {"mid": "knee", "end": "ankle"}
     WORLD_ALIGN_IK = True
 
     # =====================================================

@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import maya.cmds as cmds
+from maya import cmds
 
-from yrig.build.context import get_asset_root
 from yrig.name import get_short_name
 from yrig.skin.core import get_skinned_shapes
 from yrig.skin.ng import write_ng_skin_weights
@@ -16,8 +15,6 @@ from yrig.util import promt_user_for_directory
 def _resolve_export_directory(directory: Path | None = None) -> Path:
     if directory is not None:
         return directory
-    if (asset_root := get_asset_root()) is not None:
-        return asset_root / "data" / "skin"
     resolved_directory = promt_user_for_directory()
     if resolved_directory is None:
         raise RuntimeError(

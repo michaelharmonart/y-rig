@@ -1,0 +1,55 @@
+{
+    "version": "1.17",
+    "alias": "mgear_prop",
+    "color": "#7741c9",
+    "mute": false,
+    "solo": false,
+    "references": [
+        "util/mgear.nxt",
+        "archetype/anim_rig.nxt"
+    ],
+    "meta_data": {
+        "positions": {
+            "/node2": [
+                -1264.1403073330887,
+                -13.318422904299439
+            ],
+            "/root": [
+                -834.0036602069564,
+                -13.63513767751326
+            ],
+            "/shifter_build": [
+                -1248.3150191717723,
+                -95.06613748571294
+            ],
+            "/shifter_component_build": [
+                -1250.821884428789,
+                -12.208554328941151
+            ]
+        }
+    },
+    "nodes": {
+        "/": {
+            "attrs": {
+                "rig_path": {
+                    "type": "raw",
+                    "value": "prop/base"
+                }
+            }
+        },
+        "/root": {
+            "start_point": false,
+            "execute_in": "/shifter_component_build"
+        },
+        "/shifter_component_build": {
+            "start_point": true,
+            "instance": "/shifter_build",
+            "attrs": {
+                "guide_filepath": {
+                    "type": "raw",
+                    "value": "${file::${rig_path}/data/guide.sgt}"
+                }
+            }
+        }
+    }
+}

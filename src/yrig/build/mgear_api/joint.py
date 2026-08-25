@@ -119,7 +119,7 @@ def add_joint(  # noqa: ANN201
 
                 else:
                     driver = obj
-                    rot_off = rot_off
+                    rot_off = rot_off  # noqa
 
             if driver:
                 if JOINT_WORLD_ORIENT:

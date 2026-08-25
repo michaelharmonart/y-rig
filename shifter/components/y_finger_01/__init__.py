@@ -113,18 +113,18 @@ class Component(component.Main):
                 for i, roll_group in enumerate(self.roll_offsets):
                     if i == 0:
                         pm.connectAttr(  # type: ignore
-                            roll_ctl.attr("rotate"),  # type: ignore
+                            roll_ctl.attr("rotate"),
                             roll_group.attr("rotate"),
                             force=True,
                         )
                     else:
                         pm.connectAttr(  # type: ignore
-                            roll_ctl.attr("rotateZ"),  # type: ignore
+                            roll_ctl.attr("rotateZ"),
                             roll_group.attr("rotateZ"),
                             force=True,
                         )
 
-                pm.orientConstraint(roll_ctl, base_ctl, maintainOffset=False)  # type: ignore
+                # pm.orientConstraint(roll_ctl, base_ctl, maintainOffset=False)
 
         # IK controllers ------------------------------------
         if self.isIk:
@@ -245,16 +245,16 @@ class Component(component.Main):
             for fk_ctl in self.fk_ctl:
                 for shp in fk_ctl.getShapes():
                     pm.connectAttr(  # type: ignore
-                        fkvis_node + ".outputX",  # type: ignore
+                        fkvis_node + ".outputX",
                         shp.attr("visibility"),
                     )
 
             # ik
-            for shp in self.upv_ctl.getShapes():  # type: ignore
+            for shp in self.upv_ctl.getShapes():
                 pm.connectAttr(self.blend_att, shp.attr("visibility"))  # type: ignore
-            for shp in self.ikcns_ctl.getShapes():  # type: ignore
+            for shp in self.ikcns_ctl.getShapes():
                 pm.connectAttr(self.blend_att, shp.attr("visibility"))  # type: ignore
-            for shp in self.ik_ctl.getShapes():  # type: ignore
+            for shp in self.ik_ctl.getShapes():
                 pm.connectAttr(self.blend_att, shp.attr("visibility"))  # type: ignore
 
         # FK Chain -----------------------------------------
@@ -264,7 +264,7 @@ class Component(component.Main):
         # IK Chain -----------------------------------------
         if self.isIk:
             self.ikh = primitive.addIkHandle(self.root, self.getName("ikh"), self.chain)
-            self.ikh.attr("visibility").set(False)  # type: ignore
+            self.ikh.attr("visibility").set(False)
 
             # Constraint and up vector
             pm.pointConstraint(self.ik_ctl, self.ikh, maintainOffset=False)  # type: ignore
@@ -278,9 +278,9 @@ class Component(component.Main):
             if o_list:
                 add_nodeTwist = node.createAddNode(180.0, self.roll_att)
                 pm.connectAttr(  # type: ignore
-                    add_nodeTwist + ".output",  # type: ignore
-                    self.ikh.attr("twist"),  # type: ignore
-                )  # type: ignore
+                    add_nodeTwist + ".output",
+                    self.ikh.attr("twist"),
+                )
             else:
                 pm.connectAttr(self.roll_att, self.ikh.attr("twist"))  # type: ignore
 
@@ -310,11 +310,11 @@ class Component(component.Main):
                 # scaling
                 blend_node = pm.createNode("blendColors")  # type: ignore
                 pm.connectAttr(  # type: ignore
-                    self.chain[i].attr("scale"),  # type: ignore
+                    self.chain[i].attr("scale"),
                     blend_node + ".color1",
                 )
                 pm.connectAttr(  # type: ignore
-                    self.fk_ctl[i].attr("scale"),  # type: ignore
+                    self.fk_ctl[i].attr("scale"),
                     blend_node + ".color2",
                 )
                 pm.connectAttr(self.blend_att, blend_node + ".blender")  # type: ignore
@@ -336,7 +336,7 @@ class Component(component.Main):
             self.controlRelatives["root"] = self.ik_ctl
             self.controlRelatives["%s_loc" % (len(self.loc) - 1)] = self.ik_ctl
 
-        for i in range(0, len(self.loc) - 1):
+        for i in range(len(self.loc) - 1):
             self.relatives[f"{i}_loc"] = self.loc[i + 1]
             self.jointRelatives[f"{i}_loc"] = i + 1
             self.aliasRelatives[f"{i}_ctl"] = i + 1

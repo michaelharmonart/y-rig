@@ -1,0 +1,64 @@
+{
+    "version": "1.17",
+    "alias": "teeth",
+    "color": "#00a5e6",
+    "mute": false,
+    "solo": false,
+    "meta_data": {
+        "positions": {
+            "/teeth_component": [
+                -854.6346739575092,
+                1318.1845543738864
+            ],
+            "/teeth_component2": [
+                -534.6346739575092,
+                1318.1845543738864
+            ]
+        }
+    },
+    "nodes": {
+        "/teeth_component": {
+            "instance": "/component",
+            "child_order": [
+                "build"
+            ],
+            "attrs": {
+                "control_parent": {
+                    "value": "jaw_M_ctl"
+                },
+                "joint_parent": {
+                    "value": "face_jnt"
+                },
+                "name": {
+                    "type": "raw",
+                    "value": "teeth"
+                },
+                "parent": {
+                    "value": "face_grp"
+                }
+            },
+            "code": [
+                "group = yrig.transform.create_transform(name=\"${component_group}\", parent=\"${parent}\")",
+                "cmds.setAttr(f\"{group}.overrideEnabled\", True)",
+                "cmds.setAttr(f\"{group}.drawOverride.overrideRGBColors\", True)",
+                "cmds.connectAttr(\"${control_layer}.controlColor\", f\"{group}.drawOverride.overrideColorRGB\")"
+            ]
+        },
+        "/teeth_component/build": {
+            "code": [
+                "from yrig.component.teeth.teeth import Teeth",
+                "",
+                "teeth = Teeth(",
+                "    part=\"${name}\",",
+                "    side=\"${side}\",",
+                "    parent=\"${component_group}\",",
+                "    control_parent=\"${control_parent}\",",
+                "    parent_jnt=\"${joint_parent}\",",
+                "    control_size=1,",
+                ")",
+                "",
+                "teeth.build()"
+            ]
+        }
+    }
+}

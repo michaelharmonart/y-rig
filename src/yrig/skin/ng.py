@@ -5,7 +5,7 @@ from functools import wraps
 from pathlib import Path
 from typing import TYPE_CHECKING, ParamSpec, TypeVar
 
-import maya.cmds as cmds
+from maya import cmds
 
 from yrig.util import confirm_overwrite
 

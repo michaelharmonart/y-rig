@@ -1,0 +1,50 @@
+{
+    "version": "1.17",
+    "alias": "body",
+    "color": "#662d82",
+    "mute": false,
+    "solo": false,
+    "references": [
+        "util/mgear.nxt"
+    ],
+    "meta_data": {
+        "positions": {
+            "/shifter_component_build": [
+                -1095.9382886947733,
+                19.226987520960936
+            ]
+        }
+    },
+    "nodes": {
+        "/apply/skin/transfer_sim_weights": {
+            "instance": "/transfer_skin_weights",
+            "attrs": {
+                "transfer_mapping": {
+                    "type": "dict",
+                    "value": "{}"
+                }
+            }
+        },
+        "/shifter_component_build": {
+            "start_point": true,
+            "instance": "/shifter_build",
+            "child_order": [
+                "attribute_defaults"
+            ],
+            "attrs": {
+                "guide_filepath": {
+                    "value": "${file::${rig_path}/data/guide.sgt}"
+                }
+            }
+        },
+        "/shifter_component_build/attribute_defaults": {
+            "code": [
+                "for control in [\"armUI_L0_ctl\", \"armUI_R0_ctl\"]:",
+                "    cmds.setAttr(f\"{control}.arm_ikref\", 5)",
+                "",
+                "for control in [\"legUI_L0_ctl\", \"legUI_R0_ctl\"]:",
+                "    cmds.setAttr(f\"{control}.foot_angle_1\", -40)"
+            ]
+        }
+    }
+}

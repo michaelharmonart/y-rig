@@ -65,14 +65,14 @@ class Guide(guide.ComponentGuide):
     email = EMAIL
     version = VERSION
 
-    connectors = ["shoulder_01"]
-    joint_names_description = [
+    connectors = "shoulder_01"
+    joint_names_description = (
         "upperarm",
         "lowerarm",
         "upperarm_twist_##",
         "lowerarm_twist_##",
         "hand",
-    ]
+    )
 
     def postInit(self) -> None:
         """Initialize the position for the guide"""
@@ -149,7 +149,7 @@ class Guide(guide.ComponentGuide):
 class settingsTab(QtWidgets.QDialog, sui.Ui_Form):
     """The Component settings UI"""
 
-    def __init__(self, parent=None) -> None:  # noqa: ANN001
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setupUi(self)
 
@@ -157,7 +157,7 @@ class settingsTab(QtWidgets.QDialog, sui.Ui_Form):
 class componentSettings(MayaQWidgetDockableMixin, guide.componentMainSettings):  # type: ignore
     """Create the component setting window"""
 
-    def __init__(self, parent=None) -> None:  # noqa: ANN001
+    def __init__(self, parent=None) -> None:
         self.toolName = TYPE
         # Delete old instances of the componet settings window.
         pyqt.deleteInstances(self, MayaQDockWidget)
@@ -417,7 +417,7 @@ class componentSettings(MayaQWidgetDockableMixin, guide.componentMainSettings): 
 
         self.settingsTab.pinRefArray_listWidget.installEventFilter(self)
 
-    def eventFilter(self, sender, event):  # noqa: ANN201, ANN001
+    def eventFilter(self, sender, event):
         if event.type() == QtCore.QEvent.ChildRemoved:
             if sender == self.settingsTab.ikRefArray_listWidget:
                 self.updateListAttr(sender, "ikrefarray")

@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-import maya.cmds as cmds
+from maya import cmds
 from maya.api.OpenMaya import MPoint
 
 from yrig.control import create_control

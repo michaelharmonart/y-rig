@@ -1,0 +1,60 @@
+{
+    "version": "1.17",
+    "alias": "tongue",
+    "color": "#51b848",
+    "mute": false,
+    "solo": false,
+    "meta_data": {
+        "positions": {
+            "/tongue_component": [
+                -864.6346739575092,
+                890.1845543738862
+            ]
+        }
+    },
+    "nodes": {
+        "/tongue_component": {
+            "instance": "/component",
+            "child_order": [
+                "build"
+            ],
+            "attrs": {
+                "control_parent": {
+                    "value": "jaw_M_ctl"
+                },
+                "joint_parent": {
+                    "value": "face_jnt"
+                },
+                "name": {
+                    "type": "raw",
+                    "value": "tongue"
+                },
+                "parent": {
+                    "value": "face_grp"
+                }
+            },
+            "code": [
+                "group = yrig.transform.create_transform(name=\"${component_group}\", parent=\"${parent}\")",
+                "cmds.setAttr(f\"{group}.overrideEnabled\", True)",
+                "cmds.setAttr(f\"{group}.drawOverride.overrideRGBColors\", True)",
+                "cmds.connectAttr(\"${control_layer}.controlColor\", f\"{group}.drawOverride.overrideColorRGB\")"
+            ]
+        },
+        "/tongue_component/build": {
+            "code": [
+                "from yrig.component.tongue.tongue import Tongue",
+                "",
+                "tongue = Tongue(",
+                "    part=\"${name}\",",
+                "    side=\"${side}\",",
+                "    parent=\"${component_group}\",",
+                "    control_parent=\"${control_parent}\",",
+                "    parent_jnt=\"${joint_parent}\",",
+                "    control_size=1,",
+                ")",
+                "",
+                "tongue.build()"
+            ]
+        }
+    }
+}

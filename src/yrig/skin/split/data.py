@@ -2,7 +2,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import TypeVar
 
-import maya.cmds as cmds
+from maya import cmds
 from maya.api import OpenMaya as om2
 from maya.api.OpenMaya import (
     MDagPath,

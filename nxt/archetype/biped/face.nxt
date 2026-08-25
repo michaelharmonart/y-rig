@@ -1,0 +1,262 @@
+{
+    "version": "1.17",
+    "alias": "face",
+    "color": "#b28f11",
+    "mute": false,
+    "solo": false,
+    "references": [
+        "component/face/eye.nxt",
+        "component/face/eyebrow.nxt",
+        "component/face/mouth.nxt",
+        "component/face/tongue.nxt",
+        "component/face/teeth.nxt",
+        "component/face/nose.nxt",
+        "component/face/ear.nxt"
+    ],
+    "meta_data": {
+        "positions": {
+            "/ear": [
+                318.8538364053693,
+                142.4484541260124
+            ],
+            "/ear_component": [
+                -1418.8914960107354,
+                951.3243317314693
+            ],
+            "/eye": [
+                318.8538364053693,
+                142.4484541260124
+            ],
+            "/eye_component": [
+                -1427.026750590168,
+                554.8565813159908
+            ],
+            "/eye_def": [
+                -1424.6453348471266,
+                615.206228570865
+            ],
+            "/eyebrow": [
+                318.8538364053693,
+                142.4484541260124
+            ],
+            "/face": [
+                280,
+                20
+            ],
+            "/left": [
+                160.30801917363112,
+                39.76334630104233
+            ],
+            "/look": [
+                280,
+                20
+            ],
+            "/look_component": [
+                -1422.7011750118327,
+                680.0595692061038
+            ],
+            "/middle": [
+                -255.5748582118101,
+                28.76206986591498
+            ],
+            "/mouth": [
+                280,
+                20
+            ],
+            "/mouth_component": [
+                -1433.7360359736215,
+                408.7751187177105
+            ],
+            "/nose": [
+                280,
+                20
+            ],
+            "/nose_component": [
+                -1418.8362203089448,
+                742.0649789460736
+            ],
+            "/root": [
+                -715.363213749061,
+                30.01523973772283
+            ],
+            "/simple_eyebrow": [
+                -1433.0086772876878,
+                475.24198447276217
+            ],
+            "/teeth": [
+                280,
+                20
+            ],
+            "/teeth_component": [
+                -1413.9193325241524,
+                813.685582975128
+            ],
+            "/tongue": [
+                280,
+                20
+            ],
+            "/tongue_component": [
+                -1422.6066704497766,
+                887.5412616299258
+            ]
+        },
+        "locks": {
+            "$YRIG_NXT_DIR/components/face/ear.nxt": true,
+            "$YRIG_NXT_DIR/components/face/eye.nxt": true,
+            "$YRIG_NXT_DIR/components/face/eyebrow.nxt": true,
+            "$YRIG_NXT_DIR/components/face/mouth.nxt": true,
+            "$YRIG_NXT_DIR/components/face/nose.nxt": true,
+            "$YRIG_NXT_DIR/components/face/teeth.nxt": true,
+            "$YRIG_NXT_DIR/components/face/tongue.nxt": true
+        },
+        "collapse": {
+            "/ear_component": true,
+            "/eye_component": true,
+            "/left/ear": true,
+            "/left/eye": true,
+            "/left/eyebrow": true,
+            "/look_component": true,
+            "/middle/face/look": true,
+            "/middle/face/mouth": true,
+            "/middle/face/nose": true,
+            "/middle/face/teeth": true,
+            "/middle/face/tongue": true,
+            "/mouth_component": true,
+            "/nose_component": true,
+            "/simple_eyebrow": true,
+            "/teeth_component": true,
+            "/tongue_component": true
+        }
+    },
+    "nodes": {
+        "/cleanup": {
+            "child_order": [
+                "delete_face_guides",
+                "hide_joints",
+                "model_override",
+                "skin_tools_data"
+            ]
+        },
+        "/cleanup/delete_face_guides": {
+            "attrs": {
+                "face_guides_group": {
+                    "type": "raw",
+                    "value": "${/root/guides/face.face_guides_group}"
+                }
+            },
+            "code": [
+                "cmds.delete(\"${face_guides_group}\")"
+            ]
+        },
+        "/left": {
+            "child_order": [
+                "eye",
+                "eyebrow",
+                "ear"
+            ]
+        },
+        "/left/ear": {
+            "instance": "/ear_component"
+        },
+        "/left/eye": {
+            "instance": "/eye_component"
+        },
+        "/left/eyebrow": {
+            "instance": "/simple_eyebrow",
+            "attrs": {
+                "joint_parent": {
+                    "value": "face_jnt"
+                }
+            }
+        },
+        "/middle/face": {
+            "child_order": [
+                "nose",
+                "mouth",
+                "tongue",
+                "teeth",
+                "look"
+            ],
+            "attrs": {
+                "joint_parent": {
+                    "type": "raw",
+                    "value": "neck_M0_head_jnt"
+                },
+                "parent": {
+                    "type": "raw",
+                    "value": "neck_M0_head_ctl"
+                }
+            },
+            "code": [
+                "parent=\"${parent}\"",
+                "joint_parent=\"${joint_parent}\"",
+                "transform = \"face_M\" if cmds.objExists(\"face_M\") else None",
+                "",
+                "face_group = yrig.transform.create_transform(",
+                "    name=\"face_grp\", ",
+                "    parent=parent if cmds.objExists(parent) else None, ",
+                "    transform=transform",
+                ")",
+                "face_joint = yrig.joint.create_joint(",
+                "    \"face\", ",
+                "    parent=joint_parent if cmds.objExists(joint_parent) else None, ",
+                "    transform=transform, ",
+                "    connect=False)"
+            ]
+        },
+        "/middle/face/look": {
+            "instance": "/look_component"
+        },
+        "/middle/face/mouth": {
+            "instance": "/mouth_component",
+            "child_order": [
+                "skin_surface"
+            ],
+            "attrs": {
+                "control_size": {
+                    "value": "1"
+                },
+                "joint_parent": {
+                    "value": "face_jnt"
+                }
+            }
+        },
+        "/middle/face/mouth/skin_surface": {
+            "attrs": {
+                "mouth_surface_skin_filepath": {
+                    "value": "${file::${rig_path}/data/face/mouth_surface.yskin}"
+                }
+            }
+        },
+        "/middle/face/nose": {
+            "instance": "/nose_component",
+            "code": [
+                "group = yrig.transform.create_transform(name=\"${component_group}\", parent=\"${parent}\")",
+                "cmds.setAttr(f\"{group}.overrideEnabled\", True)",
+                "cmds.setAttr(f\"{group}.drawOverride.overrideRGBColors\", True)",
+                "cmds.connectAttr(\"${control_layer}.controlColor\", f\"{group}.drawOverride.overrideColorRGB\")"
+            ]
+        },
+        "/middle/face/teeth": {
+            "instance": "/teeth_component"
+        },
+        "/middle/face/tongue": {
+            "instance": "/tongue_component"
+        },
+        "/root/guides/face": {
+            "attrs": {
+                "face_guides_filepath": {
+                    "type": "raw",
+                    "value": "${file::${rig_path}/data/face/guides.mb}"
+                },
+                "face_guides_group": {
+                    "type": "raw",
+                    "value": "face_guide"
+                }
+            },
+            "code": [
+                "imported_nodes = cmds.file(\"${face_guides_filepath}\", i=True, defaultNamespace=True, returnNewNodes=True)"
+            ]
+        }
+    }
+}

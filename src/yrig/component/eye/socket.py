@@ -1,6 +1,6 @@
 import math
 
-import maya.cmds as cmds
+from maya import cmds
 from maya.api.OpenMaya import MEulerRotation, MMatrix, MSpace, MTransformationMatrix, MVector
 
 from yrig.control import create_control

@@ -1,7 +1,7 @@
 from typing import Any
 
 import maya.api.OpenMaya as om2
-import maya.cmds as cmds
+from maya import cmds
 
 from yrig.color.convert import lch_to_lab, oklab_to_linear_srgb
 from yrig.skin.split import get_mesh_spline_weights, get_mesh_surface_weights
@@ -112,7 +112,6 @@ def visualize_split_weights(mesh: str, cv_transforms: list[str], degree: int = 2
         weights_per_vertex=spline_weights_per_vertex,
         influence_colors=cv_colors,
     )
-    return
 
 
 def visualize_surface_split_weights(
@@ -161,4 +160,3 @@ def visualize_surface_split_weights(
         weights_per_vertex=surface_weights_per_vertex,
         influence_colors=influence_colors,
     )
-    return

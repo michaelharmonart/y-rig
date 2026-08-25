@@ -1,0 +1,278 @@
+{
+    "version": "1.17",
+    "alias": "rig",
+    "color": "#0e8b5d",
+    "mute": false,
+    "solo": false,
+    "references": [
+        "util/skin.nxt",
+        "core.nxt"
+    ],
+    "meta_data": {
+        "positions": {
+            "/apply": [
+                45.101567325149915,
+                -13.162854949084434
+            ],
+            "/cleanup": [
+                464.7309816100551,
+                -10.474659993798152
+            ],
+            "/cleanup/control_shapes": [
+                0.0,
+                0.0
+            ],
+            "/control_shapes": [
+                -2.4974733523247323,
+                95.12116921241874
+            ],
+            "/middle": [
+                -396.0467648945946,
+                -12.903779307342678
+            ],
+            "/rest_pose": [
+                107.99415846869607,
+                265.1998166510077
+            ],
+            "/root": [
+                -834.0036602069565,
+                -12.525269102154974
+            ],
+            "/setup/rig_hierarchy": [
+                0.0,
+                0.0
+            ],
+            "/shifter_build": [
+                -745.8425286930325,
+                -513.4641872897497
+            ],
+            "/shifter_component_build": [
+                -1385.6737855003867,
+                -12.961234388183893
+            ],
+            "/skin_geometry": [
+                -795.4972743705686,
+                -408.77017313211803
+            ],
+            "/split_skin_weights": [
+                -799.7965374561375,
+                -465.0107915925667
+            ]
+        },
+        "collapse": {
+            "/cleanup/hide_joints": true,
+            "/root": false,
+            "/root/rig_hierarchy": true
+        },
+        "locks": {
+            "$YRIG_NXT_DIR/core.nxt": false,
+            "/users/student/g/graphite/maya-python/y-rig/nxt/skin.nxt": false
+        }
+    },
+    "nodes": {
+        "/": {
+            "attrs": {
+                "build_scope": {
+                    "type": "raw",
+                    "value": "full"
+                },
+                "dev_build": {
+                    "type": "bool",
+                    "value": "False"
+                },
+                "rig_path": {}
+            }
+        },
+        "/apply": {
+            "execute_in": "/middle",
+            "child_order": [
+                "control_shapes",
+                "rest_pose",
+                "skin"
+            ]
+        },
+        "/apply/control_shapes": {
+            "attrs": {
+                "control_shapes_filepath": {
+                    "type": "raw",
+                    "value": "${file::${rig_path}/data/control_shapes.json}"
+                }
+            },
+            "code": [
+                "yrig.control.serialize.apply_control_shapes_file(Path(\"${control_shapes_filepath}\"))"
+            ]
+        },
+        "/apply/rest_pose": {
+            "attrs": {
+                "rest_pose": {
+                    "type": "raw",
+                    "value": "dagPose1"
+                }
+            },
+            "code": [
+                "if STAGE.control_list:",
+                "    cmds.dagPose(STAGE.control_list, name=\"${rest_pose}\", addToPose=True)"
+            ]
+        },
+        "/apply/skin": {
+            "instance": "/skin_geometry",
+            "child_order": [
+                "split"
+            ],
+            "attrs": {
+                "geo_set": {
+                    "value": "${/root/model.model_set}"
+                },
+                "skin_directory": {
+                    "value": "${file::${rig_path}/data/skin}"
+                }
+            }
+        },
+        "/apply/skin/split": {
+            "instance": "/split_skin_weights"
+        },
+        "/cleanup": {
+            "execute_in": "/apply",
+            "child_order": [
+                "hide_joints",
+                "model_override",
+                "skin_tools_data"
+            ]
+        },
+        "/cleanup/hide_joints": {
+            "code": [
+                "if not ${dev_build}:",
+                "    # Hide Joints",
+                "    cmds.setAttr(\"${/root.rig_root}.jnt_vis\", False)  # type: ignore",
+                ""
+            ]
+        },
+        "/cleanup/model_override": {
+            "code": [
+                "if not ${dev_build}:",
+                "    geo_group = \"${/root/model.model_group}\"",
+                "    cmds.setAttr(f\"{geo_group}.overrideEnabled\", True)  # type: ignore",
+                "    cmds.setAttr(f\"{geo_group}.overrideDisplayType\", 2)  # type: ignore",
+                ""
+            ]
+        },
+        "/cleanup/skin_tools_data": {
+            "code": [
+                "if not ${dev_build}:",
+                "    yrig.skin.ng.cleanup_ng_data_nodes()"
+            ]
+        },
+        "/middle": {
+            "instance": "/side",
+            "execute_in": "/root"
+        },
+        "/root": {
+            "start_point": true,
+            "child_order": [
+                "model",
+                "guides",
+                "controls",
+                "deformers"
+            ],
+            "attrs": {
+                "rig_root": {
+                    "type": "raw",
+                    "value": "rig"
+                },
+                "rig_set": {
+                    "type": "raw",
+                    "value": "${rig_root}_sets_grp"
+                }
+            },
+            "code": [
+                "rig_root = \"${rig_root}\"",
+                "if not cmds.objExists(rig_root):",
+                "    self.rig_root = yrig.transform.create_transform(rig_root)",
+                "    ",
+                "rig_set = \"${rig_set}\"",
+                "if not cmds.objExists(rig_set):",
+                "    cmds.sets(name=rig_set)"
+            ]
+        },
+        "/root/controls": {
+            "code": [
+                "STAGE.control_list = []"
+            ]
+        },
+        "/root/deformers": {
+            "attrs": {
+                "deformers_set": {
+                    "type": "raw",
+                    "value": "${rig_root}_deformers_grp"
+                }
+            },
+            "code": [
+                "rig_set = \"${deformers_set}\"",
+                "if not cmds.objExists(rig_set):",
+                "    cmds.sets(name=rig_set)"
+            ]
+        },
+        "/root/guides": {
+            "attrs": {
+                "guides_filepath": {
+                    "type": "raw",
+                    "value": "${file::${rig_path}/data/guides.mb}"
+                }
+            }
+        },
+        "/root/model": {
+            "attrs": {
+                "model_filepath": {
+                    "type": "raw",
+                    "value": "${file::${rig_path}/assets/model.mb}"
+                },
+                "model_group": {
+                    "type": "raw",
+                    "value": "geo"
+                },
+                "model_set": {
+                    "type": "raw",
+                    "value": "${rig_root}_geo_grp"
+                }
+            },
+            "code": [
+                "imported_nodes: list[str] = cmds.file(\"${model_filepath}\", i=True, defaultNamespace=True, returnNewNodes=True)",
+                "",
+                "top_level_nodes: list[str] = cmds.ls(imported_nodes, assemblies=True)",
+                "",
+                "# # Case 1: exactly one root transform",
+                "if len(top_level_nodes) == 1:",
+                "    top_level_node = top_level_nodes[0]",
+                "    if cmds.nodeType(top_level_node) == \"transform\":",
+                "        geo_grp = top_level_node",
+                "    else:",
+                "        geo_grp = cmds.group(top_level_node, name=\"${model_group}\", world=True)",
+                "    if geo_grp != \"${model_group}\":",
+                "        geo_grp = cmds.rename(geo_grp)",
+                "else:",
+                "    # Case 2: multiple top level transforms (we need to group them)",
+                "    geo_grp = cmds.group(top_level_nodes, name=\"${model_group}\", world=True)  # type: ignore",
+                "",
+                "# Keep in mind the mgear rig object's \"model\" is actually the root rig transform.",
+                "cmds.parent(geo_grp, \"${rig_root}\")",
+                "cmds.reorder(geo_grp, front=True)",
+                "cmds.reorder(geo_grp, relative=1)",
+                "",
+                "# Get the imported meshes",
+                "meshes = cmds.listRelatives(geo_grp, allDescendents=True, type=\"mesh\")",
+                "mesh_transforms = (",
+                "    cmds.listRelatives(",
+                "        meshes,  # type: ignore",
+                "        parent=True,",
+                "        fullPath=True,",
+                "    )",
+                "    or []",
+                ")",
+                "# remove duplicates",
+                "mesh_transforms: list[str] = list(set(mesh_transforms))",
+                "# Put the geo in the set.",
+                "yrig.sets.add_to_set(mesh_transforms, \"${model_set}\", parent=\"${rig_set}\")"
+            ]
+        }
+    }
+}
