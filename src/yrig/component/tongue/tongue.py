@@ -27,10 +27,8 @@ class Tongue:
         self.guides: dict[str, str] = {
             "root": "tongue_M_root",
             "tongue_back": "tongue_back_M",
+            "tongue1": "tongue_1_M",
             "tongue2": "tongue_2_M",
-            "tongue3": "tongue_3_M",
-            "tongue4": "tongue_4_M",
-            "tongue5": "tongue_5_M",
             "tongue_front": "tongue_front_M",
         }
 

@@ -27,10 +27,8 @@ class TongueSpine:
 
         guide_order = [
             "tongue_back",
+            "tongue1",
             "tongue2",
-            "tongue3",
-            "tongue4",
-            "tongue5",
             "tongue_front",
         ]
 
@@ -44,7 +42,7 @@ class TongueSpine:
 
             ctrl = create_control(
                 name=f"{guide}_ctrl",
-                parent=self.control_grp,
+                parent=self.main_ctrl,
                 transform=self.guides[guide],
                 size=self.control_size * 0.5,
                 control_shape="circle",
@@ -61,7 +59,7 @@ class TongueSpine:
                 name=guide,
                 parent=joint_parent,
                 transform=ctrl,
-                connect=False,
+                connect=True,
             )
 
             self.joints.append(joint)
