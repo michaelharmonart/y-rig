@@ -44,9 +44,9 @@ class TongueSpine:
                 name=f"{guide}_ctrl",
                 parent=self.main_ctrl,
                 transform=self.guides[guide],
-                size=self.control_size * 0.5,
+                size=self.control_size * 1,
                 control_shape="circle",
-                direction="x",
+                direction="z",
             )
 
             ctrl_transform = ctrl.transform
