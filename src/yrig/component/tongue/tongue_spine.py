@@ -26,12 +26,10 @@ class TongueSpine:
     def build_tongue_spine(self) -> None:
 
         guide_order = [
-            "tongue_back",
-            "tongue2",
-            "tongue3",
-            "tongue4",
-            "tongue5",
-            "tongue_front",
+            "tongue_1_M",
+            "tongue_2_M",
+            "tongue_3_M",
+            "tongue_4_M",
         ]
 
         self.controls = []
@@ -43,12 +41,12 @@ class TongueSpine:
             # CONTROL
 
             ctrl = create_control(
-                name=f"{guide}_ctrl",
-                parent=self.control_grp,
+                name=f"{guide}",
+                parent=self.main_ctrl,
                 transform=self.guides[guide],
-                size=self.control_size * 0.5,
+                size=self.control_size * 1,
                 control_shape="circle",
-                direction="x",
+                direction="z",
             )
 
             ctrl_transform = ctrl.transform
@@ -61,7 +59,7 @@ class TongueSpine:
                 name=guide,
                 parent=joint_parent,
                 transform=ctrl,
-                connect=False,
+                connect=True,
             )
 
             self.joints.append(joint)

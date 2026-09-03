@@ -26,12 +26,10 @@ class Tongue:
 
         self.guides: dict[str, str] = {
             "root": "tongue_M_root",
-            "tongue_back": "tongue_back_M",
-            "tongue2": "tongue_2_M",
-            "tongue3": "tongue_3_M",
-            "tongue4": "tongue_4_M",
-            "tongue5": "tongue_5_M",
-            "tongue_front": "tongue_front_M",
+            "tongue_1_M": "tongue_1_M",
+            "tongue_2_M": "tongue_2_M",
+            "tongue_3_M": "tongue_3_M",
+            "tongue_4_M": "tongue_4_M",
         }
 
     # Structure
@@ -60,7 +58,7 @@ class Tongue:
         self.main_ctrl = create_control(
             name="tongue_M",
             parent=self.control_grp,
-            transform=self.guides["tongue_back"],
+            transform=self.guides["tongue_1_M"],
             size=self.control_size,
             control_shape="round_square",
             direction="z",
