@@ -10,9 +10,7 @@ from mgear.shifter import component
 from yrig.maya_api.node import QuatSlerpNode, QuatToEulerNode
 from yrig.skin.split import tag_for_weight_split
 from yrig.spline.matrix_spline.build import matrix_spline_from_transforms
-from yrig.transform.matrix import (
-    matrix_constraint,
-)
+from yrig.transform import matrix_constraint
 from yrig.transform.quat import create_swing_only_transform, twist_extract_quat
 
 #############################################
