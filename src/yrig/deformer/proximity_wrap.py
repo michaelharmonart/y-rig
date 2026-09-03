@@ -2,15 +2,14 @@ from collections.abc import Sequence
 
 from maya import cmds
 
-# TODO: Add a proper Node subclass with all the proximityWrap attributes, and add those settings here
-
 
 def create_proximity_wrap(
     driver: str | Sequence[str],
     driven: str | Sequence[str],
-    name: str,
+    name: str | None = None,
 ) -> str:
-    wrap_node: str = cmds.deformer(driven, type="proximityWrap", name=name)[0]  # type: ignore
+    resolved_name = name if name else f"{'_'.join(driven)}_wrap"
+    wrap_node: str = cmds.deformer(driven, type="proximityWrap", name=resolved_name)[0]  # type: ignore
     cmds.proximityWrap(
         wrap_node,
         edit=True,
