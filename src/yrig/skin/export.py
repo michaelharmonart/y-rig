@@ -6,10 +6,10 @@ from maya import cmds
 
 from yrig.io import promt_user_for_directory
 from yrig.name import get_short_name
+from yrig.shape import get_shape
 from yrig.skin.core import get_skinned_shapes
 from yrig.skin.ng import write_ng_skin_weights
 from yrig.skin.serialize import export_skin_weights
-from yrig.transform.utils import get_shape
 
 
 def _resolve_export_directory(directory: Path | None = None) -> Path:
