@@ -363,7 +363,7 @@
                 }
             },
             "code": [
-                "from yrig.transform import get_shape",
+                "from yrig.shape import get_shape",
                 "",
                 "geo_to_duplicate = ${geo_to_duplicate}",
                 "for geo in geo_to_duplicate:",
