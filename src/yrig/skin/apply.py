@@ -1,5 +1,5 @@
 import logging
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -14,58 +14,97 @@ from yrig.skin.serialize import apply_skin_weight_data, skin_weight_data_from_fi
 log = logging.getLogger(__name__)
 
 
-def skin_and_apply_weights(filepath: Path, geometry: str) -> str:
-    """
-    Skin geometry (any type) using influences from a ``.yskin`` file and apply weights.
+def _valid_influences(
+    influence_names: Iterable[str],
+    geometry: str,
+    filepath: Path,
+) -> list[str]:
+    valid = [name for name in influence_names if cmds.objExists(name)]
+    missing = set(influence_names) - set(valid)
+    if missing:
+        log.warning(
+            f"[{geometry}] Missing {len(missing)} influence(s) that were defined in its skin file: "
+            f"{sorted(missing, key=natural_sort_key)}"
+        )
+    if not valid:
+        raise RuntimeError(
+            f"The file at {filepath} had no valid influences. Unable to skin geometry."
+        )
+    return valid
 
-    Missing influences are skipped with a warning. Errors if no valid influences exist in the scene.
+
+def apply_weights(filepath: Path, geometry: str) -> None:
+    """
+    Apply weights from a ``.yskin`` file.
+
+    Missing influences are skipped with a warning. Errors if no valid
+    influences exist in the scene.
     """
     skin_weight_data = skin_weight_data_from_file(filepath)
-    influence_names = skin_weight_data.influences
-    valid_influences = [j for j in influence_names if cmds.objExists(j)]
-    missing_influences = set(influence_names) - set(valid_influences)
-    if missing_influences:
-        log.warning(
-            f"[{geometry}] Missing {len(missing_influences)} influence(s) that were defined in its skin file : {sorted(missing_influences, key=natural_sort_key)}"
-        )
-    if not valid_influences:
-        raise RuntimeError(
-            f"The yskin file at {filepath} had no valid influences. Unable to skin geometry."
-        )
+    valid_influences = _valid_influences(
+        skin_weight_data.influences,
+        geometry,
+        filepath,
+    )
+    apply_skin_weight_data(skin_weight_data, geometry)
+
+
+def skin_and_apply_weights(filepath: Path, geometry: str) -> str:
+    """
+    Skin geometry using influences from a ``.yskin`` file and apply weights.
+    """
+    skin_weight_data = skin_weight_data_from_file(filepath)
+    valid_influences = _valid_influences(
+        skin_weight_data.influences,
+        geometry,
+        filepath,
+    )
+
     skin_cluster = skin_geometry(valid_influences, geometry)
     apply_skin_weight_data(skin_weight_data, geometry)
-    log.info(f"Loaded yskin file for {geometry}")
+
+    log.info(f"Loaded yskin file for {geometry} from {filepath}")
     return skin_cluster
+
+
+def apply_ng_weights(filepath: Path, mesh: str) -> None:
+    """
+    Apply weights from a ngSkinTools file.
+
+    Missing influences are skipped with a warning. Errors if no valid
+    influences exist in the scene.
+    """
+    skin_weight_data = skin_weight_data_from_file(filepath)
+    valid_influences = _valid_influences(
+        skin_weight_data.influences,
+        mesh,
+        filepath,
+    )
+    apply_ng_skin_weights(filepath, mesh)
 
 
 def skin_and_apply_ng_weights(filepath: Path, mesh: str) -> str:
     """
     Skin geometry using influences from an ngSkinTools file and apply weights.
-
-    Missing influences are skipped with a warning. Errors if no valid influences exist in the scene.
     """
     if not filepath.exists():
         raise FileNotFoundError(f"{filepath} doesn't exist")
+
     influence_paths = get_influences_from_ng_skin_weights(filepath)
     influence_names = [get_short_name(path) for path in influence_paths]
-    # Filter to joints that actually exist in scene
-    valid_influences = [j for j in influence_names if cmds.objExists(j)]
-    missing_influences = set(influence_names) - set(valid_influences)
-    if missing_influences:
-        log.warning(
-            f"[{mesh}] Missing {len(missing_influences)} influence(s) that were defined in its skin file : {sorted(missing_influences, key=natural_sort_key)}"
-        )
 
-    # Only bind to joints specified in the skin file for final build
-    if not valid_influences:
-        raise RuntimeError(
-            f"The ngskin file at {filepath} had no valid influences. Unable to skin geometry."
-        )
+    valid_influences = _valid_influences(
+        influence_names,
+        mesh,
+        filepath,
+    )
+
     skin_cluster = skin_geometry(valid_influences, mesh)
     log.info(f"Skinned {mesh} to {len(valid_influences)} joint(s)")
 
     apply_ng_skin_weights(filepath, mesh)
     log.info(f"Loaded ng skin file for {mesh}")
+
     return skin_cluster
 
 

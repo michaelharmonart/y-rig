@@ -8,6 +8,8 @@ and debug visualization of per-vertex influences.
 
 from . import apply, core, export, ng, serialize, split, visualize
 from .apply import (
+    apply_ng_weights,
+    apply_weights,
     skin_and_apply_ng_weights,
     skin_and_apply_weights,
     skin_and_apply_weights_from_directories,
@@ -22,6 +24,8 @@ from .serialize import export_skin_weights, import_skin_weights
 
 __all__ = [
     "apply",
+    "apply_ng_weights",
+    "apply_weights",
     "batch_export_skin_weights",
     "core",
     "export",

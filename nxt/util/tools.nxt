@@ -137,9 +137,6 @@
         },
         "/tools_window/tools": {
             "instance": "/tab",
-            "child_order": [
-                "geometry"
-            ],
             "attrs": {
                 "text": {
                     "value": "Tools"

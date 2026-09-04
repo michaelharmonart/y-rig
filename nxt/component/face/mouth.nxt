@@ -118,15 +118,11 @@
                 }
             },
             "code": [
-                "mouth_surface_skin = Path(\"${mouth_surface_skin_filepath}\")",
-                "",
-                "yrig.skin.skin_geometry(",
-                "    bind_joints=[\"face_jnt\", \"jaw_M_jnt\"], ",
-                "    geometry=\"mouth_surface\", ",
-                "    local=True, ",
-                "    dual_quaternion=False",
-                ")",
-                "yrig.skin.import_skin_weights(filepath=mouth_surface_skin, geometry=\"mouth_surface\")"
+                "if not \"${mouth_surface_skin_filepath}\":",
+                "    raise RuntimeError(\"Couldn't find a yskin file for the mouth surface.\")",
+                "mouth_surface_skin_filepath = Path(\"${mouth_surface_skin_filepath}\")",
+                "yrig.skin.skin_and_apply_weights(filepath=mouth_surface_skin_filepath, geometry=\"mouth_surface\")",
+                ""
             ]
         }
     }

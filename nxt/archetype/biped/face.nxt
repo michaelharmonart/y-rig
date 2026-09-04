@@ -397,7 +397,8 @@
         "/tools_window/biped/face": {
             "instance": "/panel",
             "child_order": [
-                "face_guides_io"
+                "face_guides_io",
+                "mouth_surf_skin_io"
             ],
             "attrs": {
                 "text": {
@@ -447,6 +448,51 @@
                 "import_path = Path(\"${import_filepath}\")",
                 "imported_nodes = yrig.io.import_maya_file(import_path)",
                 "print(imported_nodes)"
+            ]
+        },
+        "/tools_window/biped/face/mouth_surf_skin_io": {
+            "instance": "/io_pair",
+            "child_order": [
+                "import",
+                "export"
+            ],
+            "attrs": {
+                "mouth_surface": {
+                    "type": "raw",
+                    "value": "mouth_surface"
+                },
+                "relative_filepath": {
+                    "value": "data/face/mouth_surface.yskin"
+                },
+                "text": {
+                    "type": "raw",
+                    "value": "Mouth Surf Skin"
+                }
+            }
+        },
+        "/tools_window/biped/face/mouth_surf_skin_io/export": {
+            "attrs": {
+                "text": {
+                    "value": "Export Mouth Surf Skin"
+                }
+            },
+            "code": [
+                "export_root_path = \"${export_root_path}\"",
+                "if not export_root_path or not Path(export_root_path).is_dir():",
+                "    raise ValueError(f\"Invalid directory: {export_root_path}\")",
+                "export_path = Path(\"${export_path}\")",
+                "yrig.skin.export_skin_weights(export_path, \"${mouth_surface}\")"
+            ]
+        },
+        "/tools_window/biped/face/mouth_surf_skin_io/import": {
+            "attrs": {
+                "text": {
+                    "value": "Import Mouth Surf Skin"
+                }
+            },
+            "code": [
+                "import_path = Path(\"${import_filepath}\")",
+                "yrig.skin.apply_weights(import_path, \"${mouth_surface}\")"
             ]
         }
     }
