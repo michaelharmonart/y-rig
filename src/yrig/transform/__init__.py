@@ -17,7 +17,6 @@ from .matrix import (
 )
 from .utils import (
     create_transform,
-    get_shape,
     get_shapes,
     match_location,
     match_transform,
@@ -32,7 +31,6 @@ __all__ = [
     "get_local_matrix",
     "get_parent_inverse_matrix",
     "get_parent_matrix",
-    "get_shape",
     "get_shapes",
     "is_identity_matrix",
     "match_location",

@@ -8,10 +8,7 @@ from maya.api.OpenMaya import (
     MFn,
     MFnComponent,
     MFnDependencyNode,
-    MFnDoubleIndexedComponent,
     MFnMesh,
-    MFnNurbsCurve,
-    MFnNurbsSurface,
     MFnSingleIndexedComponent,
     MIntArray,
     MObject,
@@ -24,7 +21,7 @@ from maya.api.OpenMayaAnim import MFnSkinCluster
 
 from yrig.maya_api.utils import get_dag_path, get_depend_node
 from yrig.name import natural_sort_key
-from yrig.transform.utils import get_shape
+from yrig.shape import get_components_of_shape, get_shape
 
 
 def get_skin_clusters(geometry: str) -> list[str] | None:
@@ -180,36 +177,7 @@ def get_mesh_points(fn_mesh: MFnMesh, vertex_indices: list[int] | None = None) -
     return mesh_points
 
 
-def get_components_of_shape(shape_dag_path: MDagPath) -> MObject:
-    api_type = shape_dag_path.apiType()
-
-    if api_type == MFn.kMesh:
-        fn = MFnMesh(shape_dag_path)
-        comp_fn = MFnSingleIndexedComponent()
-        component = comp_fn.create(MFn.kMeshVertComponent)
-        comp_fn.addElements(range(fn.numVertices))
-        return component
-
-    if api_type == MFn.kNurbsCurve:
-        fn = MFnNurbsCurve(shape_dag_path)
-        comp_fn = MFnSingleIndexedComponent()
-        component = comp_fn.create(MFn.kCurveCVComponent)
-        comp_fn.addElements(range(fn.numCVs))
-        return component
-
-    if api_type == MFn.kNurbsSurface:
-        fn = MFnNurbsSurface(shape_dag_path)
-        comp_fn = MFnDoubleIndexedComponent()
-        component = comp_fn.create(MFn.kSurfaceCVComponent)
-        for u in range(fn.numCVsInU):
-            for v in range(fn.numCVsInV):
-                comp_fn.addElement(u, v)
-        return component
-    else:
-        raise TypeError(f"Unsupported shape type: {shape_dag_path.node().apiTypeStr}")
-
-
-def get_weights_of_influence(skin_cluster: str, joint: str) -> dict[int, float]:
+def get_weights_of_influence(skin_cluster: str, influence: str) -> dict[int, float]:
     """Query per-vertex skin weights for a single influence joint.
 
     Uses the Maya API's ``MFnSkinCluster.getPointsAffectedByInfluence``
@@ -218,19 +186,19 @@ def get_weights_of_influence(skin_cluster: str, joint: str) -> dict[int, float]:
 
     Args:
         skin_cluster: The name of the skinCluster node to query.
-        joint: The name of the influence joint whose weights are requested.
+        influence: The name of the influence whose weights are requested.
 
     Returns:
         A dictionary mapping vertex indices to their weight values for
         the specified joint.  Vertices with zero influence are omitted.
     """
     skin_cluster_mob: MObject = get_depend_node(skin_cluster)
-    joint_dag: MDagPath = get_dag_path(joint)
+    influence_dag: MDagPath = get_dag_path(influence)
     mfn_skin_cluster: MFnSkinCluster = MFnSkinCluster(skin_cluster_mob)
 
     components: MSelectionList
     weights: list[float]
-    components, weights = mfn_skin_cluster.getPointsAffectedByInfluence(joint_dag)
+    components, weights = mfn_skin_cluster.getPointsAffectedByInfluence(influence_dag)
 
     index_weights: dict[int, float] = {}
     affected_indices: list[int] = []

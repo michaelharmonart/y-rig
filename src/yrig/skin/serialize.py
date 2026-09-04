@@ -5,13 +5,13 @@ from pathlib import Path
 from typing import Self
 
 from yrig.io import confirm_overwrite
+from yrig.shape import get_shape
 from yrig.skin.core import (
     get_skin_cluster,
     get_skin_cluster_influences,
     get_skin_weights,
     set_skin_weights,
 )
-from yrig.transform import get_shape
 
 log = logging.getLogger(__name__)
 

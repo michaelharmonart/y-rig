@@ -11,6 +11,7 @@ from . import maya_api as maya_api
 from . import rbf as rbf
 from . import select as select
 from . import sets as sets
+from . import shape as shape
 from . import skin as skin
 from . import spline as spline
 from . import structs as structs
