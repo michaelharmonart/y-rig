@@ -45,7 +45,6 @@ def get_shape(object: str) -> str | None:
 
 
 def get_components_of_shape(shape_dag_path: MDagPath) -> MObject:
-    api_type = shape_dag_path.apiType()
 
     if shape_dag_path.hasFn(MFn.kMesh):
         fn = MFnMesh(shape_dag_path)
