@@ -7,9 +7,10 @@ from yrig.maya_api.enum import Axis
 from yrig.maya_api.node import MotionPathNode, MultiplyPointByMatrixNode
 from yrig.maya_api.utils import get_dag_path
 from yrig.name import get_short_name
+from yrig.shape import get_shape
 from yrig.spline import generate_knots
 from yrig.spline.math import collapse_periodic_cv_list, create_periodic_cv_list
-from yrig.transform import create_transform, get_shape, get_shapes
+from yrig.transform import create_transform, get_shapes
 from yrig.transform.matrix import localize_world_matrix
 from yrig.transform.utils import set_position
 
