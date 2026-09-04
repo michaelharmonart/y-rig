@@ -92,39 +92,6 @@ def get_shapes(transform: str) -> list[str]:
         raise RuntimeError(f"{transform} has no child shape nodes")
 
 
-def get_shape(object: str) -> str | None:
-    """
-    Return the first non-intermediate shape node associated with a DAG object.
-
-    If the input is a transform, its child shapes are queried and the first
-    valid (non-intermediate) shape is returned. If the input is already a
-    shape node, it is returned directly. If no valid shape is found, ``None``
-    is returned.
-
-    Args:
-        object: Name of a Maya DAG node (transform or shape).
-
-    Returns:
-        The name of the associated shape node, or ``None`` if no shape exists.
-    """
-    shape: str
-    if cmds.nodeType(object) == "transform":
-        shape_list: list[str] = cmds.listRelatives(
-            object, shapes=True, noIntermediate=True, children=True
-        )
-        if shape_list:
-            shape = shape_list[0]
-            return shape
-        else:
-            return None
-
-    if cmds.objectType(object, isAType="shape"):
-        shape = object
-        return shape
-    else:
-        return None
-
-
 def bake_shape(transform: str, zero_pivot: bool = True) -> None:
     cmds.makeIdentity(transform, apply=True)
     if zero_pivot:
