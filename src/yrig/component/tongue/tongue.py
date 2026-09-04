@@ -2,6 +2,7 @@ from maya import cmds
 
 from yrig.control import create_control
 from yrig.joint import create_joint
+from yrig.skin.split import tag_for_weight_split
 from yrig.transform import create_transform
 
 from .tongue_spine import TongueSpine
@@ -16,6 +17,7 @@ class Tongue:
         control_parent: str = "neck_M0_head_ctl",
         control_size: float = 1.0,
         parent_jnt: str = "face_jnt",
+        auto_split_weights: bool = True,
     ):
         self.part = part
         self.side = side
@@ -23,6 +25,7 @@ class Tongue:
         self.control_parent = control_parent
         self.control_size = control_size
         self.parent_jnt = parent_jnt
+        self.tag_for_weight_split = auto_split_weights
 
         self.guides: dict[str, str] = {
             "root": "tongue_M_root",
@@ -99,5 +102,6 @@ class Tongue:
             component_grp=self.component_grp,
             control_size=self.control_size,
         )
-
         self.ts.build_tongue_spine()
+        if self.tag_for_weight_split:
+            tag_for_weight_split(self.main_jnt, self.ts.joints)

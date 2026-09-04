@@ -19,6 +19,10 @@
                 "build"
             ],
             "attrs": {
+                "auto_split_weights": {
+                    "type": "bool",
+                    "value": "True"
+                },
                 "control_parent": {
                     "type": "raw",
                     "value": "jaw_M_ctl"
@@ -47,6 +51,7 @@
                 "    control_parent=\"${control_group}\",",
                 "    parent_jnt=\"${joint_parent}\",",
                 "    control_size=1,",
+                "    auto_split_weights=${auto_split_weights},",
                 ")",
                 "",
                 "tongue.build()"
