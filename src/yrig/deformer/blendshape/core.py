@@ -1,6 +1,10 @@
 from pathlib import Path
 
 from maya import cmds
+from maya.api.OpenMaya import (
+    MPlug,
+    MSelectionList,
+)
 
 
 def create_blendshape(
@@ -89,6 +93,17 @@ def get_blendshape_targets(blendshape: str) -> dict[str, str]:
     return dict(zip(aliases[::2], aliases[1::2], strict=True))
 
 
+def get_target_index(blendshape: str, target: str) -> int:
+    aliases = cmds.aliasAttr(blendshape, query=True) or []
+    indices = cmds.getAttr(f"{blendshape}.weight", multiIndices=True) or []
+
+    for alias, index in zip(aliases[::2], indices, strict=True):
+        if alias == target:
+            return index
+
+    raise ValueError(f"Target {target} not found on {blendshape}.")
+
+
 def build_blendshape_networks(blendshape: str) -> dict[str, str]:
     """
     Creates one network node per blendshape type and connects
@@ -150,3 +165,94 @@ def build_blendshape_networks(blendshape: str) -> dict[str, str]:
         )
 
     return network_nodes
+
+
+def get_target_weights(
+    blendshape: str, target: str | int, input_index: int = 0
+) -> dict[int, float]:
+    """
+    Return the stored vertex weights for a blendShape target.
+
+    Args:
+        blendshape: Name of the blendShape node.
+        target: Target alias name or logical target index.
+        input_index: Index of the input geometry.
+
+    Returns: A mapping of vertex indices to their target weights. Only vertices
+        with explicitly stored weights are included.
+    """
+    resolved_target_index = (
+        target if isinstance(target, int) else get_target_index(blendshape, target)
+    )
+    target_attr = (
+        f"{blendshape}.inputTarget[{input_index}].inputTargetGroup[{resolved_target_index}]"
+    )
+
+    sel: MSelectionList = MSelectionList()
+    sel.add(f"{target_attr}.targetWeights")
+    weight_list_plug: MPlug = sel.getPlug(0)
+    indices = weight_list_plug.getExistingArrayAttributeIndices()
+    weights_dict: dict[int, float] = {}
+    for i in indices:
+        weight_plug: MPlug = weight_list_plug.elementByLogicalIndex(i)
+        value = weight_plug.asDouble()
+        weights_dict[i] = value
+
+    return weights_dict
+
+
+def set_target_weights(
+    blendshape: str,
+    target: str | int,
+    weights: dict[int, float],
+    input_index: int = 0,
+    clear_existing: bool = True,
+) -> None:
+    """Set the stored vertex weights for a blendShape target.
+
+    Args:
+        blendshape: Name of the blendShape node.
+        target: Target alias name or logical target index.
+        weights: Mapping of vertex indices to their target weights.
+        input_index: Index of the input geometry.
+    """
+    resolved_target_index = (
+        target if isinstance(target, int) else get_target_index(blendshape, target)
+    )
+    target_attr = (
+        f"{blendshape}.inputTarget[{input_index}].inputTargetGroup[{resolved_target_index}]"
+    )
+
+    sel: MSelectionList = MSelectionList()
+    sel.add(f"{target_attr}.targetWeights")
+    weight_list_plug: MPlug = sel.getPlug(0)
+
+    if clear_existing:
+        num_points = weight_list_plug.numElements()
+        for i in range(num_points):
+            weight_plug: MPlug = weight_list_plug.elementByPhysicalIndex(i)
+            logical_index = weight_plug.logicalIndex()
+            if logical_index not in weights:
+                weight_plug.setDouble(0)
+
+    for index, value in weights.items():
+        weight_plug: MPlug = weight_list_plug.elementByLogicalIndex(index)
+        weight_plug.setDouble(value)
+
+
+def connect_target_deltas(source_target_attr: str, driven_target_attr: str) -> None:
+    source_target_item_attr = f"{source_target_attr}.inputTargetItem"
+    driven_target_item_attr = f"{driven_target_attr}.inputTargetItem"
+    source_target_item_indices = cmds.getAttr(source_target_item_attr, multiIndices=True) or []
+    for index in source_target_item_indices:
+        for attr in (
+            "inputGeomTarget",
+            "inputRelativePointsTarget",
+            "inputRelativeComponentsTarget",
+            "inputPointsTarget",
+            "inputComponentsTarget",
+        ):
+            cmds.connectAttr(
+                f"{source_target_item_attr}[{index}].{attr}",
+                f"{driven_target_item_attr}[{index}].{attr}",
+            )
