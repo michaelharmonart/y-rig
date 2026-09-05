@@ -2,7 +2,7 @@ from pathlib import Path
 
 from maya import cmds
 
-from yrig.deformer.blendshape import export_blendshape
+from yrig.deformer.blendshape import export_blendshape, import_blendshape
 
 
 def resolve_pose_interpolator_shape(pose_interpolator: str) -> str:
@@ -57,11 +57,7 @@ def import_pose_file(filepath: Path, import_shapes: bool = True) -> set[str]:
     if import_shapes:
         for shp_file in filepath.parent.glob(f"{filepath.stem}.*.shp"):
             blendshape = shp_file.stem.removeprefix(f"{filepath.stem}.")
-            if cmds.objExists(blendshape):
-                cmds.blendShape(blendshape, edit=True, ip=str(shp_file))
-                continue
-            else:
-                cmds.blendShape(name=blendshape, ip=str(shp_file))
+            import_blendshape(shp_file, blendshape)
 
     existing_pose_interps = set(cmds.ls(type="poseInterpolator") or [])
     cmds.poseInterpolator(importPoses=str(filepath))
@@ -127,15 +123,15 @@ def export_pose_file(
     for blendshape in blendshapes:
         shape_file = filepath.with_suffix(f".{blendshape}.shp")
         targets: list[str] = []
-
+        destinations: list[str] = []
         if poses:
             for pose_interpolator, pose in poses:
                 pose_index = _reslove_pose_index(pose_interpolator, pose)
                 source = (
                     f"{resolve_pose_interpolator_shape(pose_interpolator)}.output[{pose_index}]"
                 )
-                destinations: list[str] = (  # type: ignore
-                    cmds.connectionInfo(
+                destinations.extend(
+                    cmds.connectionInfo(  # type: ignore
                         source,
                         destinationFromSource=True,
                     )
@@ -145,9 +141,10 @@ def export_pose_file(
             for pose_interpolator in resloved_pose_interpolators:
                 target_name = f"{pose_interpolator}.output"
                 indices = cmds.getAttr(target_name, multiIndices=True) or []
+
                 for index in indices:
-                    destinations: list[str] = (  # type: ignore
-                        cmds.connectionInfo(
+                    destinations.extend(
+                        cmds.connectionInfo(  # type: ignore
                             f"{target_name}[{index}]",
                             destinationFromSource=True,
                         )

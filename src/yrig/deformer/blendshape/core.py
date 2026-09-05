@@ -82,7 +82,7 @@ def export_blendshape(
     filepath.parent.mkdir(parents=True, exist_ok=True)
 
     kwargs = {}
-    if targets is not None:
+    if targets:
         target_indices = [resolve_target_index(blendshape, target) for target in targets]
         kwargs["exportTarget"] = [(0, index) for index in target_indices]
     # Export shape file
