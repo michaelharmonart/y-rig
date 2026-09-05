@@ -1,8 +1,12 @@
+from collections.abc import Callable, Iterable
 from pathlib import Path
 
 from maya import cmds
 
 from yrig.deformer.blendshape import export_blendshape, import_blendshape
+from yrig.maya_api.attribute import IntegerAttribute
+from yrig.maya_api.node import PoseInterpolatorManager
+from yrig.transform import create_transform
 
 
 def resolve_pose_interpolator_shape(pose_interpolator: str) -> str:
@@ -48,7 +52,81 @@ def get_pose_interpolator_blendshapes(pose_interpolator: str) -> list[str]:
     return list(blendshapes)
 
 
-def import_pose_file(filepath: Path, import_shapes: bool = True) -> set[str]:
+def group_pose_interpolators_by_directory(
+    pose_interpolators: Iterable[str],
+    parent: str | None = None,
+    group_namer: Callable[[str], str] | None = None,
+) -> list[str]:
+    manager = PoseInterpolatorManager.from_existing("poseInterpolatorManager")
+    created_groups = []
+    index_group_map: dict[int, str] = {}
+
+    def get_group_name(directory_index: int) -> str:
+        directory_name = manager.pose_interpolator_directory[directory_index].directory_name.get()
+
+        return group_namer(directory_name) if group_namer else f"{directory_name}_rbf"
+
+    for pose_interpolator in pose_interpolators:
+        shape = resolve_pose_interpolator_shape(pose_interpolator)
+        transform: str | None = next(
+            iter(cmds.listRelatives(shape, parent=True, type="transform") or []),
+            None,
+        )
+        destinations = (
+            cmds.listConnections(
+                shape,
+                source=False,
+                destination=True,
+                plugs=True,
+            )
+            or []
+        )
+        if not destinations:
+            continue
+
+        directory_index: int = IntegerAttribute(destinations[0]).get()
+
+        # Walk upward only until we find an existing group.
+        missing: list[int] = []
+        group_parent = parent
+
+        while directory_index != 0:
+            if directory_index in index_group_map:
+                group_parent = index_group_map[directory_index]
+                break
+
+            group_name = get_group_name(directory_index)
+
+            if cmds.objExists(group_name):
+                index_group_map[directory_index] = group_name
+                group_parent = group_name
+                break
+
+            missing.append(directory_index)
+
+            directory_index = manager.pose_interpolator_directory[
+                directory_index
+            ].parent_index.get()
+
+        # Create the missing part of the hierarchy from top -> bottom.
+        for directory_index in reversed(missing):
+            group_name = get_group_name(directory_index)
+
+            create_transform(group_name, group_parent)
+
+            index_group_map[directory_index] = group_name
+            created_groups.append(group_name)
+
+            group_parent = group_name
+        if transform and group_parent:
+            cmds.parent(transform, group_parent, relative=True)
+
+    return created_groups
+
+
+def import_pose_file(
+    filepath: Path, parent: str | None = None, import_shapes: bool = True
+) -> set[str]:
     if filepath.suffix != ".pose":
         raise ValueError(f"The file at {filepath} is not a .pose file.")
     if not filepath.exists():
@@ -62,8 +140,10 @@ def import_pose_file(filepath: Path, import_shapes: bool = True) -> set[str]:
     existing_pose_interps = set(cmds.ls(type="poseInterpolator") or [])
     cmds.poseInterpolator(importPoses=str(filepath))
     current_pose_interps = set(cmds.ls(type="poseInterpolator") or [])
+    created_pose_interps = current_pose_interps - existing_pose_interps
+    group_pose_interpolators_by_directory(created_pose_interps, parent)
 
-    return current_pose_interps - existing_pose_interps
+    return created_pose_interps
 
 
 def _validate_pose_interpolators(
