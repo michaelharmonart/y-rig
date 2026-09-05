@@ -52,6 +52,7 @@ def get_pose_interpolator_blendshapes(pose_interpolator: str) -> list[str]:
     return list(blendshapes)
 
 
+# TODO make this keep the ordering of the directory children by using the childIndices attr.
 def group_pose_interpolators_by_directory(
     pose_interpolators: Iterable[str],
     parent: str | None = None,
@@ -63,7 +64,6 @@ def group_pose_interpolators_by_directory(
 
     def get_group_name(directory_index: int) -> str:
         directory_name = manager.pose_interpolator_directory[directory_index].directory_name.get()
-
         return group_namer(directory_name) if group_namer else f"{directory_name}_rbf"
 
     for pose_interpolator in pose_interpolators:
