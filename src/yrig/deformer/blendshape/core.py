@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from pathlib import Path
 
 from maya import cmds
@@ -55,12 +56,14 @@ def import_blendshape(
 def export_blendshape(
     blendshape_node: str,
     filepath: Path,
+    targets: Iterable[str | int] | None,
 ) -> None:
     """
     Export a blendShape node to a .shape/.shp file.
     Args:
         blendshape_node: Name of the blendShape node.
         filepath: Output file path.
+        targets: The names or indices of the targets to export,
     """
 
     if not cmds.objExists(blendshape_node):
@@ -72,9 +75,14 @@ def export_blendshape(
     # Ensure output directory exists
     filepath.parent.mkdir(parents=True, exist_ok=True)
 
+    kwargs = {}
+    if targets is not None:
+        target_indices = [resolve_target_index(blendshape_node, target) for target in targets]
+        kwargs["exportTarget"] = [(0, index) for index in target_indices]
     # Export shape file
     cmds.blendShape(
         blendshape_node,
+        *kwargs,
         edit=True,
         export=str(filepath),
     )
@@ -102,6 +110,10 @@ def get_target_index(blendshape: str, target: str) -> int:
             return index
 
     raise ValueError(f"Target {target} not found on {blendshape}.")
+
+
+def resolve_target_index(blendshape: str, target: str | int) -> int:
+    return target if isinstance(target, int) else get_target_index(blendshape, target)
 
 
 def build_blendshape_networks(blendshape: str) -> dict[str, str]:
@@ -181,9 +193,7 @@ def get_target_weights(
     Returns: A mapping of vertex indices to their target weights. Only vertices
         with explicitly stored weights are included.
     """
-    resolved_target_index = (
-        target if isinstance(target, int) else get_target_index(blendshape, target)
-    )
+    resolved_target_index = resolve_target_index(blendshape, target)
     target_attr = (
         f"{blendshape}.inputTarget[{input_index}].inputTargetGroup[{resolved_target_index}]"
     )
@@ -216,9 +226,7 @@ def set_target_weights(
         weights: Mapping of vertex indices to their target weights.
         input_index: Index of the input geometry.
     """
-    resolved_target_index = (
-        target if isinstance(target, int) else get_target_index(blendshape, target)
-    )
+    resolved_target_index = resolve_target_index(blendshape, target)
     target_attr = (
         f"{blendshape}.inputTarget[{input_index}].inputTargetGroup[{resolved_target_index}]"
     )
