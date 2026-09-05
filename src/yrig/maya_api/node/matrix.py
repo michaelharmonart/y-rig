@@ -134,6 +134,7 @@ class InverseMatrixNode(Node):
     """Maya inverseMatrix node with enhanced interface."""
 
     node_type = "inverseMatrix"
+    plugin = "matrixNodes"
 
     def __init__(self, name: str = "inverseMatrix") -> None:
         super().__init__(name)

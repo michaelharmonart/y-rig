@@ -42,29 +42,12 @@ NODE_TYPES: dict[str, dict[str, str]] = {
     "normalize": {"standard": "normalize", "DL": "normalizeDL"},
 }
 
-# Mapping of Node -> Required Plugin
-NODE_PLUGINS: dict[str, str] = {
-    "inverseMatrix": "matrixNodes",
-    "transposeMatrix": "matrixNodes",
-    "quatToEuler": "quatNodes",
-    "eulerToQuat": "quatNodes",
-    "quatToAxisAngle": "quatNodes",
-    "axisAngleToQuat": "quatNodes",
-    "quatInvert": "quatNodes",
-    "quatConjugate": "quatNodes",
-    "quatNegate": "quatNodes",
-    "quatNormalize": "quatNodes",
-    "quatAdd": "quatNodes",
-    "quatSub": "quatNodes",
-    "quatProd": "quatNodes",
-    "quatSlerp": "quatNodes",
-}
-
 
 class Node(ABC):
     """Base class for all Maya nodes."""
 
     node_type: ClassVar[str]
+    plugin: ClassVar[str | None] = None
 
     def __init__(self, name: str) -> None:
         """Wrap an existing node by name. Prefer .create() or .from_existing()."""
@@ -83,16 +66,15 @@ class Node(ABC):
         return node_type
 
     @classmethod
-    def _ensure_plugin(cls, node_type: str) -> None:
-        plugin: str | None = NODE_PLUGINS.get(node_type)
-        if plugin is not None:
-            ensure_plugin_loaded(plugin)
+    def _ensure_plugin(cls) -> None:
+        if cls.plugin is not None:
+            ensure_plugin_loaded(cls.plugin)
 
     @classmethod
     def create(cls, name: str | None = None) -> Self:
         """Create a new node of this type."""
         resolved_type = cls._resolve_node_type()
-        cls._ensure_plugin(resolved_type)
+        cls._ensure_plugin()
         created_name = cmds.createNode(resolved_type, name=name or cls.node_type)
         return cls(created_name)
 

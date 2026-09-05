@@ -15,6 +15,7 @@ from .matrix import (
     RowFromMatrixNode,
     WtAddMatrixNode,
 )
+from .pose_interpolator import PoseInterpolatorManager
 from .quat import (
     EulerToQuatNode,
     QuatInvertNode,
@@ -77,6 +78,7 @@ __all__ = [
     "NormalizeNode",
     "PickMatrixNode",
     "PlusMinusAverageNode",
+    "PoseInterpolatorManager",
     "QuatInvertNode",
     "QuatNormalizeNode",
     "QuatProdNode",

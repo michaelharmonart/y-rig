@@ -5,6 +5,7 @@ from enum import IntEnum
 from typing import (
     TYPE_CHECKING,
     Any,
+    ClassVar,
     Generic,
     Self,
     TypeAlias,
@@ -122,6 +123,26 @@ class ArrayAttribute(Attribute, Iterable[AttributeType], Generic[AttributeType])
         # This allows for loop iteration: for item in my_attr:
         for index in self.get_indices():
             yield self[index]
+
+
+class ValueArrayAttribute(Attribute[Sequence[T]], Generic[T]):
+    """A Maya typed array attribute."""
+
+    maya_type: ClassVar[str]
+
+    def get(self) -> list[T]:
+        return list(cmds.getAttr(self.attr_path))
+
+    def set(self, value: Sequence[T]) -> None:
+        cmds.setAttr(
+            self.attr_path,
+            list(value),  # type: ignore
+            type=self.maya_type,
+        )
+
+
+class Int32ArrayAttribute(ValueArrayAttribute[int]):
+    maya_type = "Int32Array"
 
 
 class BooleanAttribute(Attribute[bool]):

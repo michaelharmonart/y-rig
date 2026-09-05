@@ -6,8 +6,11 @@ from .core import (
     Attribute,
     BooleanAttribute,
     EnumAttribute,
+    Int32ArrayAttribute,
+    IntegerAttribute,
     MatrixAttribute,
     ScalarAttribute,
+    StringAttribute,
     Vector3Attribute,
 )
 
@@ -46,6 +49,17 @@ class ClosestPointOnSurfaceResultAttribute(Attribute):
         self.position = Vector3Attribute(f"{attr_path}.position")
         self.parameter_u = ScalarAttribute(f"{attr_path}.parameterU")
         self.parameter_v = ScalarAttribute(f"{attr_path}.parameterV")
+
+
+class PoseInterpolatorDirectoryAttribute(Attribute):
+    """A Maya attribute of the same compound type as the poseInterpolator directory."""
+
+    def __init__(self, attr_path: str) -> None:
+        super().__init__(attr_path)
+
+        self.child_indices = Int32ArrayAttribute(f"{attr_path}.childIndices")
+        self.parent_index = IntegerAttribute(f"{attr_path}.parentIndex")
+        self.directory_name = StringAttribute(f"{attr_path}TargetVector")
 
 
 class UvPinCoordinateAttribute(Attribute[tuple[float, float]]):

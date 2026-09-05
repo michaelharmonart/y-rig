@@ -8,6 +8,7 @@ class EulerToQuatNode(Node):
     """Maya eulerToQuat node with enhanced interface."""
 
     node_type = "eulerToQuat"
+    plugin = "quatNodes"
 
     def __init__(self, name: str = "eulerToQuat") -> None:
         super().__init__(name)
@@ -22,6 +23,7 @@ class QuatInvertNode(Node):
     """Maya quatInvert node with enhanced interface."""
 
     node_type = "quatInvert"
+    plugin = "quatNodes"
 
     def __init__(self, name: str = "quatInvert") -> None:
         super().__init__(name)
@@ -35,6 +37,7 @@ class QuatNormalizeNode(Node):
     """Maya quatNormalize node with enhanced interface."""
 
     node_type = "quatNormalize"
+    plugin = "quatNodes"
 
     def __init__(self, name: str = "quatNormalize") -> None:
         super().__init__(name)
@@ -48,6 +51,7 @@ class QuatProdNode(Node):
     """Maya quatProd node with enhanced interface."""
 
     node_type = "quatProd"
+    plugin = "quatNodes"
 
     def __init__(self, name: str = "quatProd") -> None:
         super().__init__(name)
@@ -62,6 +66,7 @@ class QuatSlerpNode(Node):
     """Maya quatSlerp node with enhanced interface."""
 
     node_type = "quatSlerp"
+    plugin = "quatNodes"
 
     def __init__(self, name: str = "quatSlerp") -> None:
         super().__init__(name)
