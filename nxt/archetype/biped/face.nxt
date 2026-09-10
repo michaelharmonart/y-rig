@@ -430,7 +430,7 @@
             "attrs": {
                 "relative_filepath": {
                     "type": "raw",
-                    "value": "data/face/guides.ma"
+                    "value": "data/face"
                 }
             }
         },
@@ -449,20 +449,17 @@
                 "",
                 "from yrig.io.maya import split_scene_to_files",
                 "",
-                "",
                 "export_root_path = (",
                 "    Path(\"${export_root_path}\")",
-                "    / \"data\"",
-                "    / \"face\"",
                 ")",
                 "",
                 "if not export_root_path.is_dir():",
                 "    raise NotADirectoryError(",
                 "        f\"Export root does not exist: {export_root_path}\"",
                 "    )",
-                "",
+                "export_path = Path(\"${export_path}\")",
                 "split_scene_to_files(",
-                "    directory=export_root_path,",
+                "    directory=export_path,",
                 "    objects=[\"face_surface\"],",
                 "    remainder_name=\"guides\",",
                 ")"
@@ -478,9 +475,8 @@
                 "from yrig.io.maya import import_split_scene_files",
                 "",
                 "import_path = Path(\"${import_filepath}\")",
-                "folder = import_path.parent",
                 "imported = import_split_scene_files(",
-                "    directory=folder,",
+                "    directory=import_path,",
                 "    objects=[\"face_surface\"],",
                 "    remainder_name=\"guides\",",
                 ")"
@@ -534,12 +530,13 @@
         "/tools_window/biped/face/mouth_surface_io": {
             "instance": "/io_pair",
             "child_order": [
-                "export",
-                "import"
+                "import",
+                "export"
             ],
             "attrs": {
                 "relative_filepath": {
-                    "value": "data/face/mouth_surface.ma"
+                    "type": "raw",
+                    "value": "data/face"
                 },
                 "text": {
                     "type": "raw",
@@ -554,25 +551,33 @@
                 }
             },
             "code": [
+                "from pathlib import Path",
+                "",
                 "from yrig.io.maya import split_scene_to_files",
                 "",
-                "export_root_path = Path(\"/job/sandwich/05_production/rig_build_work/sd547/rig_build/character/biped\")",
+                "export_root_path = (",
+                "    Path(\"${export_root_path}\")",
+                ")",
                 "",
                 "if not export_root_path.is_dir():",
                 "    raise NotADirectoryError(",
                 "        f\"Export root does not exist: {export_root_path}\"",
                 "    )",
-                "",
-                "",
-                "folder = export_root_path",
-                "exported = split_scene_to_files(",
-                "    directory=folder,",
+                "    ",
+                "export_path = Path(\"${export_path}\")",
+                "split_scene_to_files(",
+                "    directory=export_path,",
                 "    objects=[\"face_surface\"],",
                 "    remainder_name=None,",
                 ")"
             ]
         },
         "/tools_window/biped/face/mouth_surface_io/import": {
+            "attrs": {
+                "text": {
+                    "value": "Import Mouth Surface"
+                }
+            },
             "code": [
                 "from yrig.io.maya import import_split_scene_files",
                 "",
@@ -588,10 +593,14 @@
         "/tools_window/biped/face/solo_face_guides_io": {
             "instance": "/io_pair",
             "child_order": [
-                "export",
-                "import"
+                "import",
+                "export"
             ],
+            "enabled": true,
             "attrs": {
+                "relative_filepath": {
+                    "value": "data/face"
+                },
                 "text": {
                     "value": "Solo Face Guides"
                 }
@@ -604,12 +613,22 @@
                 }
             },
             "code": [
-                "from yrig.io.maya import import_split_scene_files",
+                "from pathlib import Path",
                 "",
-                "import_path = Path(\"${import_filepath}\")",
-                "folder = import_path.parent",
-                "imported = import_split_scene_files(",
-                "    directory=folder,",
+                "from yrig.io.maya import split_scene_to_files",
+                "",
+                "export_root_path = (",
+                "    Path(\"${export_root_path}\")",
+                ")",
+                "",
+                "if not export_root_path.is_dir():",
+                "    raise NotADirectoryError(",
+                "        f\"Export root does not exist: {export_root_path}\"",
+                "    )",
+                "    ",
+                "export_path = Path(\"${export_path}\")",
+                "split_scene_to_files(",
+                "    directory=export_path,",
                 "    objects=[\"face_surface\"],",
                 "    remainder_name=\"guides\",",
                 "    solo=True",
