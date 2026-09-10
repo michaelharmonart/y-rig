@@ -15,6 +15,7 @@ def import_blendshape(
     blendshape: str | BlendShape,
     directories: Collection[str] | None = None,
     targets: Collection[str] | None = None,
+    parent_directory: str | None = None,
 ) -> None:
     """
     Import blendShape target data from a `.yshape` file.
