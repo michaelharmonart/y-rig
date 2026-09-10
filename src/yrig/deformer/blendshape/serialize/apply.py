@@ -94,7 +94,7 @@ def _resolve_target_group_index_for_apply(
     overwrite_existing: bool = True,
 ) -> int:
     if target_group_name in name_to_target_index_map:
-        if overwrite_existing:
+        if not overwrite_existing:
             raise RuntimeError(
                 f"Target name {target_group_name} already exists on {blendshape} and `overwrite_existing` is not set to True."
             )
