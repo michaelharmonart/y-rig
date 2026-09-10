@@ -1,7 +1,6 @@
 from collections.abc import Collection, Iterable
 from dataclasses import replace
 
-from maya import cmds
 from maya.api.OpenMaya import (
     MFnPointArrayData,
     MObject,
@@ -17,7 +16,7 @@ from yrig.maya_api.attribute import (
 from yrig.maya_api.node import BlendShape
 from yrig.maya_api.utils import get_component_indices, get_plug
 
-from ..core import resolve_target_index
+from ..core import get_target_name_map, resolve_target_index
 from .data import (
     BlendShapeData,
     BlendShapeInputData,
@@ -26,14 +25,6 @@ from .data import (
     BlendShapeTargetGroupData,
     BlendShapeTargetItemData,
 )
-
-
-def get_target_name_map(blendshape: BlendShape) -> dict[int, str]:
-    aliases = cmds.aliasAttr(str(blendshape), query=True) or []
-    return {
-        int(attr.removeprefix("weight[").removesuffix("]")): alias
-        for alias, attr in zip(aliases[::2], aliases[1::2], strict=True)
-    }
 
 
 def get_blendshape_target_item_data(
@@ -72,7 +63,7 @@ def get_blendshape_target_groups_dict(
     target_group_indices: Iterable[int] | None = None,
 ) -> dict[int, BlendShapeTargetGroupData]:
     target_groups: dict[int, BlendShapeTargetGroupData] = {}
-    alias_map = get_target_name_map(blendshape)
+    alias_map = get_target_name_map(str(blendshape))
     indices = (
         target_group_indices
         if target_group_indices is not None

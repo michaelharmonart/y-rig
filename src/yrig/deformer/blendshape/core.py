@@ -122,6 +122,14 @@ def resolve_target_index(blendshape: str, target: str | int) -> int:
     return target if isinstance(target, int) else get_target_index(blendshape, target)
 
 
+def get_target_name_map(blendshape: str) -> dict[int, str]:
+    aliases = cmds.aliasAttr(blendshape, query=True) or []
+    return {
+        int(attr.removeprefix("weight[").removesuffix("]")): alias
+        for alias, attr in zip(aliases[::2], aliases[1::2], strict=True)
+    }
+
+
 def build_blendshape_networks(blendshape: str) -> dict[str, str]:
     """
     Creates one network node per blendshape type and connects
