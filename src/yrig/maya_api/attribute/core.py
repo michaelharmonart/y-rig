@@ -166,7 +166,7 @@ class ValueArrayAttribute(Attribute[Sequence[T]], Generic[T]):
     maya_type: ClassVar[str]
 
     def get(self) -> list[T]:
-        return list(cmds.getAttr(self.attr_path))
+        return cmds.getAttr(self.attr_path) or []
 
     def set(self, value: Sequence[T]) -> None:
         cmds.setAttr(
