@@ -3,36 +3,14 @@ from __future__ import annotations
 from collections.abc import Collection
 
 from maya.api.OpenMaya import (
-    MFn,
-    MFnComponentListData,
-    MFnPointArrayData,
-    MFnSingleIndexedComponent,
-    MObject,
-    MPlug,
     MPoint,
     MPointArray,
 )
 
 from yrig.maya_api.node import BlendShape
-from yrig.maya_api.utils import get_plug
+from yrig.maya_api.utils import get_plug, set_component_list_indices, set_point_array
 
 from .data import BlendShapeData, BlendShapeTargetGroupData, BlendShapeTargetItemData
-
-
-def _set_component_list_indices(plug: MPlug, indices: list[int]) -> None:
-    fn_data: MFnComponentListData = MFnComponentListData()
-    data_mob: MObject = fn_data.create()
-    fn_comp: MFnSingleIndexedComponent = MFnSingleIndexedComponent()
-    comp_mob: MObject = fn_comp.create(MFn.kMeshVertComponent)
-    fn_comp.addElements(indices)
-    fn_data.add(comp_mob)
-    plug.setMObject(data_mob)
-
-
-def _set_point_array(plug: MPlug, point_array: MPointArray) -> None:
-    fn_points = MFnPointArrayData()
-    points_mob = fn_points.create(point_array)
-    plug.setMObject(points_mob)
 
 
 def apply_blendshape_target_item_data(
@@ -55,8 +33,8 @@ def apply_blendshape_target_item_data(
     for index, point in enumerate(data.points):
         point_array[index] = MPoint(*point)
 
-    _set_component_list_indices(component_plug, data.components)
-    _set_point_array(points_plug, point_array)
+    set_component_list_indices(component_plug, data.components)
+    set_point_array(points_plug, point_array)
 
 
 def apply_blendshape_target_items_dict(

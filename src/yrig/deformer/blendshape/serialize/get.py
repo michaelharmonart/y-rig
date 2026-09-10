@@ -17,6 +17,7 @@ from yrig.maya_api.attribute import (
 from yrig.maya_api.node import BlendShape
 from yrig.maya_api.utils import get_component_indices, get_plug
 
+from ..core import resolve_target_index
 from .data import (
     BlendShapeData,
     BlendShapeInputData,
@@ -33,21 +34,6 @@ def get_target_name_map(blendshape: BlendShape) -> dict[int, str]:
         int(attr.removeprefix("weight[").removesuffix("]")): alias
         for alias, attr in zip(aliases[::2], aliases[1::2], strict=True)
     }
-
-
-def get_target_index(blendshape: str, target: str) -> int:
-    aliases = cmds.aliasAttr(blendshape, query=True) or []
-    indices = cmds.getAttr(f"{blendshape}.weight", multiIndices=True) or []
-
-    for alias, index in zip(aliases[::2], indices, strict=True):
-        if alias == target:
-            return index
-
-    raise ValueError(f"Target {target} not found on {blendshape}.")
-
-
-def resolve_target_index(blendshape: str, target: str | int) -> int:
-    return target if isinstance(target, int) else get_target_index(blendshape, target)
 
 
 def get_blendshape_target_item_data(
