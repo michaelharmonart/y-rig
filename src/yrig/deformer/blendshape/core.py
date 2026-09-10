@@ -122,10 +122,18 @@ def resolve_target_index(blendshape: str, target: str | int) -> int:
     return target if isinstance(target, int) else get_target_index(blendshape, target)
 
 
-def get_target_name_map(blendshape: str) -> dict[int, str]:
+def get_target_index_to_name_map(blendshape: str) -> dict[int, str]:
     aliases = cmds.aliasAttr(blendshape, query=True) or []
     return {
         int(attr.removeprefix("weight[").removesuffix("]")): alias
+        for alias, attr in zip(aliases[::2], aliases[1::2], strict=True)
+    }
+
+
+def get_name_to_target_index_map(blendshape: str) -> dict[str, int]:
+    aliases = cmds.aliasAttr(blendshape, query=True) or []
+    return {
+        alias: int(attr.removeprefix("weight[").removesuffix("]"))
         for alias, attr in zip(aliases[::2], aliases[1::2], strict=True)
     }
 

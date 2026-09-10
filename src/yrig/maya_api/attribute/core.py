@@ -143,6 +143,16 @@ class ArrayAttribute(Attribute, Iterable[AttributeType], Generic[AttributeType])
         """Get all existing indices in this array."""
         return cmds.getAttr(self.attr_path, multiIndices=True) or []
 
+    def next_available_index(self) -> int:
+        """Get the next available index in this array."""
+        indices = self.get_indices()
+
+        for index, existing_index in enumerate(indices):
+            if index != existing_index:
+                return index
+
+        return len(indices)
+
     def __iter__(self) -> Iterator[AttributeType]:
         """Iterate over all existing, non-sparse elements in the array."""
         # This allows for loop iteration: for item in my_attr:

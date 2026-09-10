@@ -41,3 +41,12 @@ class BlendShapeTargetGroupData:
 class BlendShapeTargetItemData:
     components: list[int]
     points: list[tuple[float, float, float]]
+
+
+def get_target_group_indices_map(data: BlendShapeData) -> dict[str, int]:
+    """Returns a mapping of target group names to their group indices."""
+    name_to_index = {}
+    for input_target in data.targets.values():
+        for group_index, group_data in input_target.groups.items():
+            name_to_index[group_data.name] = group_index
+    return name_to_index

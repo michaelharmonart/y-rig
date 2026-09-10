@@ -25,13 +25,14 @@ The dataclass names intentionally mirror this Maya hierarchy so that the
 serialized structure corresponds directly to the underlying attributes.
 """
 
-from . import apply, data, get, io
+from . import apply, data, directory, get, io
 from .get import get_blendshape_data
 from .io import export_blendshape, import_blendshape
 
 __all__ = [
     "apply",
     "data",
+    "directory",
     "export_blendshape",
     "get",
     "get_blendshape_data",
