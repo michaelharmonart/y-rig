@@ -182,6 +182,18 @@ def apply_blendshape_data(
     targets: Collection[str] | None = None,
     parent_directory: str | None = None,
 ) -> None:
+    """
+    Apply blendShape data to a designated blendshape node.
+
+    Args:
+        blendshape: BlendShape node to apply to.
+        data: BlendShapeData to use.
+        directories: Specify target directories to import.
+        targets: Specify target names or indices to export.
+        parent_directory: Parent directory for the specified directories and targets,
+            or the directory to parent the entire imported structure on if neither are specified.
+    """
+
     blendshape_node = (
         blendshape if isinstance(blendshape, BlendShape) else BlendShape.from_existing(blendshape)
     )

@@ -45,6 +45,8 @@ def export_blendshape(
         blendshape: BlendShape node to export.
         directories: Specify target directories to import.
         targets: Specify target names or indices to export.
+        parent_directory: Parent directory for the specified directories and targets,
+            or the directory to parent the entire imported structure on if neither are specified.
         force: Whether to overwrite an existing file without confirmation.
 
     Returns:
