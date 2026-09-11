@@ -137,16 +137,22 @@ def apply_blendshape_target_item_data(
         .input_target_group[group_index]
         .input_target_item[item_index]
     )
-    component_plug = get_plug(str(item_attr.input_components_target))
+
     points_plug = get_plug(str(item_attr.input_points_target))
-
+    points_to_apply = (
+        data.points if data.points else [(0, 0, 0)]
+    )  # Maya crashes if there are NO points
     point_array: MPointArray = MPointArray()
-    point_array.setLength(len(data.points))
-    for index, point in enumerate(data.points):
+    point_array.setLength(len(points_to_apply))
+    for index, point in enumerate(points_to_apply):
         point_array[index] = MPoint(*point)
-
-    set_component_list_indices(component_plug, data.components)
     set_point_array(points_plug, point_array)
+
+    component_plug = get_plug(str(item_attr.input_components_target))
+    components_to_apply = (
+        data.components if data.components else [0]
+    )  # Maya crashes if there are NO components
+    set_component_list_indices(component_plug, components_to_apply)
 
 
 def apply_blendshape_target_items_dict(
@@ -163,7 +169,6 @@ def apply_blendshape_target_items_dict(
             group_index=group_index,
             item_index=index,
         )
-        blendshape.input_target[target_index].input_target_group[group_index]
 
 
 def apply_blendshape_target_group_data(
@@ -176,6 +181,10 @@ def apply_blendshape_target_group_data(
     if blendshape.weight[target_group_index].get_alias() != data.name:
         blendshape.weight[target_group_index].set_alias(data.name)
     blendshape.weight[target_group_index].set(0)
+    target_group = blendshape.input_target[input_target_index].input_target_group[
+        target_group_index
+    ]
+    target_group.post_deformers_mode.set(data.mode)
     apply_blendshape_target_items_dict(
         blendshape, data.items, target_index=input_target_index, group_index=target_group_index
     )

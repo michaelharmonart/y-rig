@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from yrig.maya_api.enum import BlendShapePostDeformationOrder
+
 
 @dataclass
 class BlendShapeData:
@@ -34,6 +36,7 @@ class BlendShapeInputTargetData:
 @dataclass
 class BlendShapeTargetGroupData:
     name: str
+    mode: BlendShapePostDeformationOrder
     items: dict[int, BlendShapeTargetItemData]
 
 

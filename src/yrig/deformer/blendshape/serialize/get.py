@@ -30,6 +30,19 @@ from .directory import (
 )
 
 
+def _filtered_components_and_points(
+    component_ids: list[int], points_array: MPointArray
+) -> tuple[list[int], list[tuple[float, float, float]]]:
+    """Returns a tuple of a list of filtered component indices, and a list of point tuples."""
+    filtered_components: list[int] = []
+    filtered_point_tuples: list[tuple[float, float, float]] = []
+    for component_index, point in zip(component_ids, points_array, strict=True):  # type: ignore
+        if not point.isEquivalent(MPoint.kOrigin):
+            filtered_components.append(component_index)
+            filtered_point_tuples.append((point.x, point.y, point.z))
+    return filtered_components, filtered_point_tuples
+
+
 def get_blendshape_target_item_data(
     target_item: BlendShapeInputTargetItemAttribute,
 ) -> BlendShapeTargetItemData:
@@ -40,13 +53,15 @@ def get_blendshape_target_item_data(
     points_mob: MObject = points_plug.asMObject()
     fn_points: MFnPointArrayData = MFnPointArrayData(points_mob)
     points_array: MPointArray = fn_points.array()
-    filtered_components: list[int] = []
-    filtered_point_tuples: list[tuple[float, float, float]] = []
-    for component_index, point in zip(component_ids, points_array, strict=True):  # type: ignore
-        if not point.isEquivalent(MPoint.kOrigin):
-            filtered_components.append(component_index)
-            filtered_point_tuples.append((point.x, point.y, point.z))
-    return BlendShapeTargetItemData(components=filtered_components, points=filtered_point_tuples)
+
+    filtered_components, filtered_point_tuples = _filtered_components_and_points(
+        component_ids, points_array
+    )
+
+    return BlendShapeTargetItemData(
+        components=filtered_components,
+        points=filtered_point_tuples,
+    )
 
 
 def get_blendshape_target_items_dict(
@@ -75,8 +90,9 @@ def get_blendshape_target_groups_dict(
     for index in indices:
         target_group = target.input_target_group[index]
         target_name = alias_map[index]
+        target_mode = target_group.post_deformers_mode.get()
         target_group_data = BlendShapeTargetGroupData(
-            name=target_name, items=get_blendshape_target_items_dict(target_group)
+            name=target_name, mode=target_mode, items=get_blendshape_target_items_dict(target_group)
         )
         target_groups[index] = target_group_data
 
@@ -122,10 +138,12 @@ def get_blendshape_directory_dict(
     directory_dict: dict[int, BlendShapeTargetDirectory] = {}
     for index in indices:
         target_directory_attr = blendshape.target_directory[index]
+        # Maya is stupid and sometimes creates child index lists that have duplicates...
+        child_indices = list(dict.fromkeys(target_directory_attr.child_indices.get()))
         directory = BlendShapeTargetDirectory(
             name=target_directory_attr.directory_name.get(),
             parent_index=target_directory_attr.parent_index.get(),
-            child_indices=target_directory_attr.child_indices.get(),
+            child_indices=child_indices,
         )
         directory_dict[index] = directory
     return directory_dict
