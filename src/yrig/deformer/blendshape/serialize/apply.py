@@ -64,22 +64,12 @@ def get_name_to_directory_index_map(blendshape: BlendShape) -> dict[str, int]:
     return name_to_index
 
 
-def _remap_child_index(
-    value: int, directory_index_map: dict[int, int], group_index_map: dict[int, int]
-) -> int:
-    if value >= 0:
-        return group_index_map[value]
-    original_directory_index = -value
-    return -directory_index_map[original_directory_index]
-
-
 def apply_directory_tree(
     blendshape: BlendShape,
     data: BlendShapeData,
     target_directory_index: int,
     parent_directory_index: int = 0,
     target_groups_to_skip: Collection[str] | None = None,
-    overwrite_existing_target_groups: bool = False,
 ) -> None:
     target_directory_to_apply = data.directory[target_directory_index]
     parent_directory = blendshape.target_directory[parent_directory_index]
@@ -109,7 +99,6 @@ def apply_directory_tree(
                 data,
                 target_directory_index=source_directory_index,
                 parent_directory_index=maya_directory_index,
-                overwrite_existing_target_groups=overwrite_existing_target_groups,
             )
         # Indices >= 0 are target groups
         else:
@@ -255,5 +244,4 @@ def apply_blendshape_data(
         pruned_data,
         target_directory_index=0,
         parent_directory_index=parent_directory_index,
-        overwrite_existing_target_groups=True,
     )
