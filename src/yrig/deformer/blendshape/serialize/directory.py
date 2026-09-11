@@ -4,6 +4,28 @@ from dataclasses import replace
 from .data import BlendShapeTargetDirectory
 
 
+def get_directory_indices(
+    directory_data: dict[int, BlendShapeTargetDirectory],
+    directories: Collection[str],
+    start_index: int = 0,
+) -> dict[str, int] | None:
+
+    if directory_data[start_index].name in directories:
+        return {directory_data[start_index].name: start_index}
+    indices_map: dict[str, int] = {}
+    for directory_index in directory_data[start_index].child_indices:
+        new_indices_map = get_directory_indices(directory_data, directories, directory_index)
+        if new_indices_map:
+            for name, index in new_indices_map.items():
+                if name not in indices_map:
+                    indices_map[name] = index
+
+    if len(indices_map) > 0:
+        return indices_map
+    else:
+        return None
+
+
 def compute_needed_indices(
     directory_data: dict[int, BlendShapeTargetDirectory],
     directories_to_keep: Collection[str],

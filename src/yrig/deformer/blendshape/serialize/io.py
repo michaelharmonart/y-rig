@@ -27,7 +27,7 @@ def import_blendshape(
         targets: Specify target names to import.
     """
     data = load_json(filepath, BlendShapeData)
-    apply_blendshape_data(blendshape, data, directories, targets)
+    apply_blendshape_data(blendshape, data, directories, targets, parent_directory)
 
 
 def export_blendshape(
@@ -45,6 +45,8 @@ def export_blendshape(
         blendshape: BlendShape node to export.
         directories: Specify target directories to import.
         targets: Specify target names or indices to export.
+        parent_directory: Parent directory for the specified directories and targets,
+            or the directory to parent the entire imported structure on if neither are specified.
         force: Whether to overwrite an existing file without confirmation.
 
     Returns:

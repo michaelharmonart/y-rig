@@ -150,7 +150,7 @@ class BlendShapeTargetDirectoryAttribute(Attribute):
 
         self.child_indices = Int32ArrayAttribute(f"{attr_path}.childIndices")
         self.parent_index = IntegerAttribute(f"{attr_path}.parentIndex")
-        self.dirctory_name = StringAttribute(f"{attr_path}.directoryName")
+        self.directory_name = StringAttribute(f"{attr_path}.directoryName")
         self.directory_visibility = BooleanAttribute(f"{attr_path}.directoryVisibility")
         self.directory_parent_visibility = BooleanAttribute(
             f"{attr_path}.directoryParentVisibility"
