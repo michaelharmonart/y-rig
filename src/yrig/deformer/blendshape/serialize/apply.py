@@ -199,6 +199,74 @@ def get_parent_directory_index_from_name(
     return None
 
 
+def _resolve_parent_directory_index(blendshape: BlendShape, parent_directory: str | None) -> int:
+    if not parent_directory:
+        return 0
+    index = get_parent_directory_index_from_name(blendshape, parent_directory)
+    if index is None:
+        raise RuntimeError(
+            f"The specified parent directory {parent_directory} couldn't be found on {blendshape}"
+        )
+    return index
+
+
+def _apply_explicit_targets(
+    blendshape: BlendShape,
+    data: BlendShapeData,
+    target_names: Collection[str],
+    target_index_map: dict[str, int],
+    parent_directory_index: int,
+) -> set[str]:
+    """Reparent explicitly-named targets directly under parent_directory_index. Returns names applied."""
+    applied: set[str] = set()
+    for target_name in target_names:
+        if target_name not in target_index_map:
+            raise RuntimeError(
+                f"The target {target_name} couldn't be found in the data to be applied."
+            )
+        target_group_index = target_index_map[target_name]
+        for input_target_index, input_target in data.targets.items():
+            if target_group_index in input_target.groups:
+                target_group_data = input_target.groups[target_group_index]
+                add_target_group(
+                    blendshape,
+                    data=target_group_data,
+                    input_target_index=input_target_index,
+                    parent_directory_index=parent_directory_index,
+                )
+                applied.add(target_name)
+    return applied
+
+
+def _apply_directories(
+    blendshape: BlendShape,
+    data: BlendShapeData,
+    directories: Collection[str],
+    parent_directory_index: int,
+    target_groups_to_skip: set[str],
+) -> None:
+    directory_indices_map = get_directory_indices(data.directory, directories)
+    directory_indices_set = set(directory_indices_map.values())
+    existing_child_directories_map = get_existing_child_directories(blendshape, 0)
+    for directory_index in directory_indices_map.values():
+        directory_name = data.directory[directory_index].name
+        maya_directory_index = existing_child_directories_map.get(directory_name)
+        if maya_directory_index is None:
+            maya_directory_index = add_target_directory(
+                blendshape,
+                data.directory[directory_index],
+                parent_directory_index=parent_directory_index,
+            )
+        apply_directory_children(
+            blendshape,
+            data,
+            target_directory_index=directory_index,
+            parent_directory_index=maya_directory_index,
+            target_groups_to_skip=target_groups_to_skip,
+            target_directories_indices_to_skip=directory_indices_set,
+        )
+
+
 def apply_blendshape_data(
     blendshape: str | BlendShape,
     data: BlendShapeData,
@@ -248,55 +316,21 @@ def apply_blendshape_data(
     parent_directory_index = 0
     already_added_targets: set[str] = set()
     if parent_directory:
-        parent_directory_index = get_parent_directory_index_from_name(
-            blendshape_node, parent_directory
-        )
-        if parent_directory_index is None:
-            raise RuntimeError(
-                f"The specified parent directory {parent_directory} couldn't be found on {blendshape_node}"
-            )
-
+        parent_directory_index = _resolve_parent_directory_index(blendshape_node, parent_directory)
         # Apply reparented targets first as they're easy.
         if targets is not None:
-            data_target_to_index_map = get_target_group_indices_map(data)
-            for target_name in targets:
-                if target_name not in data_target_to_index_map:
-                    raise RuntimeError(
-                        f"The target {target_name} couldn't be found in the data to be applied."
-                    )
-                target_group_index = data_target_to_index_map[target_name]
-                for input_target_index, input_target in data.targets.items():
-                    if target_group_index in input_target.groups:
-                        target_group_data = input_target.groups[target_group_index]
-                        add_target_group(
-                            blendshape_node,
-                            data=target_group_data,
-                            input_target_index=input_target_index,
-                            parent_directory_index=parent_directory_index,
-                        )
-                        already_added_targets.add(target_name)
+            already_added_targets = _apply_explicit_targets(
+                blendshape_node, data, targets, data_target_to_index_map, parent_directory_index
+            )
 
     if directories is not None:
-        directory_indices_map = get_directory_indices(directory_data, directories)
-        directory_indices_set = set(directory_indices_map.values())
-        existing_child_directories_map = get_existing_child_directories(blendshape_node, 0)
-        for directory_index in directory_indices_map.values():
-            directory_name = pruned_data.directory[directory_index].name
-            maya_directory_index = existing_child_directories_map.get(directory_name)
-            if maya_directory_index is None:
-                maya_directory_index = add_target_directory(
-                    blendshape_node,
-                    pruned_data.directory[directory_index],
-                    parent_directory_index=parent_directory_index,
-                )
-            apply_directory_children(
-                blendshape_node,
-                pruned_data,
-                target_directory_index=directory_index,
-                parent_directory_index=maya_directory_index,
-                target_groups_to_skip=already_added_targets,
-                target_directories_indices_to_skip=directory_indices_set,
-            )
+        _apply_directories(
+            blendshape_node,
+            pruned_data,
+            directories,
+            parent_directory_index=parent_directory_index,
+            target_groups_to_skip=already_added_targets,
+        )
     else:
         apply_directory_children(
             blendshape_node,
