@@ -1,3 +1,4 @@
+from collections import deque
 from collections.abc import Collection
 from dataclasses import replace
 
@@ -8,22 +9,33 @@ def get_directory_indices(
     directory_data: dict[int, BlendShapeTargetDirectory],
     directories: Collection[str],
     start_index: int = 0,
-) -> dict[str, int] | None:
-
-    if directory_data[start_index].name in directories:
-        return {directory_data[start_index].name: start_index}
+) -> dict[str, int]:
+    """
+    Breadth first search for the given directories.
+    """
+    target_directories = set(directories)
     indices_map: dict[str, int] = {}
-    for directory_index in directory_data[start_index].child_indices:
-        new_indices_map = get_directory_indices(directory_data, directories, directory_index)
-        if new_indices_map:
-            for name, index in new_indices_map.items():
-                if name not in indices_map:
-                    indices_map[name] = index
+    queue = deque([start_index])
+    while queue:
+        current_index = queue.popleft()
+        if current_index > 0:
+            continue
+        directory_index = -current_index
+        directory = directory_data[directory_index]
 
-    if len(indices_map) > 0:
-        return indices_map
-    else:
-        return None
+        if directory.name in target_directories and directory.name not in indices_map:
+            indices_map[directory.name] = directory_index
+            # Early exit if all target directories have been found
+            if len(indices_map) == len(target_directories):
+                return indices_map
+
+        queue.extend(child_index for child_index in directory.child_indices)
+
+    missing = target_directories - indices_map.keys()
+    if missing:
+        raise RuntimeError(f"Directories not found: {', '.join(sorted(missing))}")
+
+    return indices_map
 
 
 def compute_needed_indices(
