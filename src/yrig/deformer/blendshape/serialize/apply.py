@@ -90,24 +90,25 @@ def apply_directory_tree(
         if child_index < 0:
             directory_index = -child_index
             directory_name = blendshape.target_directory[directory_index].directory_name.get()
-            if directory_name == target_directory_to_apply.name:
-                existing_directory_map[directory_name] = directory_index
+            existing_directory_map[directory_name] = directory_index
 
     for child_index in target_directory_to_apply.child_indices:
         # Indices < 0 are directories
         if child_index < 0:
-            directory_index = -child_index
-            child_directory = data.directory[directory_index]
-            apply_directory_index = directory_index
-            if child_directory.name not in existing_directory_map:
-                apply_directory_index = add_target_directory(
-                    blendshape, child_directory, target_directory_index
+            source_directory_index = -child_index
+            child_directory = data.directory[source_directory_index]
+            maya_directory_index = existing_directory_map.get(child_directory.name)
+            if maya_directory_index is None:
+                maya_directory_index = add_target_directory(
+                    blendshape,
+                    child_directory,
+                    parent_directory_index=parent_directory_index,
                 )
             apply_directory_tree(
                 blendshape,
                 data,
-                target_directory_index=directory_index,
-                parent_directory_index=apply_directory_index,
+                target_directory_index=source_directory_index,
+                parent_directory_index=maya_directory_index,
                 overwrite_existing_target_groups=overwrite_existing_target_groups,
             )
         # Indices >= 0 are target groups
@@ -124,7 +125,7 @@ def apply_directory_tree(
                         blendshape,
                         data=target_group_data,
                         input_target_index=input_target_index,
-                        parent_directory_index=target_directory_index,
+                        parent_directory_index=parent_directory_index,
                     )
 
 
