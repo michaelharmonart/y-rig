@@ -123,7 +123,7 @@ def get_blendshape_directory_dict(
     for index in indices:
         target_directory_attr = blendshape.target_directory[index]
         directory = BlendShapeTargetDirectory(
-            name=target_directory_attr.dirctory_name.get(),
+            name=target_directory_attr.directory_name.get(),
             parent_index=target_directory_attr.parent_index.get(),
             child_indices=target_directory_attr.child_indices.get(),
         )

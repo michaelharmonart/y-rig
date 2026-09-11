@@ -27,7 +27,7 @@ def import_blendshape(
         targets: Specify target names to import.
     """
     data = load_json(filepath, BlendShapeData)
-    apply_blendshape_data(blendshape, data, directories, targets)
+    apply_blendshape_data(blendshape, data, directories, targets, parent_directory)
 
 
 def export_blendshape(
