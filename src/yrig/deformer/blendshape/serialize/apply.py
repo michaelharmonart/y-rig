@@ -244,4 +244,5 @@ def apply_blendshape_data(
         pruned_data,
         target_directory_index=0,
         parent_directory_index=parent_directory_index,
+        target_groups_to_skip=already_added_targets,
     )
