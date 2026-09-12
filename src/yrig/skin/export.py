@@ -103,33 +103,10 @@ def export_skin_weights_for_shape(
     return exported_path
 
 
-def export_skin_weights_for_selected(
-    directory: Path | None = None,
-    use_ng: bool = True,
-    force: bool = False,
-) -> list[Path]:
-    """Export skin weights for the currently selected skinned shapes."""
-    shapes = _get_selected_skin_shapes()
-    if not shapes:
-        raise RuntimeError("No selected skinned geometry found for export.")
-
-    export_directory = _resolve_export_directory(directory)
-    export_directory.mkdir(parents=True, exist_ok=True)
-
-    exported_files: list[Path] = []
-    for shape in shapes:
-        exported_path = _export_weights_for_shape(
-            shape=shape, directory=export_directory, use_ng=use_ng, force=force
-        )
-        if exported_path is not None:
-            exported_files.append(exported_path)
-
-    return exported_files
-
-
 def batch_export_skin_weights(
     directory: Path | None = None,
-    selected_only: bool = False,
+    *,
+    selected_only: bool = True,
     use_ng: bool = True,
     force: bool = False,
 ) -> list[Path]:

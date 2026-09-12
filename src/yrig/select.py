@@ -14,3 +14,7 @@ def maintain_selection(maintain_empty: bool = False) -> Generator[None, None, No
             cmds.select(clear=True)
         if selection:
             cmds.select(*selection, replace=True)
+
+
+def get_selection() -> list[str]:
+    return cmds.ls(selection=True)

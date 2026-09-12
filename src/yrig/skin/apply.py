@@ -108,13 +108,63 @@ def skin_and_apply_ng_weights(filepath: Path, mesh: str) -> str:
     return skin_cluster
 
 
+def apply_weights_from_directories(
+    directories: Sequence[Path],
+    geometry: Sequence[str],
+    *,
+    map_geo_to_file: Callable[[str], str] | None = None,
+) -> dict[str, Path]:
+    """
+    Apply saved weights from one or more directories.
+    For each geometry, searches the directories for a matching ``.json`` or ``.yskin`` weight file.
+
+    Args:
+        directories: Directories to search for weight files, in search order.
+        geometry: Geometry to skin and apply weights to.
+        skip_skinned_geometry: Whether to skip geometry that already has a skin cluster.
+        map_geo_to_file: Optional function that maps a geometry name to the corresponding weight file name.
+
+    Returns:
+        Dictionary mapping geometry that had skin weights applied -> the skin weight file applied.
+    """
+    geo_applied_weight_files: dict[str, Path] = {}
+    with progress_step("Apply Skin Weights", total=len(geometry)) as progress:
+        for geo in geometry:
+            with progress_step(geo):
+                if not get_skin_clusters(geo):
+                    log.warning(
+                        f"Specified geometry {geo} didn't have a skinCluster and couldn't have weights applied."
+                    )
+                applied: bool = False
+                for directory in directories:
+                    geo_mapped_file = map_geo_to_file(geo) if map_geo_to_file is not None else geo
+                    ng_skin_filepath: Path = directory / f"{geo_mapped_file}.json"
+                    yskin_filepath: Path = directory / f"{geo_mapped_file}.yskin"
+                    if ng_skin_filepath.exists():
+                        apply_ng_weights(ng_skin_filepath, geo)
+                        geo_applied_weight_files[geo] = ng_skin_filepath
+                        applied = True
+                        break
+                    elif yskin_filepath.exists():
+                        apply_weights(yskin_filepath, geo)
+                        geo_applied_weight_files[geo] = yskin_filepath
+                        applied = True
+                        break
+                if not applied:
+                    log.warning(
+                        f"Couldn't find a skin file named '{geo_mapped_file}' for {geometry} in any of the checked directories: {directories}"
+                    )
+    return geo_applied_weight_files
+
+
 def skin_and_apply_weights_from_directories(
     directories: Sequence[Path],
     geometry: Sequence[str],
+    *,
     skip_skinned_geometry: bool = True,
     fallback_skinning: Callable[[str], Any] | None = None,
     map_geo_to_file: Callable[[str], str] | None = None,
-) -> None:
+) -> dict[str, Path | None]:
     """
     Skin geometry and apply saved weights from one or more directories.
     For each geometry, searches the directories for a matching ``.json`` or ``.yskin`` weight file.
@@ -126,7 +176,12 @@ def skin_and_apply_weights_from_directories(
         skip_skinned_geometry: Whether to skip geometry that already has a skin cluster.
         fallback_skinning: Optional function called for geometry with no saved weight file.
         map_geo_to_file: Optional function that maps a geometry name to the corresponding weight file name.
+
+    Returns:
+        Returns:
+            Dictionary mapping geometry that was skinned -> the skin weight file applied or None if default skinning.
     """
+    geo_applied_weight_files: dict[str, Path | None] = {}
     with progress_step("Skin Models", total=len(geometry)) as progress:
         for geo in geometry:
             with progress_step(geo):
@@ -139,11 +194,20 @@ def skin_and_apply_weights_from_directories(
                     yskin_filepath: Path = directory / f"{geo_mapped_file}.yskin"
                     if ng_skin_filepath.exists():
                         skin_and_apply_ng_weights(ng_skin_filepath, geo)
+                        geo_applied_weight_files[geo] = ng_skin_filepath
                         skinned = True
                         break
                     elif yskin_filepath.exists():
                         skin_and_apply_weights(yskin_filepath, geo)
+                        geo_applied_weight_files[geo] = yskin_filepath
                         skinned = True
                         break
-                if not skinned and fallback_skinning is not None:
-                    fallback_skinning(geo)
+                if not skinned:
+                    if fallback_skinning is not None:
+                        fallback_skinning(geo)
+                        geo_applied_weight_files[geo] = None
+                    else:
+                        log.warning(
+                            f"Couldn't find a skin file named '{geo_mapped_file}' for {geometry} in any of the checked directories: {directories}"
+                        )
+    return geo_applied_weight_files
