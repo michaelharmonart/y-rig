@@ -29,6 +29,8 @@ from .directory import (
     resolve_needed_group_indices,
 )
 
+ZERO_TOLERANCE = 1e-7  # About the precision needed for 32 bit floats
+
 
 def _filtered_components_and_points(
     component_ids: list[int], points_array: MPointArray
@@ -37,7 +39,7 @@ def _filtered_components_and_points(
     filtered_components: list[int] = []
     filtered_point_tuples: list[tuple[float, float, float]] = []
     for component_index, point in zip(component_ids, points_array, strict=True):  # type: ignore
-        if not point.isEquivalent(MPoint.kOrigin):
+        if not point.isEquivalent(MPoint.kOrigin, ZERO_TOLERANCE):
             filtered_components.append(component_index)
             filtered_point_tuples.append((point.x, point.y, point.z))
     return filtered_components, filtered_point_tuples
