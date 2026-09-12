@@ -19,12 +19,20 @@
     "nodes": {
         "/": {
             "code": [
+                "# Reload yrig automatically on build or workflow tool run for convenience.",
+                "import sys",
+                "modules = [name for name in sys.modules.keys() if name.startswith(\"yrig\")]",
+                "for name in modules:",
+                "    del sys.modules[name]",
                 "import yrig",
+                "",
                 "from maya import cmds",
                 "",
                 "from pathlib import Path",
                 "import logging",
-                "self.log = logging.getLogger(\"yrig.nxt.build\")"
+                "self.log = logging.getLogger(\"yrig.nxt.build\")",
+                "",
+                ""
             ]
         },
         "/component": {
