@@ -104,6 +104,75 @@
                 "        group_name = f\"finger_{side}{num}_root\"",
                 "        cmds.parent(group_name, control_name)"
             ]
+        },
+        "/tools_window/biped/body": {
+            "instance": "/panel",
+            "child_order": [
+                "psd"
+            ],
+            "attrs": {
+                "text": {
+                    "value": "Body"
+                }
+            }
+        },
+        "/tools_window/biped/body/psd": {
+            "instance": "/panel",
+            "child_order": [
+                "hand_shapes_io"
+            ],
+            "attrs": {
+                "text": {
+                    "value": "PSD"
+                }
+            }
+        },
+        "/tools_window/biped/body/psd/hand_shapes_io": {
+            "instance": "/io_pair",
+            "child_order": [
+                "import",
+                "export"
+            ],
+            "attrs": {
+                "blendshape": {
+                    "type": "raw",
+                    "value": "body_psd"
+                },
+                "relative_filepath": {
+                    "type": "raw",
+                    "value": "data/body/psd/hands.yshape"
+                },
+                "text": {
+                    "value": "Hand Shapes"
+                }
+            }
+        },
+        "/tools_window/biped/body/psd/hand_shapes_io/export": {
+            "attrs": {
+                "text": {
+                    "value": "Export Hand Shapes"
+                }
+            },
+            "code": [
+                "export_root_path = \"${export_root_path}\"",
+                "if not export_root_path or not Path(export_root_path).is_dir():",
+                "    raise ValueError(f\"Invalid directory: {export_root_path}\")",
+                "export_path = Path(\"${export_path}\")",
+                "",
+                "yrig.deformer.blendshape.export_blendshape(export_path, \"${blendshape}\", directories={\"hands\"})"
+            ]
+        },
+        "/tools_window/biped/body/psd/hand_shapes_io/import": {
+            "attrs": {
+                "text": {
+                    "value": "Import Hand Shapes"
+                }
+            },
+            "code": [
+                "import_path = Path(\"${import_filepath}\")",
+                "",
+                "yrig.deformer.blendshape.import_blendshape(import_path, \"${blendshape}\")"
+            ]
         }
     }
 }
