@@ -103,7 +103,7 @@ def skin_and_apply_ng_weights(filepath: Path, mesh: str) -> str:
     log.info(f"Skinned {mesh} to {len(valid_influences)} joint(s)")
 
     apply_ng_skin_weights(filepath, mesh)
-    log.info(f"Loaded ng skin file for {mesh}")
+    log.info(f"Loaded ng skin file for {mesh} from {filepath}")
 
     return skin_cluster
 
