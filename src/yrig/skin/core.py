@@ -23,6 +23,8 @@ from yrig.maya_api.utils import get_dag_path, get_depend_node
 from yrig.name import natural_sort_key
 from yrig.shape import get_components_of_shape, get_shape
 
+ZERO_TOLERANCE = 1e-7
+
 
 def get_skin_clusters(geometry: str) -> list[str] | None:
     """
@@ -235,7 +237,11 @@ def get_influence_name_to_index_map(skin_cluster: str) -> dict[str, int]:
     return influence_map
 
 
-def get_skin_weights(geometry: str, skin_cluster: str | None = None) -> dict[int, dict[str, float]]:
+def get_skin_weights(
+    geometry: str,
+    skin_cluster: str | None = None,
+    prune_zero_threshold: float | None = ZERO_TOLERANCE,
+) -> dict[int, dict[str, float]]:
     """
     Retrieves skinCluster weights for all vertices of the given mesh shape.
 
@@ -272,8 +278,9 @@ def get_skin_weights(geometry: str, skin_cluster: str | None = None) -> dict[int
         for influence_index in influence_indices:
             weight_element_plug: MPlug = weight_plug.elementByLogicalIndex(influence_index)
             value: float = weight_element_plug.asDouble()
-            influence_name = influence_map[influence_index]
-            vert_weights[influence_name] = value
+            if prune_zero_threshold is None or value > prune_zero_threshold:
+                influence_name = influence_map[influence_index]
+                vert_weights[influence_name] = value
         weights_dict[i] = vert_weights
 
     return weights_dict
