@@ -217,6 +217,21 @@ def cleanup_ng_data_nodes() -> None:
 def get_ng_layer_weights(
     layer: ng.Layer, mesh: str, skin_cluster: str | None = None
 ) -> dict[int, dict[str, float]]:
+    """
+    Get all vertex weights from an ngSkinTools layer.
+
+    .. warning::
+        This function is BUNS SLOW since it has to call an ngSkinTools command for every used influence.
+
+    Args:
+        layer: The ngSkinTools layer to query.
+        mesh: The mesh or transform associated with the layer.
+        skin_cluster: Explicit skinCluster node. If ``None``, the skinCluster on
+            ``mesh`` is resolved automatically.
+
+    Returns:
+        A mapping of vertex indices to influence names and their weights.
+    """
     resolved_skin_cluster = skin_cluster if skin_cluster is not None else get_skin_cluster(mesh)
     if resolved_skin_cluster is None:
         raise RuntimeError(
@@ -243,6 +258,19 @@ def set_ng_layer_weights(
     weights: dict[int, dict[str, float]],
     skin_cluster: str | None = None,
 ) -> None:
+    """
+    Set vertex weights on an ngSkinTools layer.
+
+    .. warning::
+        This function is BUNS SLOW since it has to call an ngSkinTools command for every influence present in ``weights``.
+
+    Args:
+        layer: The ngSkinTools layer to modify.
+        mesh: The mesh or transform associated with the layer.
+        weights: A mapping of vertex indices to influence names and their weights.
+        skin_cluster: Explicit skinCluster node. If ``None``, the skinCluster on
+            ``mesh`` is resolved automatically.
+    """
     resolved_skin_cluster = skin_cluster if skin_cluster is not None else get_skin_cluster(mesh)
     if resolved_skin_cluster is None:
         raise RuntimeError(
