@@ -213,12 +213,23 @@ def get_weights_of_influence(skin_cluster: str, influence: str) -> dict[int, flo
     return index_weights
 
 
-def get_influence_map(skin_cluster: str) -> dict[int, str]:
+def get_influence_index_to_name_map(skin_cluster: str) -> dict[int, str]:
     skin_cluster_mob = get_depend_node(skin_cluster)
     mfn_skin_cluster: MFnSkinCluster = MFnSkinCluster(skin_cluster_mob)
     influence_paths = mfn_skin_cluster.influenceObjects()
     influence_map: dict[int, str] = {
         mfn_skin_cluster.indexForInfluenceObject(path): MFnDependencyNode(path.node()).name()
+        for path in influence_paths
+    }
+    return influence_map
+
+
+def get_influence_name_to_index_map(skin_cluster: str) -> dict[str, int]:
+    skin_cluster_mob = get_depend_node(skin_cluster)
+    mfn_skin_cluster: MFnSkinCluster = MFnSkinCluster(skin_cluster_mob)
+    influence_paths = mfn_skin_cluster.influenceObjects()
+    influence_map: dict[str, int] = {
+        MFnDependencyNode(path.node()).name(): mfn_skin_cluster.indexForInfluenceObject(path)
         for path in influence_paths
     }
     return influence_map
@@ -250,7 +261,7 @@ def get_skin_weights(geometry: str, skin_cluster: str | None = None) -> dict[int
     sel.add(f"{resolved_skin_cluster}.weightList")
     weight_list_plug: MPlug = sel.getPlug(0)
     point_indices: MIntArray = weight_list_plug.getExistingArrayAttributeIndices()
-    influence_map = get_influence_map(resolved_skin_cluster)
+    influence_map = get_influence_index_to_name_map(resolved_skin_cluster)
     weights_dict: dict[int, dict[str, float]] = {}
     for i in point_indices:
         weight_list_element_plug: MPlug = weight_list_plug.elementByLogicalIndex(i)
@@ -266,6 +277,23 @@ def get_skin_weights(geometry: str, skin_cluster: str | None = None) -> dict[int
         weights_dict[i] = vert_weights
 
     return weights_dict
+
+
+def organize_weights_by_influence(
+    weights: dict[int, dict[str, float]],
+) -> dict[str, dict[int, float]]:
+    """
+    Converts dictionary of vertex weights: {vtx_index: {influence_name: weight}}
+    to dictionary of influence weights: {influence: {vtx_index: weight}}
+    """
+    weights_by_influence: dict[str, dict[int, float]] = {}
+    for vertex, influence_weights in weights.items():
+        for influence, weight in influence_weights.items():
+            if influence in weights_by_influence:
+                weights_by_influence[influence][vertex] = weight
+            else:
+                weights_by_influence[influence] = {vertex: weight}
+    return weights_by_influence
 
 
 def get_skinned_shapes() -> dict[str, str]:

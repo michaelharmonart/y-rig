@@ -39,7 +39,13 @@ def get_dag_path(node: str) -> MDagPath:
                 f"{', '.join(found_nodes)}"
             ) from exc
         else:
-            raise RuntimeError(f"Couldn't resolve an MDagPath for {node}") from exc
+            raise RuntimeError(
+                f"Couldn't resolve an MDagPath for {node} as it wasn't present in the scene."
+            ) from exc
+    except TypeError as exc:
+        raise TypeError(
+            f"Couldn't resolve an MDagPath for {node} as it is an object of the wrong type."
+        ) from exc
     return dag_path
 
 

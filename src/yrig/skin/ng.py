@@ -5,9 +5,18 @@ from pathlib import Path
 from typing import TYPE_CHECKING, ParamSpec, TypeVar
 
 from maya import cmds
+from maya.api.OpenMaya import MFnComponent
 
 from yrig.io import confirm_overwrite
 from yrig.io.json import load_json
+from yrig.maya_api.utils import get_dag_path
+from yrig.shape import get_components_of_shape
+from yrig.skin.core import (
+    get_influence_index_to_name_map,
+    get_influence_name_to_index_map,
+    get_skin_cluster,
+    organize_weights_by_influence,
+)
 
 log = logging.getLogger(__name__)
 
@@ -67,25 +76,38 @@ def require_ng_skin(func: Callable[P, R]) -> Callable[P, R]:
 
 
 @require_ng_skin
-def init_layers(shape: str) -> ng.Layers:
-    """Initialize ngSkinTools2 layers on a mesh shape and add a default base layer.
-
-    Looks up the skinCluster associated with *shape*, initialises the
-    ngSkinTools2 layer stack on it, and creates an initial ``"Base Weights"``
-    layer that acts as the foundation for subsequent paint layers.
+def get_ng_layer(skin_cluster: str, layer_name: str | None) -> ng.Layer | None:
+    """
+    Gets an ngSkinTools2 layer with the given name on the specified shape.
 
     Args:
-        shape: The mesh shape node (not the transform) that has a
-            skinCluster attached.
+        skin_cluster(str): The name of the skinCluster node.
+        layer_name (str): The name of the layer to retrieve. If None, the active layer will be returned.
 
     Returns:
-        The ``ngSkinTools2.api.Layers`` object managing the layer stack
-        for the given shape's skinCluster.
+        ngSkinTools2.api.layers.Layer: The layer object or None if it couldn't be found.
     """
-    skin_cluster = ng.target_info.get_related_skin_cluster(shape)
-    layers = ng.layers.init_layers(skin_cluster)
-    layers.add("Base Weights")
-    return layers
+
+    layers: ng.Layers = ng.Layers(skin_cluster)
+
+    if layer_name is None:
+        return layers.current_layer()
+
+    # Check for existing layer
+    for layer in layers.list():
+        if layer.name == layer_name:
+            return layer
+
+    return None
+
+
+@require_ng_skin
+def get_ng_layer_used_influence_index_to_name_mapping(
+    layer: ng.Layer, skin_cluster: str
+) -> dict[int, str]:
+    used_influences: list[int] = layer.get_used_influences()
+    influence_map = get_influence_index_to_name_map(skin_cluster)
+    return {influence_id: influence_map[influence_id] for influence_id in used_influences}
 
 
 @require_ng_skin
@@ -141,9 +163,7 @@ def apply_ng_skin_weights(weights_file: Path, geometry: str) -> None:
 
 
 @require_ng_skin
-def write_ng_skin_weights(
-    filepath: Path, geometry: str, force: bool = False, auto_init_layers: bool = False
-) -> bool:
+def write_ng_skin_weights(filepath: Path, geometry: str, force: bool = False) -> bool:
     """
     Writes a ngSkinTools JSON file representing the weights of the given geometry.
 
@@ -151,13 +171,9 @@ def write_ng_skin_weights(
         filepath: The path and filename and extension to save under.
         geometry: The transform, shape, or skinCluster Node the weights are on.
         force: If True, will automatically overwrite any existing file at the filepath specified.
-
     """
     if not ng.get_layers_enabled(geometry):
-        if auto_init_layers:
-            init_layers(geometry)
-        else:
-            raise RuntimeError(f"{geometry} has not had ngSkinTools layers initialized.")
+        raise RuntimeError(f"{geometry} has not had ngSkinTools layers initialized.")
     if not confirm_overwrite(filepath, force):
         return False
     ng.export_json(target=geometry, file=str(filepath))
@@ -194,4 +210,52 @@ def cleanup_ng_data_nodes() -> None:
         cmds.delete(ng_data_nodes)  # type: ignore
         log.info(
             f"Removed {len(ng_data_nodes)} ngst2SkinLayerData node(s) from the scene: {ng_data_nodes}"
+        )
+
+
+@require_ng_skin
+def get_ng_layer_weights(
+    layer: ng.Layer, mesh: str, skin_cluster: str | None = None
+) -> dict[int, dict[str, float]]:
+    resolved_skin_cluster = skin_cluster if skin_cluster is not None else get_skin_cluster(mesh)
+    if resolved_skin_cluster is None:
+        raise RuntimeError(
+            f"Couldn't find a skinCluster on mesh: {mesh} which was determined by layer {layer}"
+        )
+    used_influences = get_ng_layer_used_influence_index_to_name_mapping(
+        layer, resolved_skin_cluster
+    )
+    weights: dict[int, dict[str, float]] = {}
+    for influence_id, influence_name in used_influences.items():
+        flat_influence_weights: list[float] = layer.get_weights(influence_id)
+        for vert_id, weight in enumerate(flat_influence_weights):
+            if vert_id not in weights:
+                weights[vert_id] = {}
+            weights[vert_id][influence_name] = weight
+
+    return weights
+
+
+@require_ng_skin
+def set_ng_layer_weights(
+    layer: ng.Layer,
+    mesh: str,
+    weights: dict[int, dict[str, float]],
+    skin_cluster: str | None = None,
+) -> None:
+    resolved_skin_cluster = skin_cluster if skin_cluster is not None else get_skin_cluster(mesh)
+    if resolved_skin_cluster is None:
+        raise RuntimeError(
+            f"Couldn't find a skinCluster on mesh: {mesh} which was determined by layer {layer}"
+        )
+    components = get_components_of_shape(get_dag_path(mesh))
+    mfn_component: MFnComponent = MFnComponent(components)
+    number_of_components: int = mfn_component.elementCount
+
+    weights_by_influence = organize_weights_by_influence(weights)
+    influence_map = get_influence_name_to_index_map(resolved_skin_cluster)
+    for influence_name, weights_dict in weights_by_influence.items():
+        layer.set_weights(
+            influence_map[influence_name],
+            [weights_dict.get(i, 0) for i in range(number_of_components)],
         )

@@ -9,7 +9,8 @@ from yrig.maya_api.attribute import (
     IntegerAttribute,
     MessageAttribute,
 )
-from yrig.skin.split.data import WeightSplitData
+
+from .data import WeightSplitData
 
 
 class WeightSplitTag:
@@ -117,3 +118,14 @@ def get_weight_split_tag(influence: str) -> WeightSplitTag | None:
         return None
     source = sources[0]
     return WeightSplitTag.from_node(source)
+
+
+def get_weight_split_data_from_influences(influences: Iterable[str]) -> list[WeightSplitData]:
+    weight_split_data_list = []
+    for influence in influences:
+        weight_split_tag = get_weight_split_tag(influence)
+        if weight_split_tag is None:
+            continue
+        weight_split_data = weight_split_tag.get_weight_split_data()
+        weight_split_data_list.append(weight_split_data)
+    return weight_split_data_list

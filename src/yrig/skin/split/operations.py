@@ -8,66 +8,28 @@ from yrig.skin.core import (
     get_skin_cluster_influences,
     get_skin_clusters,
     get_skin_weights,
+    organize_weights_by_influence,
     set_skin_weights,
 )
-from yrig.skin.split.data import WeightSplitData, get_mesh_spline_weights
-from yrig.skin.split.tag import get_weight_split_tag
+
+from .data import WeightSplitData, get_mesh_spline_weights
+from .tag import get_weight_split_data_from_influences
 
 log = logging.getLogger(__name__)
 
 
-def split_weights(
-    mesh: str,
+def compute_split_weights(
+    mesh_shape: str,
+    original_weights: dict[int, dict[str, float]],
     split_data_collection: Iterable[WeightSplitData],
-    skin_cluster: str | None = None,
-) -> None:
-    """
-    This function is designed to reassign weights from a set of original joints (e.g., proxy drivers)
-    across multiple split joints (e.g., spline-based deformation chains like ribbons or bendy limbs).
-    The redistribution is done by computing weights along a spline built from the split joints'
-    world positions and distributing the original joint's influence accordingly.
-
-    For each `WeightSplitData` entry a temporary NURBS curve is built from the
-    world-space positions of the split influences. Every vertex that is affected by the
-    source influence is projected onto that curve and assigned new weights via B-spline
-    basis evaluation. The source influence's weight is then zeroed out and its value is
-    redistributed across the split influences proportionally.
-
-    Args:
-        mesh: The transform node or mesh shape.
-        split_data_collection: One or more `WeightSplitData` descriptors, each
-            specifying a source influence and the ordered list of split
-            influences that should receive its weights.  The ``degree`` and ``periodic``
-            fields on each descriptor control the spline used for interpolation.
-        skin_cluster: Explicit skinCluster node name to operate on.  When ``None``
-            the first skinCluster found on *mesh* is used.
-
-    Raises:
-        RuntimeError: If no skinCluster can be resolved for *mesh*.
-    """
-    # get the shape node
-    mesh_shape = get_shape(mesh)
-    if mesh_shape is None:
-        raise RuntimeError(f"{mesh} has no attached shape node")
-    # get the skinCluster and weights
-    split_skin_cluster = skin_cluster if skin_cluster is not None else get_skin_cluster(mesh)
-    original_weights: dict[int, dict[str, float]] = get_skin_weights(
-        geometry=mesh_shape, skin_cluster=split_skin_cluster
-    )
-
+) -> dict[int, dict[str, float]]:
     # Copy the original weights for modification.
     new_weights: dict[int, dict[str, float]] = {
         vtx: weights.copy() for vtx, weights in original_weights.items()
     }
 
     # Organize weights by influence rather than vertex
-    weights_by_influence: dict[str, dict[int, float]] = {}
-    for vertex, influence_weights in original_weights.items():
-        for influence, weight in influence_weights.items():
-            if influence in weights_by_influence:
-                weights_by_influence[influence][vertex] = weight
-            else:
-                weights_by_influence[influence] = {vertex: weight}
+    weights_by_influence = organize_weights_by_influence(original_weights)
 
     # Process each original joint → split joints mapping
     for split_data in split_data_collection:
@@ -108,9 +70,69 @@ def split_weights(
                     new_weights[vertex][influence] = 0.0
                 new_weights[vertex][influence] += spline_weight * original_weight
 
-    set_skin_weights(
-        shape=mesh_shape, weights=new_weights, skin_cluster=split_skin_cluster, normalize=True
+    return new_weights
+
+
+def split_weights(
+    mesh: str,
+    *,
+    split_data_collection: Iterable[WeightSplitData] | None = None,
+    skin_cluster: str | None = None,
+) -> bool:
+    """
+    This function is designed to reassign weights from a set of original joints (e.g., proxy drivers)
+    across multiple split joints (e.g., spline-based deformation chains like ribbons or bendy limbs).
+    The redistribution is done by computing weights along a spline built from the split joints'
+    world positions and distributing the original joint's influence accordingly.
+
+    For each `WeightSplitData` entry a temporary NURBS curve is built from the
+    world-space positions of the split influences. Every vertex that is affected by the
+    source influence is projected onto that curve and assigned new weights via B-spline
+    basis evaluation. The source influence's weight is then zeroed out and its value is
+    redistributed across the split influences proportionally.
+
+    Args:
+        mesh: The transform node or mesh shape.
+        split_data_collection: One or more `WeightSplitData` descriptors, each
+            specifying a source influence and the ordered list of split
+            influences that should receive its weights.  The ``degree`` and ``periodic``
+            fields on each descriptor control the spline used for interpolation.
+            If None it will be queried from the scene tags.
+        skin_cluster: Explicit skinCluster node name to operate on.  When ``None``
+            the first skinCluster found on *mesh* is used.
+
+    Returns:
+        True if weights were split, else False.
+    """
+    # get the shape node
+    mesh_shape = get_shape(mesh)
+    if mesh_shape is None:
+        raise RuntimeError(f"{mesh} has no attached shape node")
+    # get the skinCluster and weights
+    resolved_skin_cluster = skin_cluster if skin_cluster is not None else get_skin_cluster(mesh)
+    if resolved_skin_cluster is None:
+        raise RuntimeError(f"Coudn't find a skinCluster on {mesh}.")
+    if split_data_collection is not None:
+        resolved_split_data_collection = list(split_data_collection)
+    else:
+        influences: list[str] = get_skin_cluster_influences(resolved_skin_cluster)
+        weight_split_data_list = get_weight_split_data_from_influences(influences)
+        resolved_split_data_collection = weight_split_data_list
+
+    if not resolved_skin_cluster:
+        return False
+
+    original_weights: dict[int, dict[str, float]] = get_skin_weights(
+        geometry=mesh_shape, skin_cluster=resolved_skin_cluster
     )
+    new_weights = compute_split_weights(
+        mesh_shape, original_weights, resolved_split_data_collection
+    )
+    set_skin_weights(
+        shape=mesh_shape, weights=new_weights, skin_cluster=resolved_skin_cluster, normalize=True
+    )
+    log.info(f"Finished splitting {skin_cluster} weights on {mesh}.")
+    return True
 
 
 def auto_split_weights(meshes: Iterable[str] | str) -> None:
@@ -132,19 +154,8 @@ def auto_split_weights(meshes: Iterable[str] | str) -> None:
             if skin_clusters is None:
                 continue
             for skin_cluster in skin_clusters:
-                weight_split_data_list = []
-                influences: list[str] = get_skin_cluster_influences(skin_cluster=skin_cluster)
-                for influence in influences:
-                    weight_split_tag = get_weight_split_tag(influence)
-                    if weight_split_tag is None:
-                        continue
-                    weight_split_data = weight_split_tag.get_weight_split_data()
-                    weight_split_data_list.append(weight_split_data)
-                if weight_split_data_list:
-                    split_weights(
-                        mesh,
-                        split_data_collection=weight_split_data_list,
-                        skin_cluster=skin_cluster,
-                    )
-                    log.info(f"Finished splitting {skin_cluster} weights on {mesh}.")
+                split_weights(
+                    mesh,
+                    skin_cluster=skin_cluster,
+                )
             progress_update(i / total)
