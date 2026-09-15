@@ -201,11 +201,64 @@
         },
         "/tools_window/biped": {
             "instance": "/tab",
+            "child_order": [
+                "visibility_sets_io"
+            ],
             "attrs": {
                 "text": {
                     "value": "Biped"
                 }
             }
+        },
+        "/tools_window/biped/visibility_sets_io": {
+            "instance": "/io_pair",
+            "child_order": [
+                "import",
+                "export"
+            ],
+            "attrs": {
+                "relative_filepath": {
+                    "value": "data/visibility.ysets"
+                },
+                "text": {
+                    "value": "Visibility Sets"
+                },
+                "visibility_set_name": {
+                    "type": "raw",
+                    "value": "rig_visibility_sets"
+                }
+            }
+        },
+        "/tools_window/biped/visibility_sets_io/export": {
+            "attrs": {
+                "text": {
+                    "value": "Export Visibility Sets"
+                }
+            },
+            "code": [
+                "export_root_path = \"${export_root_path}\"",
+                "if not export_root_path or not Path(export_root_path).is_dir():",
+                "    raise ValueError(f\"Invalid directory: {export_root_path}\")",
+                "export_path = Path(\"${export_path}\")",
+                "",
+                "yrig.sets.export_sets(export_path, \"${visibility_set_name}\")"
+            ]
+        },
+        "/tools_window/biped/visibility_sets_io/import": {
+            "attrs": {
+                "rig_set": {
+                    "type": "raw",
+                    "value": "rig_sets_grp"
+                },
+                "text": {
+                    "value": "Import Visibility Sets"
+                }
+            },
+            "code": [
+                "import_path = Path(\"${import_filepath}\")",
+                "",
+                "yrig.sets.import_sets(import_path, parent=\"${rig_set}\")"
+            ]
         }
     }
 }
