@@ -140,7 +140,27 @@
             }
         },
         "/apply": {
-            "execute_in": "/right"
+            "execute_in": "/right",
+            "child_order": [
+                "visibility_sets"
+            ]
+        },
+        "/apply/visibility_sets": {
+            "attrs": {
+                "rig_set": {
+                    "type": "raw",
+                    "value": "${/setup/root.rig_set}"
+                },
+                "visibility_sets_filepath": {
+                    "type": "raw",
+                    "value": "${file::${rig_path}/data/visibility.ysets}"
+                }
+            },
+            "code": [
+                "if \"${visibility_sets_filepath}\":",
+                "    filepath = Path(\"${visibility_sets_filepath}\")",
+                "    yrig.sets.import_sets(filepath, parent=\"${rig_set}\")"
+            ]
         },
         "/cleanup": {
             "execute_in": "/apply"
