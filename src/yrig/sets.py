@@ -92,7 +92,7 @@ def _import_set_data(
     set_file_data: SetFileData, set_name: str, set_data: SetData, parent: str | None = None
 ) -> None:
     if not cmds.objExists(set_name):
-        cmds.sets(name=set_name)
+        cmds.createNode("objectSet", name=set_name)
 
     if parent is not None:
         if not cmds.objExists(parent):
