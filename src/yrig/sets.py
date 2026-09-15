@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
@@ -8,6 +9,8 @@ from maya import cmds
 
 from yrig.io import confirm_overwrite
 from yrig.io.json import export_json, load_json
+
+log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -85,31 +88,37 @@ def export_sets(filepath: Path, sets: Iterable[str] | str, *, force: bool = Fals
     set_file_data = _get_set_file_data(sets)
 
     export_json(filepath, set_file_data)
+    log.info(f"Exported .ysets file to {filepath}")
     return True
 
 
 def _import_set_data(
     set_file_data: SetFileData, set_name: str, set_data: SetData, parent: str | None = None
-) -> None:
+) -> list[str]:
+    created_sets: list[str] = []
     if not cmds.objExists(set_name):
         cmds.createNode("objectSet", name=set_name)
+        created_sets.append(set_name)
 
     if parent is not None:
         if not cmds.objExists(parent):
-            cmds.sets(name=parent)
+            cmds.createNode("objectSet", name=parent)
+            created_sets.append(parent)
         cmds.sets(set_name, addElement=parent)
 
     if set_data.members:
         cmds.sets(*set_data.members, addElement=set_name)
     for child_set_name in set_data.sets:
-        _import_set_data(
+        created_child_sets = _import_set_data(
             set_file_data, child_set_name, set_file_data.sets[child_set_name], parent=set_name
         )
+        created_sets.extend(created_child_sets)
+    return created_sets
 
 
 def import_sets(
     filepath: Path, sets: Iterable[str] | str | None = None, *, parent: str | None = None
-) -> None:
+) -> list[str]:
     set_file_data = load_json(filepath, SetFileData)
     if sets is None:
         sets_to_import = None
@@ -117,12 +126,17 @@ def import_sets(
         sets_to_import = {sets} if isinstance(sets, str) else set(sets)
 
     if sets_to_import is None:
-        for set_name, set_data in set_file_data.sets.items():
-            _import_set_data(set_file_data, set_name, set_data, parent)
+        set_name_data_pairs = set_file_data.sets.items()
     else:
-        for set_name in sets_to_import:
-            set_data = set_file_data.sets[set_name]
-            _import_set_data(set_file_data, set_name, set_data, parent)
+        set_name_data_pairs = [
+            (set_name, set_file_data.sets[set_name]) for set_name in sets_to_import
+        ]
+
+    created_sets: list[str] = []
+    for set_name, set_data in set_name_data_pairs:
+        created_sets.extend(_import_set_data(set_file_data, set_name, set_data, parent))
+    log.info(f"Imported .ysets file from {filepath}")
+    return created_sets
 
 
 def add_to_set(node: str | Iterable[str], set_name: str, parent: str | None = None) -> None:
