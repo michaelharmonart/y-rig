@@ -1,4 +1,5 @@
-from . import mgear_api as mgear_api
-from . import nxt_api as nxt_api
-from .core import build_rig as build_rig
-from .scope import BuildScope as BuildScope
+from . import mgear_api, nxt_api
+from .core import build_rig, open_rig_in_editor
+from .scope import BuildScope
+
+__all__ = ["BuildScope", "build_rig", "mgear_api", "nxt_api", "open_rig_in_editor"]

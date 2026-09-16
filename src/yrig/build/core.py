@@ -1,5 +1,5 @@
 import logging
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from itertools import chain
 from pathlib import Path
 
@@ -23,6 +23,35 @@ def resolve_build_scope(value: str | BuildScope | None) -> BuildScope | None:
         raise
 
 
+def resolve_build_path(rig_path: Path) -> Path:
+    return rig_path / "data/build.nxt"
+
+
+def resolve_root_paths(
+    root_paths: Sequence[Path],
+) -> Iterable[Path]:
+    return chain(root_paths, (YRIG_NXT_DIR,))
+
+
+def open_rig_in_editor(root_paths: Sequence[Path], rig_path: Path | None) -> None:
+    """
+    Open the rig build file in the NXT editor.
+
+    Args:
+        root_paths: Paths to rig build root directories. Should be in order of
+            strongest -> weakest.
+        rig_path: Path to the rig's build directory relative to the root. If
+            ``None``, opens the NXT editor without a specific rig.
+    """
+    from maya import cmds
+
+    with nxt_file_roots(resolve_root_paths(root_paths)):
+        if rig_path is None:
+            cmds.nxt_ui()  # type: ignore
+        else:
+            cmds.nxt_ui(str(rig_path))  # type: ignore
+
+
 def build_rig(
     root_paths: Sequence[Path],
     rig_path: Path,
@@ -44,7 +73,7 @@ def build_rig(
         bool: True if the build was successful, else False
     """
     extended_root_paths = chain(root_paths, (YRIG_NXT_DIR,))
-    build_path = rig_path / "data/build.nxt"
+    build_path = resolve_build_path(rig_path)
     resolved_scope = resolve_build_scope(build_scope)
     build_step = ProgressStep("Rig Build", callback=progress_callback)
     with nxt_file_roots(extended_root_paths), bind_progress_step(build_step):
