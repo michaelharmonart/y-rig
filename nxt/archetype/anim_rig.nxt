@@ -126,7 +126,23 @@
         },
         "/apply/deformation/main": {
             "child_order": [
-                "skin"
+                "skin",
+                "psd"
+            ]
+        },
+        "/apply/deformation/main/psd": {
+            "attrs": {
+                "psd_group": {
+                    "type": "raw",
+                    "value": "psd"
+                },
+                "psd_group_parent": {
+                    "type": "raw",
+                    "value": "${/setup/root.rig_root}"
+                }
+            },
+            "code": [
+                "yrig.transform.create_transform(name=\"${psd_group}\", parent=\"${psd_group_parent}\")"
             ]
         },
         "/apply/deformation/main/skin": {
