@@ -48,10 +48,10 @@ def _filtered_components_and_points(
 def get_blendshape_target_item_data(
     target_item: BlendShapeInputTargetItemAttribute,
 ) -> BlendShapeTargetItemData:
-    components_plug = get_plug(str(target_item.input_components_target))
+    components_plug = get_plug(target_item.input_components_target)
     component_ids = get_component_indices(components_plug)
 
-    points_plug = get_plug(str(target_item.input_points_target))
+    points_plug = get_plug(target_item.input_points_target)
     points_mob: MObject = points_plug.asMObject()
     fn_points: MFnPointArrayData = MFnPointArrayData(points_mob)
     points_array: MPointArray = fn_points.array()

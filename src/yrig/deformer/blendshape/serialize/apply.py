@@ -9,6 +9,10 @@ from maya.api.OpenMaya import (
     MPointArray,
 )
 
+from yrig.maya_api.attribute import (
+    BlendShapeInputTargetGroupAttribute,
+    BlendShapeInputTargetItemAttribute,
+)
 from yrig.maya_api.node import BlendShape
 from yrig.maya_api.utils import get_plug, set_component_list_indices, set_point_array
 
@@ -126,19 +130,11 @@ def apply_directory_children(
 
 
 def apply_blendshape_target_item_data(
-    blendshape: BlendShape,
     data: BlendShapeTargetItemData,
-    target_index: int,
-    group_index: int,
-    item_index: int,
+    target_item: BlendShapeInputTargetItemAttribute,
 ) -> None:
-    item_attr = (
-        blendshape.input_target[target_index]
-        .input_target_group[group_index]
-        .input_target_item[item_index]
-    )
 
-    points_plug = get_plug(str(item_attr.input_points_target))
+    points_plug = get_plug(target_item.input_points_target)
     points_to_apply = (
         data.points if data.points else [(0, 0, 0)]
     )  # Maya crashes if there are NO points
@@ -148,7 +144,7 @@ def apply_blendshape_target_item_data(
         point_array[index] = MPoint(*point)
     set_point_array(points_plug, point_array)
 
-    component_plug = get_plug(str(item_attr.input_components_target))
+    component_plug = get_plug(target_item.input_components_target)
     components_to_apply = (
         data.components if data.components else [0]
     )  # Maya crashes if there are NO components
@@ -156,18 +152,12 @@ def apply_blendshape_target_item_data(
 
 
 def apply_blendshape_target_items_dict(
-    blendshape: BlendShape,
     data: dict[int, BlendShapeTargetItemData],
-    target_index: int,
-    group_index: int,
+    target_group: BlendShapeInputTargetGroupAttribute,
 ) -> None:
     for index, target_item in data.items():
         apply_blendshape_target_item_data(
-            blendshape,
-            data=target_item,
-            target_index=target_index,
-            group_index=group_index,
-            item_index=index,
+            data=target_item, target_item=target_group.input_target_item[index]
         )
 
 
@@ -185,9 +175,7 @@ def apply_blendshape_target_group_data(
         target_group_index
     ]
     target_group.post_deformers_mode.set(data.mode)
-    apply_blendshape_target_items_dict(
-        blendshape, data.items, target_index=input_target_index, group_index=target_group_index
-    )
+    apply_blendshape_target_items_dict(data.items, target_group)
     blendshape.target_directory[0].child_indices.set(original_root_child_indices)
 
 

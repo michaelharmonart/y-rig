@@ -13,6 +13,9 @@ from maya.api.OpenMaya import (
     MSelectionList,
 )
 
+from yrig.maya_api.attribute import Attribute
+from yrig.maya_api.node import Node
+
 log = logging.getLogger(__name__)
 
 _loaded_plugin_cache: set[str] = set()
@@ -26,13 +29,14 @@ def ensure_plugin_loaded(plugin: str) -> None:
         _loaded_plugin_cache.add(plugin)
 
 
-def get_dag_path(node: str) -> MDagPath:
+def get_dag_path(node: str | Node) -> MDagPath:
+    node_str = str(node)
     selection = MSelectionList()
     try:
         selection.add(node)
         dag_path: MDagPath = selection.getDagPath(0)
     except RuntimeError as exc:
-        found_nodes = cmds.ls(node)
+        found_nodes = cmds.ls(node_str)
         if found_nodes:
             raise RuntimeError(
                 f"Couldn't resolve an MDagPath for '{node}' as there were multiple nodes with that name: "
@@ -49,20 +53,22 @@ def get_dag_path(node: str) -> MDagPath:
     return dag_path
 
 
-def get_depend_node(node: str) -> MObject:
+def get_depend_node(node: str | Node) -> MObject:
+    node_str = str(node)
     selection = MSelectionList()
     try:
-        selection.add(node)
+        selection.add(node_str)
         depend_node: MObject = selection.getDependNode(0)
     except RuntimeError as exc:
         raise RuntimeError(f"Couldn't resolve an MObject for {node}") from exc
     return depend_node
 
 
-def get_plug(attr: str) -> MPlug:
+def get_plug(attr: str | Attribute) -> MPlug:
+    attr_str = str(attr)
     selection = MSelectionList()
     try:
-        selection.add(attr)
+        selection.add(attr_str)
         plug: MPlug = selection.getPlug(0)
     except RuntimeError as exc:
         raise RuntimeError(f"Couldn't resolve an MPlug for {attr}") from exc
