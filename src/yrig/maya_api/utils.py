@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import logging
+from typing import TYPE_CHECKING
 
 from maya import cmds
 from maya.api.OpenMaya import (
@@ -13,8 +16,9 @@ from maya.api.OpenMaya import (
     MSelectionList,
 )
 
-from yrig.maya_api.attribute import Attribute
-from yrig.maya_api.node import Node
+if TYPE_CHECKING:
+    from .attribute import Attribute
+    from .node import Node
 
 log = logging.getLogger(__name__)
 
