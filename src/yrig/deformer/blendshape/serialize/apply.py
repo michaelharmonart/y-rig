@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from collections import deque
-from collections.abc import Collection
+from collections.abc import Collection, Generator
+from contextlib import contextmanager
 from dataclasses import replace
 
 from maya.api.OpenMaya import (
@@ -30,6 +31,26 @@ from .directory import (
 )
 
 
+@contextmanager
+def preserve_all_target_directories(blendshape: BlendShape) -> Generator[None, None, None]:
+    """
+    When initializing a new inputTargetGroup plug Maya just decides a directory to add it to.
+    This screws up our manual handling of directories on import.
+
+    This might be overkill, but since I don't have the Maya source code on hand
+    this is the only way to guarantee that Maya won't screw up directory data.
+    """
+    directory_indices = blendshape.target_directory.get_indices()
+    snapshot = {
+        index: blendshape.target_directory[index].child_indices.get() for index in directory_indices
+    }
+    try:
+        yield
+    finally:
+        for index, child_indices in snapshot.items():
+            blendshape.target_directory[index].child_indices.set(child_indices)
+
+
 def add_target_group(
     blendshape: BlendShape,
     data: BlendShapeTargetGroupData,
@@ -38,10 +59,12 @@ def add_target_group(
 ) -> int:
     """Add target group to blendshape and apply data. Returns the index at which the target was added."""
     target_group_index = blendshape.weight.next_available_index()
-    apply_blendshape_target_group_data(blendshape, data, input_target_index, target_group_index)
-    child_indices = blendshape.target_directory[parent_directory_index].child_indices.get()
-    new_child_indices = child_indices + [target_group_index]
-    blendshape.target_directory[parent_directory_index].child_indices.set(new_child_indices)
+
+    parent_directory = blendshape.target_directory[parent_directory_index]
+    original_child_indices = parent_directory.child_indices.get()
+    with preserve_all_target_directories(blendshape):
+        apply_blendshape_target_group_data(blendshape, data, input_target_index, target_group_index)
+    parent_directory.child_indices.set(original_child_indices + [target_group_index])
     return target_group_index
 
 
@@ -50,8 +73,10 @@ def add_target_directory(
 ) -> int:
     """Add target directory to blendshape and apply data. Returns the index at which the target directory was added."""
     target_directory_index = blendshape.target_directory.next_available_index()
-    blendshape.target_directory[target_directory_index].directory_name.set(data.name)
-    blendshape.target_directory[target_directory_index].parent_index.set(parent_directory_index)
+    target_directory = blendshape.target_directory[target_directory_index]
+
+    target_directory.directory_name.set(data.name)
+    target_directory.parent_index.set(parent_directory_index)
     parent_directory_child_indices = blendshape.target_directory[
         parent_directory_index
     ].child_indices.get()
@@ -167,7 +192,6 @@ def apply_blendshape_target_group_data(
     input_target_index: int,
     target_group_index: int,
 ) -> None:
-    original_root_child_indices = blendshape.target_directory[0].child_indices.get()
     if blendshape.weight[target_group_index].get_alias() != data.name:
         blendshape.weight[target_group_index].set_alias(data.name)
     blendshape.weight[target_group_index].set(0)
@@ -176,7 +200,6 @@ def apply_blendshape_target_group_data(
     ]
     target_group.post_deformers_mode.set(data.mode)
     apply_blendshape_target_items_dict(data.items, target_group)
-    blendshape.target_directory[0].child_indices.set(original_root_child_indices)
 
 
 def get_parent_directory_index_from_name(
