@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Callable, Iterable
 from pathlib import Path
 
@@ -7,6 +8,8 @@ from yrig.deformer.blendshape import export_maya_shape_file, import_maya_shape_f
 from yrig.maya_api.attribute import IntegerAttribute
 from yrig.maya_api.node import PoseInterpolatorManager
 from yrig.transform import create_transform
+
+log = logging.getLogger(__name__)
 
 
 def resolve_pose_interpolator_shape(pose_interpolator: str) -> str:
@@ -142,7 +145,7 @@ def import_pose_file(
     current_pose_interps = set(cmds.ls(type="poseInterpolator") or [])
     created_pose_interps = current_pose_interps - existing_pose_interps
     group_pose_interpolators_by_directory(created_pose_interps, parent)
-
+    log.info(f"Imported {len(created_pose_interps)} pose interpolator(s) from {filepath}")
     return created_pose_interps
 
 
@@ -190,6 +193,7 @@ def export_pose_file(
         edit=True,
         exportPoses=str(filepath),
     )
+    log.info(f"Exported pose interpolator(s) to {filepath}")
 
     if not export_shapes:
         return

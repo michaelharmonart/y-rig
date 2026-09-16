@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Collection, Iterable
 from pathlib import Path
 
@@ -8,6 +9,8 @@ from yrig.maya_api.node import BlendShape
 from .apply import apply_blendshape_data
 from .data import BlendShapeData
 from .get import get_blendshape_data
+
+log = logging.getLogger(__name__)
 
 
 def import_blendshape(
@@ -28,6 +31,7 @@ def import_blendshape(
     """
     data = load_json(filepath, BlendShapeData)
     apply_blendshape_data(blendshape, data, directories, targets, parent_directory)
+    log.info(f"Imported shapes from {filepath}")
 
 
 def export_blendshape(
@@ -58,4 +62,5 @@ def export_blendshape(
         return False
     blendshape_data = get_blendshape_data(blendshape, directories, targets)
     export_json(filepath, blendshape_data)
+    log.info(f"Exported shapes to {filepath}")
     return True
