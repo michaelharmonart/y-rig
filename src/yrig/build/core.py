@@ -49,7 +49,7 @@ def open_rig_in_editor(root_paths: Sequence[Path], rig_path: Path | None) -> Non
         if rig_path is None:
             cmds.nxt_ui()  # type: ignore
         else:
-            cmds.nxt_ui(str(rig_path))  # type: ignore
+            cmds.nxt_ui(path=str(rig_path))  # type: ignore
 
 
 def build_rig(
