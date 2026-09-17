@@ -45,11 +45,13 @@ def open_rig_in_editor(root_paths: Sequence[Path], rig_path: Path | None) -> Non
     """
     from maya import cmds
 
-    with nxt_file_roots(resolve_root_paths(root_paths)):
+    resolved_root_paths = list(resolve_root_paths(root_paths))
+    with nxt_file_roots(resolved_root_paths):
         if rig_path is None:
             cmds.nxt_ui()  # type: ignore
         else:
-            cmds.nxt_ui(path=str(rig_path))  # type: ignore
+            build_path = resolve_build_path(rig_path)
+            cmds.nxt_ui(path=str(build_path))  # type: ignore
 
 
 def build_rig(
