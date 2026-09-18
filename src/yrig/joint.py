@@ -51,8 +51,10 @@ def create_joint(
     name: str,
     transform: str | Control | MMatrix | None = None,
     parent: str | None = None,
+    *,
     connect: bool = True,
     radius: float = 1,
+    add_to_set: bool = True,
 ) -> str:
     joint = cmds.createNode("joint", name=f"{name}{JOINT_SUFFIX}")
 
@@ -79,5 +81,6 @@ def create_joint(
 
     _register_joint(joint)
     # This is mGear specific and may need changed if you stop using mGear.
-    add_to_joint_set(joint)
+    if add_to_set:
+        add_to_joint_set(joint)
     return joint
