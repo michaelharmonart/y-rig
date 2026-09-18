@@ -192,3 +192,22 @@ def srgb_to_linear_color(srgb_color: tuple[float, float, float]) -> tuple[float,
         max(0.0, min(1.0, g)),
         max(0.0, min(1.0, b)),
     )
+
+
+def hex_to_byte_color(hex: str) -> tuple[int, int, int]:
+    hex_value = hex.removeprefix("#")
+    return tuple(int(hex_value[i : i + 2], 16) for i in (0, 2, 4))  # type: ignore
+
+
+def byte_color_to_hex(color: tuple[int, int, int]) -> str:
+    r, g, b = color
+    hex_value = ("{:02X}" * 3).format(r, g, b)
+    return f"#{hex_value}"
+
+
+def rgb_to_byte_color(color: tuple[float, float, float]) -> tuple[int, int, int]:
+    return tuple(round(max(0.0, min(1.0, channel)) * 255) for channel in color)  # type: ignore
+
+
+def byte_color_to_rgb(color: tuple[int, int, int]) -> tuple[float, float, float]:
+    return tuple(channel / 255 for channel in color)  # type: ignore

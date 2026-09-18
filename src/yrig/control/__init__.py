@@ -1,6 +1,13 @@
-from . import serialize as serialize
-from . import utils as utils
-from .core import Control as Control
-from .core import collect_controls as collect_controls
-from .core import create_control as create_control
-from .serialize import ControlShape as ControlShape
+from . import serialize, utils
+from .core import Control, collect_controls, create_control, set_override_color
+from .serialize import ControlShape
+
+__all__ = [
+    "Control",
+    "ControlShape",
+    "collect_controls",
+    "create_control",
+    "serialize",
+    "set_override_color",
+    "utils",
+]

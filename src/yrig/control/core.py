@@ -9,10 +9,15 @@ from maya import cmds
 from maya.api.OpenMaya import MMatrix
 
 from yrig.build.mgear_api.control import add_ctl
+from yrig.color.convert import (
+    byte_color_to_rgb,
+    hex_to_byte_color,
+    srgb_to_linear_color,
+)
 from yrig.control.serialize import ControlShape, create_curve
 from yrig.maya_api.enum import RotateOrder
 from yrig.name import MIDDLE_SIDE_NAME, get_side
-from yrig.transform import create_transform
+from yrig.transform import create_transform, get_shapes
 from yrig.transform.matrix import get_world_matrix
 from yrig.transform.structs import Direction
 from yrig.transform.utils import bake_shape, partial_path_name
@@ -175,3 +180,21 @@ def create_control(
     control = Control(transform=control_transform, offset=offset_transform, name=name)
     _register_control(control)
     return control
+
+
+def set_override_color(
+    control: str | Control, color: tuple[float, float, float] | str, override_shapes: bool = False
+) -> None:
+    if isinstance(color, str):
+        resolved_color = srgb_to_linear_color(byte_color_to_rgb(hex_to_byte_color(color)))
+    else:
+        resolved_color = color
+    if override_shapes:
+        override_nodes = [shape for shape in get_shapes(str(control))]
+    else:
+        override_nodes = (str(control),)
+
+    for node in override_nodes:
+        cmds.setAttr(f"{node}.overrideEnabled", True)  # type: ignore
+        cmds.setAttr(f"{node}.overrideRGBColors", True)  # type: ignore
+        cmds.setAttr(f"{node}.overrideColorRGB", *resolved_color)  # type: ignore
