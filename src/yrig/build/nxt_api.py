@@ -1,14 +1,22 @@
+from __future__ import annotations
+
 import logging
 import os
 from collections.abc import Generator, Iterable
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from nxt.nxt_layer import CompLayer
 from nxt.nxt_node import get_node_enabled
 from nxt.runtime import ExitGraph, ExitNode, InvalidNodeError
+from nxt.session import Session
 from nxt.stage import Stage, logger, run
+
+if TYPE_CHECKING:
+    from nxt.nxt_layer import SpecLayer
+    from nxt.nxt_node import SpecNode
+
 
 from yrig.build.progress import progress_step
 
@@ -104,3 +112,56 @@ class ProgressStage(Stage):
 def execute_nxt_graph(filepath: Path, parameters: dict[str, Any] | None = None) -> None:
     stage: ProgressStage = ProgressStage.load_from_filepath(str(filepath))
     stage.execute(parameters=parameters)
+
+
+def _add_world_node(stage: Stage, layer: SpecLayer) -> SpecNode:
+    world_node, _ = stage.add_node(
+        name="",
+        parent="/",
+        layer=layer,
+        fix_names=False,
+    )
+    return world_node[0]
+
+
+def setup_rig_build_nxt_layer(
+    filepath: Path, *, rig_path: Path, inherits: Path | None, name: str, color: str
+) -> None:
+    """
+    Create and save an NXT layer for a rig build.
+
+    The layer is given the specified name and color, optionally inherits from
+    another layer, and stores the rig path on its world node.
+
+    Args:
+        filepath: Path where the NXT layer will be saved.
+        rig_path: Path to the rig associated with the layer.
+        inherits: Optional path to a layer this layer should inherit from.
+        name: Alias to assign to the new layer.
+        color: Color to assign to the layer.
+
+    Returns:
+        The NXT session containing the newly created layer.
+    """
+    filepath = filepath.resolve()
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+
+    session = Session()
+    stage: Stage = session.new_file()
+    layer: SpecLayer = stage.top_layer
+
+    layer.set_alias(name)
+    layer.color = color
+
+    if inherits is not None:
+        layer.add_reference(layer_path=inherits.as_posix())
+
+    world_node = _add_world_node(stage, layer)
+
+    stage.add_node_attr(
+        node=world_node,
+        attr="rig_path",
+        attr_data={"value": rig_path.as_posix()},
+        layer=layer,
+    )
+    layer.save(filepath=filepath.as_posix())
