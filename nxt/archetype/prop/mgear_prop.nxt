@@ -14,10 +14,6 @@
                 -1264.1403073330887,
                 -13.318422904299439
             ],
-            "/root": [
-                -834.0036602069564,
-                -13.63513767751326
-            ],
             "/shifter_build": [
                 -1248.3150191717723,
                 -95.06613748571294
@@ -33,23 +29,44 @@
             "attrs": {
                 "rig_path": {
                     "type": "raw",
-                    "value": "prop/base"
+                    "value": "prop/mgear_prop"
                 }
             }
         },
-        "/root": {
+        "/setup": {
             "start_point": false,
             "execute_in": "/shifter_component_build"
         },
         "/shifter_component_build": {
             "start_point": true,
             "instance": "/shifter_build",
+            "child_order": [
+                "world_control_color"
+            ],
             "attrs": {
+                "custom_steps": {
+                    "value": "False"
+                },
                 "guide_filepath": {
                     "type": "raw",
                     "value": "${file::${rig_path}/data/guide.sgt}"
                 }
             }
+        },
+        "/shifter_component_build/world_control_color": {
+            "attrs": {
+                "color": {
+                    "type": "raw",
+                    "value": "${_nxtcolor}"
+                },
+                "world_control": {
+                    "type": "raw",
+                    "value": "world_ctl"
+                }
+            },
+            "code": [
+                "yrig.control.set_override_color(\"${world_control}\", color=\"${color}\", override_shapes=True)"
+            ]
         }
     }
 }

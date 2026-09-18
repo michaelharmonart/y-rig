@@ -70,6 +70,10 @@
             "/split_skin_weights": [
                 -799.7965374561375,
                 -465.0107915925667
+            ],
+            "/static_joint": [
+                280,
+                20
             ]
         },
         "collapse": {
@@ -116,7 +120,10 @@
                 }
             },
             "code": [
-                "yrig.control.serialize.apply_control_shapes_file(Path(\"${control_shapes_filepath}\"))"
+                "control_shapes_filepath_str = \"${control_shapes_filepath}\"",
+                "if control_shapes_filepath_str:",
+                "    control_shapes_filepath = Path(control_shapes_filepath_str)",
+                "    yrig.control.serialize.apply_control_shapes_file(control_shapes_filepath)"
             ]
         },
         "/apply/deformation": {
@@ -264,13 +271,22 @@
                     "type": "raw",
                     "value": "${/setup/root/model.model_set}"
                 }
-            }
+            },
+            "code": [
+                "joint_group = \"${joint_group}\"",
+                "if not cmds.objExists(joint_group):",
+                "    yrig.transform.create_transform(joint_group, parent=\"${rig_root}\")"
+            ]
         },
         "/setup/root/deformation/main": {
             "attrs": {
                 "deformers_set": {
                     "type": "raw",
                     "value": "${rig_root}_deformers_grp"
+                },
+                "joint_group": {
+                    "type": "raw",
+                    "value": "jnt_org"
                 }
             },
             "code": [
@@ -287,7 +303,7 @@
                 }
             },
             "code": [
-                "yrig.joint.create_joint(\"static\", parent=\"${joint_group}\")"
+                "yrig.joint.create_joint(\"static\", parent=\"${joint_group}\", add_to_set=False)"
             ]
         },
         "/setup/root/guides": {
