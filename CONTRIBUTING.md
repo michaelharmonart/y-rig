@@ -15,9 +15,9 @@ Your future coworkers will thank you.
 
 ## Make it easy to have fun
 
-These are tools created with the purposes of making rigging easy fun.
+These are tools created with the purposes of making rigging easy and fun.
 Think through what the ideal workflow would be, what would make it easiest to iterate and experiment and do that.
-Writing overcomplicated spaghetti code or write duct tape fixes on top of each other makes working with these drudgery instead of fun!
+Writing over-complicated spaghetti code or relying on duct tape fixes stacked on top of each other makes working drudgery instead of fun!
 Realize that there are times for throw away scripts, but that this library is meant to be useful for people after you for years to come.
 Be in the practice of writing clean code that's easy for others to work with. Clean up after yourself, and when needed, others.  
 Your future coworkers will thank you.
