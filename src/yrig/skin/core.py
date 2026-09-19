@@ -86,7 +86,9 @@ def skin_geometry(
     bind_joints: Iterable[str],
     geometry: str,
     name: str | None = None,
+    *,
     dual_quaternion: bool = True,
+    weight_blend: bool = False,
     support_non_rigid: bool = True,
     local: bool = False,
 ) -> str:
@@ -100,6 +102,8 @@ def skin_geometry(
             If None, a name will be auto-generated based on the geometry name.
         dual_quaternion (bool): Whether to use dual quaternion skinning.
             Defaults to False (classic linear skinning).
+        weight_blend (bool): When using dual quaternion skinning, if True the skinCluster will use the DQ Weight Blended mode.
+        support_non_rigid (bool): When using dual quaternion skinning, when True the option for supporting non rigid transformations is enabled.
         local (bool): Whether to enable local space mode on the skin cluster.
 
     Returns:
@@ -116,11 +120,12 @@ def skin_geometry(
         )
     if not bind_joints:
         raise ValueError("The provided bind_joints list was empty")
+    mode = (2 if weight_blend else 1) if dual_quaternion else 0
     skin_cluster: str = cmds.skinCluster(  # type: ignore
         *bind_joints,
         shape,
         toSelectedBones=True,
-        skinMethod=1 if dual_quaternion else 0,
+        skinMethod=mode,
         name=name,
     )[0]
     if support_non_rigid:
