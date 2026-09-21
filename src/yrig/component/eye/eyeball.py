@@ -169,7 +169,7 @@ class Eyeball:
         etq_node.output_quat.w.connect_to(f"{obj}.scaleZ")
         radius_adjust.input2.x.set(eye_radius)
 
-        ## offsets
+        # offsets
 
         radius_adjust.input1.y.connect_from(etq_node.output_quat.w)
         radius_adjust.input1.z.connect_from(etq_node.output_quat.w)

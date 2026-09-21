@@ -63,8 +63,6 @@ __all__ = [
     "BlendShapeNormalizationGroupAttribute",
     "BlendShapeSculptTargetTweaksAttribute",
     "BlendShapeTargetDirectoryAttribute",
-    "BlendShapeWeightFunctionDataAttribute",
-    "BlendShapeWeightListAttribute",
     "BooleanAttribute",
     "ClosestPointOnSurfaceResultAttribute",
     "ColorAttribute",

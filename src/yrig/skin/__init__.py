@@ -29,7 +29,6 @@ __all__ = [
     "core",
     "export",
     "export_skin_weights",
-    "export_skin_weights_for_selected",
     "export_skin_weights_for_shape",
     "import_skin_weights",
     "ng",

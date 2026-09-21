@@ -19,6 +19,7 @@ from maya.api.OpenMaya import (
 )
 from maya.api.OpenMayaAnim import MFnSkinCluster
 
+from yrig.maya_api.node import SkinCluster
 from yrig.maya_api.utils import get_dag_path, get_depend_node
 from yrig.name import natural_sort_key
 from yrig.shape import get_components_of_shape, get_shape
@@ -69,7 +70,7 @@ def _resolve_skin_cluster(node: str) -> str | None:
     return get_skin_cluster(node)
 
 
-def get_skin_cluster_influences(skin_cluster: str) -> list[str]:
+def get_skin_cluster_influences(skin_cluster: str | SkinCluster) -> list[str]:
     """Return the influence joints bound to a skinCluster.
 
     Args:
@@ -79,7 +80,7 @@ def get_skin_cluster_influences(skin_cluster: str) -> list[str]:
         A list of influence (joint/transform) names associated with the
         skinCluster.
     """
-    return cmds.skinCluster(skin_cluster, query=True, influence=True)  # type: ignore
+    return cmds.skinCluster(str(skin_cluster), query=True, influence=True)  # type: ignore
 
 
 def skin_geometry(

@@ -9,7 +9,6 @@ from .core import (
 from .serialize import export_blendshape, get_blendshape_data, import_blendshape
 
 __all__ = [
-    "build_blendshape_networks",
     "core",
     "create_blendshape",
     "export_blendshape",

@@ -534,7 +534,7 @@ class Eyelid:
                     joint=joint,
                 )
 
-                ##### Adding x translate control funtionality to the controls
+                # Adding x translate control funtionality to the controls
 
                 x_md = MultiplyDivideNode.create(name=f"{sub_blink}_{side}_{self.side}_MD")
 
