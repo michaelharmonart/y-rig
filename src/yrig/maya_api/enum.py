@@ -120,9 +120,11 @@ class PlusMinusAverageOperation(IntEnum):
     AVERAGE = 3
 
 
-class SkinClusterWeightDistribution(IntEnum):
-    DISTANCE = 0
-    NEIGHBORS = 1
+class SkinClusterBindMethod(IntEnum):
+    CLOSEST_DISTANCE = 0
+    CLOSEST_JOINT_IN_HIERARCHY = 1
+    HEAT_MAP = 2
+    GEODESIC_VOXEL = 3
 
 
 class SkinClusterNormalizeWeights(IntEnum):
@@ -141,6 +143,11 @@ class SkinClusterSkinningMethod(IntEnum):
     CLASSIC_LINEAR = 0
     DUAL_QUATERNION = 1
     WEIGHT_BLENDED = 2
+
+
+class SkinClusterWeightDistribution(IntEnum):
+    DISTANCE = 0
+    NEIGHBORS = 1
 
 
 class UnsignedAxis(IntEnum):
