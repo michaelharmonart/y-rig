@@ -145,7 +145,3 @@ class BlendShapeTargetDirectoryAttribute(Attribute):
             f"{attr_path}.directoryParentVisibility"
         )
         self.directory_weight = ScalarAttribute(f"{attr_path}.directoryWeight")
-
-
-class BlendShapeWeightFunctionDataAttribute(Attribute):
-    """A Maya attribute of the same compound type as the blendShape Weight Function Data."""
