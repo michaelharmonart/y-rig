@@ -22,7 +22,10 @@ class GeometryFilter(Node):
         super().__init__(name)
         self.block_gpu = BooleanAttribute(f"{self.name}.blockGPU")
         self.envelope = ScalarAttribute(f"{self.name}.envelope")
-        self.input = self.input = ArrayAttribute(f"{self.name}.input", GeometryFilterInputAttribute)
+        self.input = ArrayAttribute(f"{self.name}.input", GeometryFilterInputAttribute)
+        self.output_geometry = ArrayAttribute(
+            f"{self.name}.outputGeometry", GeometryFilterInputAttribute
+        )
         self.map_64_bit_indices = UInt64ArrayAttribute(f"{self.name}.map64BitIndices")
         self.original_geometry = ArrayAttribute(f"{self.name}.originalGeometry", GeometryAttribute)
         self.weight_function = ArrayAttribute(

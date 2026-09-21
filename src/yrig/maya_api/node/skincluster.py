@@ -12,16 +12,17 @@ from yrig.maya_api.attribute import (
     Vector3Attribute,
 )
 from yrig.maya_api.enum import (
+    SkinClusterBindMethod,
     SkinClusterNormalizeWeights,
     SkinClusterRelativeSpaceMode,
     SkinClusterSkinningMethod,
     SkinClusterWeightDistribution,
 )
 
-from .core import Node
+from .geometry_filter import WeightGeometryFilter
 
 
-class SkinCluster(Node):
+class SkinCluster(WeightGeometryFilter):
     """Maya skinCluster node with enhanced interface."""
 
     node_type = "skinCluster"
@@ -32,7 +33,7 @@ class SkinCluster(Node):
     def _setup_attributes(self) -> None:
         self.base_dirty = MessageAttribute(f"{self.name}.baseDirty")
         self.basePoints = ArrayAttribute(f"{self.name}.basePoints", GeometryAttribute)
-        self.bind_method = EnumAttribute(f"{self.name}.bindMethod", SkinClusterSkinningMethod)
+        self.bind_method = EnumAttribute(f"{self.name}.bindMethod", SkinClusterBindMethod)
         self.bind_pose = MessageAttribute(f"{self.name}.bindPose")
         self.bind_pre_matrix = ArrayAttribute(f"{self.name}.bindPreMatrix", MatrixAttribute)
         self.bind_volume = MessageAttribute(f"{self.name}.bindVolume")
