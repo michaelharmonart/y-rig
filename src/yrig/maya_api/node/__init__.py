@@ -1,6 +1,7 @@
 from .blendshape import BlendShape
 from .core import Node
 from .geometry import ClosestPointOnSurfaceNode, CurveInfoNode, MotionPathNode, UvPinNode
+from .geometry_filter import GeometryFilter, WeightGeometryFilter
 from .matrix import (
     AimMatrixNode,
     AxisFromMatrixNode,
@@ -25,6 +26,7 @@ from .quat import (
     QuatSlerpNode,
     QuatToEulerNode,
 )
+from .skincluster import SkinCluster
 from .utility import (
     AbsoluteNode,
     AddDLNode,
@@ -67,6 +69,7 @@ __all__ = [
     "DivideNode",
     "EulerToQuatNode",
     "FourByFourMatrixNode",
+    "GeometryFilter",
     "InverseMatrixNode",
     "LengthNode",
     "LerpNode",
@@ -89,8 +92,10 @@ __all__ = [
     "RemapValueNode",
     "RowFromMatrixNode",
     "SinNode",
+    "SkinCluster",
     "SubtractNode",
     "SumNode",
     "UvPinNode",
+    "WeightGeometryFilter",
     "WtAddMatrixNode",
 ]

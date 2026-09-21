@@ -1,15 +1,12 @@
 from .blendshape import (
     BlendShapeInbetweenInfoAttribute,
     BlendShapeInbetweenInfoGroupAttribute,
-    BlendShapeInputAttribute,
     BlendShapeInputTargetAttribute,
     BlendShapeInputTargetGroupAttribute,
     BlendShapeInputTargetItemAttribute,
     BlendShapeNormalizationGroupAttribute,
     BlendShapeSculptTargetTweaksAttribute,
     BlendShapeTargetDirectoryAttribute,
-    BlendShapeWeightFunctionDataAttribute,
-    BlendShapeWeightListAttribute,
 )
 from .compound import (
     AimMatrixAxisAttribute,
@@ -46,6 +43,12 @@ from .core import (
     Vector3Attribute,
     Vector4Attribute,
 )
+from .geometry_filter import (
+    GeometryFilterInputAttribute,
+    GeometryFilterWeightFunctionDataAttribute,
+    WeightGeometryFilterWeightListAttribute,
+)
+from .skincluster import SkinClusterInfluenceColor
 
 __all__ = [
     "AimMatrixAxisAttribute",
@@ -54,7 +57,6 @@ __all__ = [
     "BlendMatrixTargetAttribute",
     "BlendShapeInbetweenInfoAttribute",
     "BlendShapeInbetweenInfoGroupAttribute",
-    "BlendShapeInputAttribute",
     "BlendShapeInputTargetAttribute",
     "BlendShapeInputTargetGroupAttribute",
     "BlendShapeInputTargetItemAttribute",
@@ -70,6 +72,8 @@ __all__ = [
     "DoubleArrayAttribute",
     "EnumAttribute",
     "GeometryAttribute",
+    "GeometryFilterInputAttribute",
+    "GeometryFilterWeightFunctionDataAttribute",
     "Int32ArrayAttribute",
     "IntegerAttribute",
     "Long3Attribute",
@@ -83,11 +87,13 @@ __all__ = [
     "PoseInterpolatorDirectoryAttribute",
     "QuatAttribute",
     "ScalarAttribute",
+    "SkinClusterInfluenceColor",
     "StringAttribute",
     "UInt64ArrayAttribute",
     "UvPinCoordinateAttribute",
     "Vector2Attribute",
     "Vector3Attribute",
     "Vector4Attribute",
+    "WeightGeometryFilterWeightListAttribute",
     "WtMatrixAttribute",
 ]

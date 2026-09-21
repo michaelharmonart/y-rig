@@ -48,17 +48,6 @@ class BlendShapeInbetweenInfoGroupAttribute(Attribute):
         self.inbetween_info = BlendShapeInbetweenInfoAttribute(f"{attr_path}.inbetweenInfoGroup")
 
 
-class BlendShapeInputAttribute(Attribute):
-    """A Maya attribute of the same compound type as the blendShape Input."""
-
-    def __init__(self, attr_path: str) -> None:
-        super().__init__(attr_path)
-
-        self.input_geometry = GeometryAttribute(f"{attr_path}.inputGeometry")
-        self.group_id = IntegerAttribute(f"{attr_path}.groupId")
-        self.component_tag_expression = StringAttribute(f"{attr_path}.componentTagExpression")
-
-
 class BlendShapeInputTargetAttribute(Attribute):
     """A Maya attribute of the same compound type as the blendShape inputTarget."""
 
@@ -156,15 +145,6 @@ class BlendShapeTargetDirectoryAttribute(Attribute):
             f"{attr_path}.directoryParentVisibility"
         )
         self.directory_weight = ScalarAttribute(f"{attr_path}.directoryWeight")
-
-
-class BlendShapeWeightListAttribute(Attribute):
-    """A Maya attribute of the same compound type as the blendShape WeightList."""
-
-    def __init__(self, attr_path: str) -> None:
-        super().__init__(attr_path)
-
-        self.weights = ArrayAttribute(f"{attr_path}.weights", ScalarAttribute)
 
 
 class BlendShapeWeightFunctionDataAttribute(Attribute):

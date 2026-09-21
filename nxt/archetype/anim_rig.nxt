@@ -91,11 +91,12 @@
         "/": {
             "attrs": {
                 "build_scope": {
+                    "comment": "The build scope for the rig. eg. \"full\" \"face\" \"body\"",
                     "type": "raw",
                     "value": "full"
                 },
                 "dev_build": {
-                    "comment": "When True the rig should be built ready for publish",
+                    "comment": "When False the rig should be built ready for publish",
                     "type": "bool",
                     "value": "False"
                 },
