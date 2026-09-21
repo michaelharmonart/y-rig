@@ -9,6 +9,14 @@
     ],
     "meta_data": {
         "positions": {
+            "/pose_intepolators2": [
+                1164.9789899989946,
+                14.14114315884109
+            ],
+            "/shapes2": [
+                1164.9789899989946,
+                14.14114315884109
+            ],
             "/shifter_component_build": [
                 -1095.9382886947733,
                 19.226987520960936
@@ -18,7 +26,8 @@
     "nodes": {
         "/apply/deformation/main/psd/body_psd": {
             "child_order": [
-                "hands"
+                "hands",
+                "eyes"
             ],
             "attrs": {
                 "blendshape": {
@@ -36,6 +45,49 @@
             },
             "code": [
                 "yrig.deformer.blendshape.create_blendshape(geometry=\"${geometry}\", name=\"${blendshape}\")"
+            ]
+        },
+        "/apply/deformation/main/psd/body_psd/eyes": {
+            "child_order": [
+                "shapes",
+                "pose_intepolators",
+                "shapes",
+                "pose_intepolators"
+            ]
+        },
+        "/apply/deformation/main/psd/body_psd/eyes/pose_intepolators": {
+            "attrs": {
+                "pose_filepath": {
+                    "type": "raw",
+                    "value": "${file::${psd_path}/eyes.pose}"
+                }
+            },
+            "code": [
+                "pose_filepath_str = \"${pose_filepath}\"",
+                "if pose_filepath_str:",
+                "    pose_filepath = Path(pose_filepath_str)",
+                "    yrig.rbf.pose_interpolator.import_pose_file(",
+                "        filepath = pose_filepath,",
+                "        parent = \"${psd_group}\",",
+                "        import_shapes = False,",
+                "    )"
+            ]
+        },
+        "/apply/deformation/main/psd/body_psd/eyes/shapes": {
+            "attrs": {
+                "yshape_filepath": {
+                    "type": "raw",
+                    "value": "${file::${psd_path}/eyes.yshape}"
+                }
+            },
+            "code": [
+                "shape_filepath_str = \"${yshape_filepath}\"",
+                "if shape_filepath_str:",
+                "    shape_filepath = Path(shape_filepath_str)",
+                "    yrig.deformer.blendshape.import_blendshape(",
+                "        filepath=shape_filepath,",
+                "        blendshape=\"${blendshape}\",",
+                "        )"
             ]
         },
         "/apply/deformation/main/psd/body_psd/hands": {
