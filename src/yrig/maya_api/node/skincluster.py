@@ -39,6 +39,7 @@ class SkinCluster(Node):
         self.blend_weights = ArrayAttribute(f"{self.name}.blendWeights", ScalarAttribute)
         self.deform_user_normals = BooleanAttribute(f"{self.name}.deformUserNormals")
         self.dqs_scale = Vector3Attribute(f"{self.name}.dqsScale")
+        self.dqs_support_non_rigid = BooleanAttribute(f"{self.name}.dqsSupportNonRigid")
         self.driver_points = ArrayAttribute(f"{self.name}.driverPoints", GeometryAttribute)
         self.dropoff = ArrayAttribute(f"{self.name}.dropoff", ScalarAttribute)
         self.dropoff_rate = ScalarAttribute(f"{self.name}.dropoffRate")
