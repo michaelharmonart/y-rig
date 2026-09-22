@@ -44,6 +44,10 @@
                 -360.0,
                 -380.0
             ],
+            "/eyes_psd": [
+                720.0,
+                760.0
+            ],
             "/face_base_component": [
                 -360.0,
                 -620.0
@@ -59,6 +63,14 @@
             "/nose_component": [
                 -360.0,
                 -740.0
+            ],
+            "/psd_import": [
+                120.0,
+                -320.0
+            ],
+            "/psd_layer": [
+                120.0,
+                -380.0
             ],
             "/setup": [
                 -840.0,
@@ -98,6 +110,9 @@
             ]
         },
         "collapse": {
+            "/apply/deformation/main/psd/body_psd/eyes": true,
+            "/apply/deformation/main/psd/body_psd/eyes/shapes": true,
+            "/apply/deformation/main/psd/body_psd/hands": true,
             "/build/left": false,
             "/build/left/ear": true,
             "/build/left/eye": true,

@@ -47,6 +47,14 @@
                 -414.87530251227207,
                 -11.02092554557493
             ],
+            "/psd_import": [
+                120.0,
+                -300.0
+            ],
+            "/psd_layer": [
+                120.0,
+                -360.0
+            ],
             "/rest_pose": [
                 107.99415846869607,
                 265.1998166510077
@@ -103,6 +111,8 @@
         "collapse": {
             "/apply/deformation": false,
             "/cleanup/hide_joints": true,
+            "/psd_import": true,
+            "/psd_import/shapes": true,
             "/root/rig_hierarchy": true,
             "/setup/root": false
         },
@@ -279,6 +289,68 @@
             "code": [
                 "if not ${dev_build}:",
                 "    yrig.skin.ng.cleanup_ng_data_nodes()"
+            ]
+        },
+        "/psd_import": {
+            "child_order": [
+                "shapes",
+                "pose_intepolators"
+            ],
+            "attrs": {
+                "psd_filename": {}
+            }
+        },
+        "/psd_import/pose_intepolators": {
+            "attrs": {
+                "pose_filepath": {
+                    "type": "raw",
+                    "value": "${file::${psd_path}/${psd_filename}.pose}"
+                }
+            },
+            "code": [
+                "pose_filepath_str = \"${pose_filepath}\"",
+                "if pose_filepath_str:",
+                "    pose_filepath = Path(pose_filepath_str)",
+                "    yrig.rbf.pose_interpolator.import_pose_file(",
+                "        filepath = pose_filepath,",
+                "        parent = \"${psd_group}\",",
+                "        import_shapes = False,",
+                "    )"
+            ]
+        },
+        "/psd_import/shapes": {
+            "attrs": {
+                "yshape_filepath": {
+                    "type": "raw",
+                    "value": "${file::${psd_path}/${psd_filename}.yshape}"
+                }
+            },
+            "code": [
+                "shape_filepath_str = \"${yshape_filepath}\"",
+                "if shape_filepath_str:",
+                "    shape_filepath = Path(shape_filepath_str)",
+                "    yrig.deformer.blendshape.import_blendshape(",
+                "        filepath=shape_filepath,",
+                "        blendshape=\"${blendshape}\",",
+                "        )"
+            ]
+        },
+        "/psd_layer": {
+            "attrs": {
+                "blendshape": {
+                    "type": "raw",
+                    "value": "psd"
+                },
+                "geometry": {
+                    "type": "raw"
+                },
+                "psd_path": {
+                    "type": "raw",
+                    "value": "${rig_path}/data/psd"
+                }
+            },
+            "code": [
+                "yrig.deformer.blendshape.create_blendshape(geometry=\"${geometry}\", name=\"${blendshape}\")"
             ]
         },
         "/setup": {
