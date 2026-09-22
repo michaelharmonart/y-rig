@@ -120,13 +120,23 @@ def import_sets(
     filepath: Path, sets: Iterable[str] | str | None = None, *, parent: str | None = None
 ) -> list[str]:
     set_file_data = load_json(filepath, SetFileData)
+
     if sets is None:
         sets_to_import = None
     else:
         sets_to_import = {sets} if isinstance(sets, str) else set(sets)
 
     if sets_to_import is None:
-        set_name_data_pairs = set_file_data.sets.items()
+        # Only the sets that aren't a child of some other set in the file
+        # count as "root level" and should be reparented under `parent`.
+        child_set_names: set[str] = set()
+        for data in set_file_data.sets.values():
+            child_set_names.update(data.sets)
+        set_name_data_pairs = [
+            (set_name, data)
+            for set_name, data in set_file_data.sets.items()
+            if set_name not in child_set_names
+        ]
     else:
         set_name_data_pairs = [
             (set_name, set_file_data.sets[set_name]) for set_name in sets_to_import
