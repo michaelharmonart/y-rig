@@ -17,117 +17,110 @@
     "meta_data": {
         "positions": {
             "/apply": [
-                888.8765850667808,
-                -15.486798626351607
+                120.0,
+                0.0
+            ],
+            "/build": [
+                -360.0,
+                0.0
             ],
             "/cleanup": [
-                1351.2193760258265,
-                -21.41354069259009
+                580.0,
+                0.0
             ],
             "/component": [
-                -871.1745871252489,
-                -1125.2381176092777
-            ],
-            "/deformation": [
-                856.0087940139424,
-                -9.668699423947338
+                -360.0,
+                -200.0
             ],
             "/ear_component": [
-                -849.5507090116776,
-                -365.5183048649902
+                -360.0,
+                -560.0
             ],
             "/eye_component": [
-                -857.6859635911101,
-                -761.9860552804687
+                -360.0,
+                -800.0
             ],
             "/eye_def": [
-                -855.304547848069,
-                -701.6364080255946
+                -360.0,
+                -380.0
             ],
             "/face_base_component": [
-                -866.1340283878521,
-                -974.9116258957818
-            ],
-            "/left": [
-                43.70522400530376,
-                -12.216212990862651
+                -360.0,
+                -620.0
             ],
             "/look_component": [
-                -853.3603880127753,
-                -636.7830673903558
-            ],
-            "/middle": [
-                -396.0467648945946,
-                -12.903779307342678
+                -360.0,
+                -440.0
             ],
             "/mouth_component": [
-                -864.3952489745639,
-                -908.067517878749
+                -360.0,
+                -320.0
             ],
             "/nose_component": [
-                -849.4954333098872,
-                -574.777657650386
+                -360.0,
+                -740.0
             ],
-            "/right": [
-                463.15561879099346,
-                -12.908243890569672
-            ],
-            "/root": [
-                -836.227393231747,
-                -13.679528134599906
+            "/setup": [
+                -840.0,
+                0.0
             ],
             "/shifter_build": [
-                -1450.4047765525336,
-                49.58230371411526
-            ],
-            "/shifter_component_build": [
-                -1333.8722592666647,
-                -13.21855392066065
-            ],
-            "/shifter_component_build_pasted": [
-                -1216.6259972304554,
-                54.15622969038259
+                -1260.0,
+                0.0
             ],
             "/side": [
-                -867.8719860022462,
-                -1054.7293578480908
+                -360.0,
+                -140.0
             ],
             "/simple_eyebrow": [
-                -863.6678902886301,
-                -841.6006521236975
+                -360.0,
+                -680.0
             ],
             "/skin_geometry": [
-                860.1225287185864,
-                -263.3559470406896
+                120.0,
+                -200.0
             ],
             "/split_skin_weights": [
-                855.8232656330174,
-                -319.5965655011383
+                120.0,
+                -260.0
             ],
             "/teeth_component": [
-                -844.5785455250948,
-                -503.15705362133156
+                -360.0,
+                -260.0
             ],
             "/tongue_component": [
-                -853.2658834507188,
-                -429.3013749665338
+                -360.0,
+                -500.0
             ],
             "/transfer_skin_weights": [
-                862.0089522432202,
-                -212.17592278220042
+                120.0,
+                -140.0
             ]
         },
         "collapse": {
-            "/apply/deformation/face": false,
-            "/apply/deformation/face/duplicate_geo": false,
-            "/right/ear": true,
-            "/right/eye": true,
-            "/right/eyebrow": true,
-            "/root/guides/face": true,
-            "/tools_window/biped": false,
-            "/tools_window/biped/face": false,
-            "/tools_window/biped/face/face_guides_io": false,
-            "/tools_window/biped/face/face_guides_io/import": true
+            "/build/left": false,
+            "/build/left/ear": true,
+            "/build/left/eye": true,
+            "/build/left/eyebrow": true,
+            "/build/middle": false,
+            "/build/middle/face/base": true,
+            "/build/middle/face/look": true,
+            "/build/middle/face/mouth": true,
+            "/build/middle/face/nose": true,
+            "/build/middle/face/teeth": true,
+            "/build/middle/face/tongue": true,
+            "/build/right/ear": true,
+            "/build/right/eye": true,
+            "/build/right/eyebrow": true,
+            "/ear_component": true,
+            "/eye_component": true,
+            "/face_base_component": true,
+            "/look_component": true,
+            "/mouth_component": true,
+            "/nose_component": true,
+            "/simple_eyebrow": true,
+            "/teeth_component": true,
+            "/tongue_component": true
         }
     },
     "nodes": {
@@ -162,13 +155,6 @@
                 "    filepath = Path(\"${visibility_sets_filepath}\")",
                 "    yrig.sets.import_sets(filepath, parent=\"${rig_set}\")"
             ]
-        },
-        "/middle": {
-            "attrs": {
-                "control_color": {
-                    "value": "[1.0, 0.8786, 0.0]"
-                }
-            }
         },
         "/skin_geometry": {
             "attrs": {

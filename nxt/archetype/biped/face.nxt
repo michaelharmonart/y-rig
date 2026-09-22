@@ -14,135 +14,6 @@
         "component/face/nose.nxt",
         "component/face/ear.nxt"
     ],
-    "meta_data": {
-        "positions": {
-            "/cleanup": [
-                578.6271216105457,
-                41.68783296905949
-            ],
-            "/ear": [
-                318.8538364053693,
-                142.4484541260124
-            ],
-            "/ear_component": [
-                -1418.8914960107354,
-                951.3243317314693
-            ],
-            "/eye": [
-                318.8538364053693,
-                142.4484541260124
-            ],
-            "/eye_component": [
-                -1427.026750590168,
-                554.8565813159908
-            ],
-            "/eye_def": [
-                -1424.6453348471266,
-                615.206228570865
-            ],
-            "/eyebrow": [
-                318.8538364053693,
-                142.4484541260124
-            ],
-            "/face": [
-                280,
-                20
-            ],
-            "/face_base_component": [
-                -1435.4748153869095,
-                341.9310107006777
-            ],
-            "/io_pair2": [
-                320,
-                0
-            ],
-            "/left": [
-                160.30801917363112,
-                39.76334630104233
-            ],
-            "/look": [
-                280,
-                20
-            ],
-            "/look_component": [
-                -1422.7011750118327,
-                680.0595692061038
-            ],
-            "/middle": [
-                -255.5748582118101,
-                28.76206986591498
-            ],
-            "/mouth": [
-                280,
-                20
-            ],
-            "/mouth_component": [
-                -1433.7360359736215,
-                408.7751187177105
-            ],
-            "/nose": [
-                280,
-                20
-            ],
-            "/nose_component": [
-                -1418.8362203089448,
-                742.0649789460736
-            ],
-            "/root": [
-                -715.363213749061,
-                30.01523973772283
-            ],
-            "/simple_eyebrow": [
-                -1433.0086772876878,
-                475.24198447276217
-            ],
-            "/teeth": [
-                280,
-                20
-            ],
-            "/teeth_component": [
-                -1413.9193325241524,
-                813.685582975128
-            ],
-            "/tongue": [
-                280,
-                20
-            ],
-            "/tongue_component": [
-                -1422.6066704497766,
-                887.5412616299258
-            ]
-        },
-        "locks": {
-            "$YRIG_NXT_DIR/components/face/ear.nxt": true,
-            "$YRIG_NXT_DIR/components/face/eye.nxt": true,
-            "$YRIG_NXT_DIR/components/face/eyebrow.nxt": true,
-            "$YRIG_NXT_DIR/components/face/mouth.nxt": true,
-            "$YRIG_NXT_DIR/components/face/nose.nxt": true,
-            "$YRIG_NXT_DIR/components/face/teeth.nxt": true,
-            "$YRIG_NXT_DIR/components/face/tongue.nxt": true
-        },
-        "collapse": {
-            "/ear_component": true,
-            "/eye_component": true,
-            "/face_base_component": true,
-            "/left/ear": true,
-            "/left/eye": true,
-            "/left/eyebrow": true,
-            "/look_component": true,
-            "/middle/face/base": true,
-            "/middle/face/look": true,
-            "/middle/face/mouth": true,
-            "/middle/face/nose": true,
-            "/middle/face/teeth": true,
-            "/middle/face/tongue": true,
-            "/mouth_component": true,
-            "/nose_component": true,
-            "/simple_eyebrow": true,
-            "/teeth_component": true,
-            "/tongue_component": true
-        }
-    },
     "nodes": {
         "/apply/deformation": {
             "child_order": [
@@ -206,14 +77,14 @@
                 "cmds.delete(\"${face_guides_group}\")"
             ]
         },
-        "/left": {
+        "/build/left": {
             "child_order": [
                 "eye",
                 "eyebrow",
                 "ear"
             ]
         },
-        "/left/ear": {
+        "/build/left/ear": {
             "instance": "/ear_component",
             "attrs": {
                 "control_parent": {
@@ -224,7 +95,7 @@
                 }
             }
         },
-        "/left/eye": {
+        "/build/left/eye": {
             "instance": "/eye_component",
             "attrs": {
                 "control_parent": {
@@ -235,7 +106,7 @@
                 }
             }
         },
-        "/left/eyebrow": {
+        "/build/left/eyebrow": {
             "instance": "/simple_eyebrow",
             "attrs": {
                 "control_parent": {
@@ -247,7 +118,7 @@
                 }
             }
         },
-        "/middle/face": {
+        "/build/middle/face": {
             "child_order": [
                 "base",
                 "nose",
@@ -283,7 +154,7 @@
                 "    connect=False)"
             ]
         },
-        "/middle/face/base": {
+        "/build/middle/face/base": {
             "instance": "/face_base_component",
             "attrs": {
                 "joint_parent": {
@@ -295,10 +166,10 @@
                 }
             }
         },
-        "/middle/face/look": {
+        "/build/middle/face/look": {
             "instance": "/look_component"
         },
-        "/middle/face/mouth": {
+        "/build/middle/face/mouth": {
             "instance": "/mouth_component",
             "child_order": [
                 "skin_surface"
@@ -315,7 +186,7 @@
                 }
             }
         },
-        "/middle/face/mouth/skin_surface": {
+        "/build/middle/face/mouth/skin_surface": {
             "attrs": {
                 "mouth_surface_skin_filepath": {
                     "type": "raw",
@@ -323,13 +194,13 @@
                 }
             }
         },
-        "/middle/face/nose": {
+        "/build/middle/face/nose": {
             "instance": "/nose_component"
         },
-        "/middle/face/teeth": {
+        "/build/middle/face/teeth": {
             "instance": "/teeth_component"
         },
-        "/middle/face/tongue": {
+        "/build/middle/face/tongue": {
             "instance": "/tongue_component"
         },
         "/setup/root/deformation/face": {
