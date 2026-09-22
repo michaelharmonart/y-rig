@@ -13,7 +13,7 @@ from yrig.maya_api.node import AimMatrixNode, PickMatrixNode
 from yrig.spline.math import point_on_spline_weights, resample, tangent_on_spline_weights
 from yrig.spline.matrix_spline.core import MatrixSpline
 from yrig.structs.transform import Vector3
-from yrig.transform.utils import zero_transform
+from yrig.transform import zero_transform
 
 CARDINALS = {(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)}
 X_AXIS = (1, 0, 0)

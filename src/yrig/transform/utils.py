@@ -65,6 +65,17 @@ def create_transform(
     return created_transform
 
 
+def get_transform(node: str) -> str:
+    """Return the transform associated with a DAG node."""
+    if cmds.nodeType(node) == "transform":
+        return node
+
+    transform = cmds.listRelatives(node, parent=True, type="transform")
+    if not transform:
+        raise RuntimeError(f"{node} has no parent transform")
+    return transform[0]
+
+
 def get_shapes(transform: str) -> list[str]:
     """Return the non-intermediate shape nodes parented under a transform.
 
@@ -90,12 +101,6 @@ def get_shapes(transform: str) -> list[str]:
         return shape_list
     else:
         raise RuntimeError(f"{transform} has no child shape nodes")
-
-
-def bake_shape(transform: str, zero_pivot: bool = True) -> None:
-    cmds.makeIdentity(transform, apply=True)
-    if zero_pivot:
-        cmds.xform(transform, pivots=(0, 0, 0))
 
 
 def get_position(transform: str, world_space: bool = True) -> MPoint:

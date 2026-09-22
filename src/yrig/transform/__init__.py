@@ -17,29 +17,37 @@ from .matrix import (
 )
 from .utils import (
     create_transform,
+    get_position,
     get_shapes,
+    get_transform,
     match_location,
     match_transform,
+    partial_path_name,
+    set_position,
     zero_rotate_axis,
+    zero_transform,
 )
 
 __all__ = [
     "constraint",
-    # Utils
     "create_transform",
-    # Matrix
     "get_local_matrix",
     "get_parent_inverse_matrix",
     "get_parent_matrix",
+    "get_position",
     "get_shapes",
+    "get_transform",
     "is_identity_matrix",
     "match_location",
     "match_transform",
     "matrix",
     "matrix_constraint",
     "mmatrix_to_list",
+    "partial_path_name",
     "quat",
+    "set_position",
     "set_world_matrix",
     "utils",
     "zero_rotate_axis",
+    "zero_transform",
 ]

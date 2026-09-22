@@ -17,10 +17,10 @@ from yrig.color.convert import (
 from yrig.control.serialize import ControlShape, create_curve
 from yrig.maya_api.enum import RotateOrder
 from yrig.name import MIDDLE_SIDE_NAME, get_side
-from yrig.transform import create_transform, get_shapes
+from yrig.shape import bake_shape
+from yrig.transform import create_transform, get_shapes, partial_path_name
 from yrig.transform.matrix import get_world_matrix
 from yrig.transform.structs import Direction
-from yrig.transform.utils import bake_shape, partial_path_name
 
 CONTROL_SUFFIX = "_ctl"
 OFFSET_SUFFIX = "_npo"

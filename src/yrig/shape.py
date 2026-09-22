@@ -70,3 +70,9 @@ def get_components_of_shape(shape_dag_path: MDagPath) -> MObject:
         return component
     else:
         raise TypeError(f"Unsupported shape type: {shape_dag_path.node().apiTypeStr}")
+
+
+def bake_shape(transform: str, zero_pivot: bool = True) -> None:
+    cmds.makeIdentity(transform, apply=True)
+    if zero_pivot:
+        cmds.xform(transform, pivots=(0, 0, 0))
