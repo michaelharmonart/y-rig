@@ -14,11 +14,18 @@
         "component/face/nose.nxt",
         "component/face/ear.nxt"
     ],
+    "meta_data": {
+        "positions": {
+            "/eyes_psd": [
+                400,
+                20
+            ]
+        }
+    },
     "nodes": {
         "/apply/deformation": {
             "child_order": [
-                "face",
-                "main"
+                "face"
             ]
         },
         "/apply/deformation/face": {
@@ -58,24 +65,13 @@
         "/apply/deformation/face/skin/split": {
             "instance": "/split_skin_weights"
         },
-        "/cleanup": {
-            "child_order": [
-                "delete_face_guides",
-                "hide_joints",
-                "model_override",
-                "skin_tools_data"
-            ]
-        },
-        "/cleanup/delete_face_guides": {
+        "/apply/deformation/main/psd/body_psd/eyes": {
+            "instance": "/psd_import",
             "attrs": {
-                "face_guides_group": {
-                    "type": "raw",
-                    "value": "${/setup/root/guides/face.face_guides_group}"
+                "psd_filename": {
+                    "value": "eyes"
                 }
-            },
-            "code": [
-                "cmds.delete(\"${face_guides_group}\")"
-            ]
+            }
         },
         "/build/left": {
             "child_order": [
@@ -202,6 +198,25 @@
         },
         "/build/middle/face/tongue": {
             "instance": "/tongue_component"
+        },
+        "/cleanup": {
+            "child_order": [
+                "delete_face_guides",
+                "hide_joints",
+                "model_override",
+                "skin_tools_data"
+            ]
+        },
+        "/cleanup/delete_face_guides": {
+            "attrs": {
+                "face_guides_group": {
+                    "type": "raw",
+                    "value": "${/setup/root/guides/face.face_guides_group}"
+                }
+            },
+            "code": [
+                "cmds.delete(\"${face_guides_group}\")"
+            ]
         },
         "/setup/root/deformation/face": {
             "child_order": [
