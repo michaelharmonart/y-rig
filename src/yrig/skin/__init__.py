@@ -14,20 +14,22 @@ from .apply import (
     skin_and_apply_weights,
     skin_and_apply_weights_from_directories,
 )
-from .core import skin_geometry, transfer_skin_weights
+from .core import skin_geometry
 from .export import (
-    batch_export_skin_weights,
+    batch_export_skin_data,
     export_skin_weights_for_shape,
 )
-from .serialize import export_skin_weights, import_skin_weights
+from .serialize import export_skin_data, export_skin_weights, import_skin_weights
+from .transfer import transfer_skin
 
 __all__ = [
     "apply",
     "apply_ng_weights",
     "apply_weights",
-    "batch_export_skin_weights",
+    "batch_export_skin_data",
     "core",
     "export",
+    "export_skin_data",
     "export_skin_weights",
     "export_skin_weights_for_shape",
     "import_skin_weights",
@@ -38,6 +40,6 @@ __all__ = [
     "skin_and_apply_weights_from_directories",
     "skin_geometry",
     "split",
-    "transfer_skin_weights",
+    "transfer_skin",
     "visualize",
 ]

@@ -8,8 +8,8 @@ from yrig.io import promt_user_for_directory
 from yrig.name import get_short_name
 from yrig.shape import get_shape
 from yrig.skin.core import get_skinned_shapes
-from yrig.skin.ng import write_ng_skin_weights
-from yrig.skin.serialize import export_skin_weights
+from yrig.skin.ng import write_ng_skin_data
+from yrig.skin.serialize import export_skin_data
 
 
 def _resolve_export_directory(directory: Path | None = None) -> Path:
@@ -59,15 +59,16 @@ def _shape_to_export_name(shape: str) -> str:
     return shape
 
 
-def _export_weights_for_shape(
+def _export_skin_data_for_shape(
     shape: str, directory: Path, use_ng: bool, force: bool
 ) -> Path | None:
-    filepath = directory / f"{_shape_to_export_name(shape)}{'.json' if use_ng else '.yskin'}"
+    extension = ".json" if use_ng else ".yskin"
+    filepath = directory / f"{_shape_to_export_name(shape)}{extension}"
 
     if use_ng:
-        result = write_ng_skin_weights(filepath=filepath, geometry=shape, force=force)
+        result = write_ng_skin_data(filepath=filepath, geometry=shape, force=force)
     else:
-        result = export_skin_weights(filepath=filepath, geometry=shape, force=force)
+        result = export_skin_data(filepath=filepath, geometry=shape, force=force)
 
     return filepath if result else None
 
@@ -95,7 +96,7 @@ def export_skin_weights_for_shape(
 
     use_ng_resolved = use_ng and cmds.nodeType(shape) == "mesh"
 
-    exported_path = _export_weights_for_shape(
+    exported_path = _export_skin_data_for_shape(
         shape=shape, directory=export_directory, use_ng=use_ng_resolved, force=force
     )
     if exported_path is None:
@@ -103,7 +104,7 @@ def export_skin_weights_for_shape(
     return exported_path
 
 
-def batch_export_skin_weights(
+def batch_export_skin_data(
     directory: Path | None = None,
     *,
     selected_only: bool = True,
@@ -135,7 +136,7 @@ def batch_export_skin_weights(
 
     exported_files: list[Path] = []
     for shape in shapes:
-        exported_path = _export_weights_for_shape(
+        exported_path = _export_skin_data_for_shape(
             shape=shape, directory=export_directory, use_ng=use_ng, force=force
         )
         if exported_path is not None:

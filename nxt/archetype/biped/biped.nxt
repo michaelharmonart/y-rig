@@ -199,6 +199,13 @@
                 }
             }
         },
+        "/skin_geometry": {
+            "attrs": {
+                "dual_quaternion": {
+                    "value": "True"
+                }
+            }
+        },
         "/tools_window/biped": {
             "instance": "/tab",
             "child_order": [

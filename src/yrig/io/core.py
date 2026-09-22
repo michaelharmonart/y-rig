@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Iterable
 from pathlib import Path
 
 from maya import cmds
@@ -6,22 +7,31 @@ from maya import cmds
 log = logging.getLogger(__name__)
 
 
-def confirm_overwrite(filepath: Path, force: bool = False) -> bool:
+def confirm_overwrite(filepath: Path | Iterable[Path], force: bool = False) -> bool:
     """
     If *filepath* does not exist, return ``True`` immediately.
 
     If *filepath* already exists, show a confirmation dialogue and return
     ``True`` only if the user explicitly agrees to overwrite or if *force* is ``True``.
     """
-    if filepath.is_dir():
-        raise IsADirectoryError(f"Found directory instead of file at {filepath}")
-    if force:
+    if isinstance(filepath, Path):
+        resolved_paths = (filepath,)
+    else:
+        resolved_paths = tuple(filepath)
+    existing_paths: list[Path] = []
+    for path in resolved_paths:
+        if path.is_dir():
+            raise IsADirectoryError(f"Found directory instead of file at {filepath}")
+        if path.exists():
+            existing_paths.append(path)
+    if force or not existing_paths:
         return True
-    if not filepath.exists():
-        return True
+
+    existing_paths_str = ", \n".join(str(path) for path in existing_paths)
     confirm: str = cmds.confirmDialog(
         title="File Overwrite",
-        message=f"{filepath} already exists and will be overwritten, are you sure you want to write the file?",
+        message="The following file(s) already exist and will be overwritten, are you sure you want to write them?\n"
+        f"{existing_paths_str}",
         button=["Yes", "No"],
         defaultButton="Yes",
         cancelButton="No",

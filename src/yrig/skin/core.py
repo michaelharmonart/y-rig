@@ -19,6 +19,11 @@ from maya.api.OpenMaya import (
 )
 from maya.api.OpenMayaAnim import MFnSkinCluster
 
+from yrig.maya_api.enum import (
+    SkinClusterNormalizeWeights,
+    SkinClusterRelativeSpaceMode,
+    SkinClusterWeightDistribution,
+)
 from yrig.maya_api.node import SkinCluster
 from yrig.maya_api.utils import get_dag_path, get_depend_node
 from yrig.name import natural_sort_key
@@ -64,10 +69,11 @@ def get_skin_cluster(geometry: str) -> str | None:
     return skin_clusters[0] if skin_clusters else None
 
 
-def _resolve_skin_cluster(node: str) -> str | None:
+def _resolve_skin_cluster(node: str) -> SkinCluster | None:
     if cmds.nodeType(node) == "skinCluster":
-        return node
-    return get_skin_cluster(node)
+        return SkinCluster.from_existing(node)
+    skin_cluster = get_skin_cluster(node)
+    return SkinCluster.from_existing(skin_cluster) if skin_cluster is not None else None
 
 
 def get_skin_cluster_influences(skin_cluster: str | SkinCluster) -> list[str]:
@@ -88,27 +94,37 @@ def skin_geometry(
     geometry: str,
     name: str | None = None,
     *,
-    dual_quaternion: bool = True,
+    dual_quaternion: bool = False,
     weight_blend: bool = False,
     support_non_rigid: bool = True,
-    local: bool = False,
-) -> str:
+    relative_space_mode: SkinClusterRelativeSpaceMode = SkinClusterRelativeSpaceMode.WORLD,
+    normalize_weights: SkinClusterNormalizeWeights = SkinClusterNormalizeWeights.INTERACTIVE,
+    weight_distribution: SkinClusterWeightDistribution = SkinClusterWeightDistribution.DISTANCE,
+    max_influences: int = 6,
+    maintain_max_influences: bool = False,
+) -> SkinCluster:
     """
-    Creates a skinCluster on the given geometry using the specified bind joints.
+    Create a skin cluster on the given geometry using the specified bind joints.
 
     Args:
-        bind_joints (list[str]): A list of joint names to bind the geometry to.
-        geometry (str): The name of the geometry to be skinned.
-        name (str | None, optional): The name to assign to the skinCluster.
-            If None, a name will be auto-generated based on the geometry name.
-        dual_quaternion (bool): Whether to use dual quaternion skinning.
-            Defaults to False (classic linear skinning).
-        weight_blend (bool): When using dual quaternion skinning, if True the skinCluster will use the DQ Weight Blended mode.
-        support_non_rigid (bool): When using dual quaternion skinning, when True the option for supporting non rigid transformations is enabled.
-        local (bool): Whether to enable local space mode on the skin cluster.
+        bind_joints: Joint names to bind the geometry to.
+        geometry: Geometry to skin.
+        name: Name for the skin cluster. If None, uses the geometry name with
+            a ``_SC`` suffix.
+        dual_quaternion: Whether to use dual quaternion skinning. If False,
+            classic linear skinning is used.
+        weight_blend: Whether to use DQ weight blended mode when dual
+            quaternion skinning is enabled.
+        support_non_rigid: Whether to enable support for non-rigid
+            transformations when dual quaternion skinning is enabled.
+        relative_space_mode: Space mode used by the skin cluster.
+        normalize_weights: Weight normalization mode used by the skin cluster.
+        weight_distribution: Method used to distribute weights when binding.
+        max_influences: Maximum number of influences allowed per vertex.
+        maintain_max_influences: Whether to enforce the maximum influence count.
 
     Returns:
-        str: The name of the created skinCluster node.
+        The created skin cluster.
     """
     if not name:
         name = f"{geometry}_SC"
@@ -128,12 +144,15 @@ def skin_geometry(
         toSelectedBones=True,
         skinMethod=mode,
         name=name,
+        normalizeWeights=normalize_weights,
+        weightDistribution=weight_distribution,
+        maximumInfluences=max_influences,
+        obeyMaxInfluences=maintain_max_influences,
     )[0]
-    if support_non_rigid:
-        cmds.setAttr(f"{skin_cluster}.dqsSupportNonRigid", 1)  # type: ignore
-    if local:
-        cmds.setAttr(f"{skin_cluster}.relativeSpaceMode", 1)  # type: ignore
-    return skin_cluster
+    skin_cluster_node = SkinCluster.from_existing(skin_cluster)
+    skin_cluster_node.dqs_support_non_rigid.set(support_non_rigid)
+    skin_cluster_node.relative_space_mode.set(relative_space_mode)
+    return skin_cluster_node
 
 
 def remove_unused_influences(geometry: str, skin_cluster: str | None = None) -> list[str]:
@@ -440,49 +459,3 @@ def set_skin_weights(
         returnOldWeights=False,
     )
     return resolved_skin_cluster
-
-
-def transfer_skin_weights(
-    source: str,
-    target: str,
-    interpolate: bool = True,
-    map_by_name: bool = True,
-    add_missing_influences: bool = True,
-    skin_unskinned_target: bool = True,
-) -> None:
-    """Transfer skin weights from one skinned object to another.
-
-    Args:
-        source: Source geometry or skinCluster.
-        target: Target geometry or skinCluster.
-        interpolate: Smooth/interpolate weights when transferring between different topology.
-        map_by_name: Match influences by name. Otherwise Maya uses closestJoint.
-        add_missing_influences: Add source influences that do not exist on the target skinCluster.
-        skin_unskinned_target: Create a skinCluster on the target when one does not exist.
-    """
-    source_skin = _resolve_skin_cluster(source)
-    if source_skin is None:
-        raise RuntimeError(f"No skin cluster found on {source}.")
-
-    source_influences = get_skin_cluster_influences(source_skin)
-    if not source_influences:
-        raise RuntimeError(f"Source skin cluster {source_skin!r} has no influences.")
-
-    target_skin = _resolve_skin_cluster(target)
-
-    if target_skin is None:
-        if skin_unskinned_target:
-            target_skin = skin_geometry(source_influences, target)
-        else:
-            raise RuntimeError(f"No skin cluster found on {target}.")
-    elif add_missing_influences:
-        target_influences = get_skin_cluster_influences(target_skin)
-        _add_missing_influences(target_influences, source_influences, target_skin)
-
-    cmds.copySkinWeights(
-        sourceSkin=source_skin,
-        destinationSkin=target_skin,
-        noMirror=True,
-        smooth=interpolate,
-        influenceAssociation="name" if map_by_name else "closestJoint",
-    )

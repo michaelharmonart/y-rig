@@ -8,15 +8,17 @@ from maya import cmds
 from maya.api.OpenMaya import MFnComponent
 
 from yrig.io import confirm_overwrite
-from yrig.io.json import load_json
+from yrig.io.json import export_json, load_json
 from yrig.maya_api.utils import get_dag_path
 from yrig.shape import get_components_of_shape
 from yrig.skin.core import (
+    _resolve_skin_cluster,
     get_influence_index_to_name_map,
     get_influence_name_to_index_map,
     get_skin_cluster,
     organize_weights_by_influence,
 )
+from yrig.skin.serialize import get_skin_bind_data
 
 log = logging.getLogger(__name__)
 
@@ -178,6 +180,21 @@ def write_ng_skin_weights(filepath: Path, geometry: str, force: bool = False) ->
         return False
     ng.export_json(target=geometry, file=str(filepath))
     log.info(f"The skin weights for {geometry} were written to {filepath}")
+    return True
+
+
+@require_ng_skin
+def write_ng_skin_data(filepath: Path, geometry: str, force: bool = False) -> bool:
+    skin_cluster = _resolve_skin_cluster(geometry)
+    if skin_cluster is None:
+        raise RuntimeError(f"No skinCluster found on {geometry}")
+    weight_filepath = filepath
+    bind_filepath = filepath.with_suffix(".ybind")
+    if not confirm_overwrite((weight_filepath, bind_filepath), force):
+        return False
+    bind_data = get_skin_bind_data(skin_cluster)
+    export_json(bind_filepath, bind_data)
+    ng.export_json(target=geometry, file=str(weight_filepath))
     return True
 
 

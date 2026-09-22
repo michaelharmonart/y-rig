@@ -30,6 +30,11 @@
                     "type": "raw",
                     "value": "rig_deformers_grp"
                 },
+                "dual_quaternion": {
+                    "comment": "Whether to use DQ for fallback skinning.",
+                    "type": "bool",
+                    "value": "False"
+                },
                 "fallback_skinning": {
                     "comment": "When True geometry will be skinned to the gfiven joints even if no skin file is found.",
                     "type": "bool",
@@ -69,7 +74,7 @@
                 "geo_to_skin = geo_list if geo_list else cmds.sets(\"${geo_set}\", query=True)",
                 "",
                 "def _fallback_skin(geometry: str):",
-                "    skin_geometry(def_joints, geometry)",
+                "    skin_geometry(def_joints, geometry, dual_quaternion=${dual_quaternion})",
                 "    STAGE.log.info(f\"Default skinned {geometry}\")",
                 "",
                 "strip_suffix = \"${strip_suffix}\"",
@@ -113,7 +118,7 @@
             "code": [
                 "transfer_mapping = ${transfer_mapping}",
                 "for source, target in transfer_mapping.items():",
-                "    yrig.skin.transfer_skin_weights(source, target)"
+                "    yrig.skin.transfer_skin(source, target)"
             ]
         }
     }
