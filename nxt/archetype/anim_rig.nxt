@@ -12,12 +12,12 @@
     "meta_data": {
         "positions": {
             "/apply": [
-                45.101567325149915,
-                -14.162854949084434
+                865.1915815690384,
+                -12.103226698102677
             ],
             "/cleanup": [
-                467.7309816100551,
-                -15.474659993798152
+                1300.6480500225357,
+                -11.929521705595196
             ],
             "/cleanup/control_shapes": [
                 0.0,
@@ -27,17 +27,25 @@
                 -2.4974733523247323,
                 95.12116921241874
             ],
+            "/left": [
+                17.65526123510523,
+                -10.24338654365905
+            ],
             "/main": [
                 -679.5661157024792,
                 324.3636363636364
             ],
             "/middle": [
-                -396.0467648945946,
-                -12.903779307342678
+                -414.87530251227207,
+                -11.02092554557493
             ],
             "/rest_pose": [
                 107.99415846869607,
                 265.1998166510077
+            ],
+            "/right": [
+                462.41406815056894,
+                -11.790323947023598
             ],
             "/root": [
                 -834.0036602069565,
@@ -106,7 +114,7 @@
             }
         },
         "/apply": {
-            "execute_in": "/middle",
+            "execute_in": "/right",
             "child_order": [
                 "rest_pose",
                 "control_shapes",
@@ -213,9 +221,36 @@
                 "    yrig.skin.ng.cleanup_ng_data_nodes()"
             ]
         },
+        "/left": {
+            "instance": "/side",
+            "execute_in": "/middle",
+            "attrs": {
+                "control_color": {
+                    "value": "[0.105, 0.447, 0.911]"
+                },
+                "side": {
+                    "value": "L"
+                }
+            }
+        },
         "/middle": {
             "instance": "/side",
             "execute_in": "/setup"
+        },
+        "/right": {
+            "instance": "/left",
+            "execute_in": "/left",
+            "attrs": {
+                "control_color": {
+                    "value": "[0.811, 0.080, 0.108]"
+                },
+                "side": {
+                    "value": "R"
+                },
+                "side_mult": {
+                    "value": "-1"
+                }
+            }
         },
         "/setup": {
             "start_point": true,
@@ -444,7 +479,8 @@
         "/tools_window/tools/skin": {
             "instance": "/panel",
             "child_order": [
-                "skin_data_io"
+                "skin_data_io",
+                "weight_split"
             ],
             "attrs": {
                 "text": {

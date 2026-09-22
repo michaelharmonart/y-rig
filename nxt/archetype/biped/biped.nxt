@@ -17,12 +17,12 @@
     "meta_data": {
         "positions": {
             "/apply": [
-                863.0669956752183,
-                -13.16285494908442
+                888.8765850667808,
+                -15.486798626351607
             ],
             "/cleanup": [
-                1296.6643526537218,
-                -15.594755912117055
+                1351.2193760258265,
+                -21.41354069259009
             ],
             "/component": [
                 -871.1745871252489,
@@ -49,8 +49,8 @@
                 -974.9116258957818
             ],
             "/left": [
-                18.209666557736483,
-                -12.063569759815769
+                43.70522400530376,
+                -12.216212990862651
             ],
             "/look_component": [
                 -853.3603880127753,
@@ -69,8 +69,8 @@
                 -574.777657650386
             ],
             "/right": [
-                419.19959226227263,
-                -11.329718709791148
+                463.15561879099346,
+                -12.908243890569672
             ],
             "/root": [
                 -836.227393231747,
@@ -120,7 +120,6 @@
         "collapse": {
             "/apply/deformation/face": false,
             "/apply/deformation/face/duplicate_geo": false,
-            "/left": false,
             "/right/ear": true,
             "/right/eye": true,
             "/right/eyebrow": true,
@@ -140,8 +139,10 @@
             }
         },
         "/apply": {
-            "execute_in": "/right",
             "child_order": [
+                "rest_pose",
+                "control_shapes",
+                "deformation",
                 "visibility_sets"
             ]
         },
@@ -162,40 +163,10 @@
                 "    yrig.sets.import_sets(filepath, parent=\"${rig_set}\")"
             ]
         },
-        "/cleanup": {
-            "execute_in": "/apply"
-        },
-        "/left": {
-            "instance": "/side",
-            "execute_in": "/middle",
-            "attrs": {
-                "control_color": {
-                    "value": "[0.105, 0.447, 0.911]"
-                },
-                "side": {
-                    "value": "L"
-                }
-            }
-        },
         "/middle": {
             "attrs": {
                 "control_color": {
                     "value": "[1.0, 0.8786, 0.0]"
-                }
-            }
-        },
-        "/right": {
-            "instance": "/left",
-            "execute_in": "/left",
-            "attrs": {
-                "control_color": {
-                    "value": "[0.811, 0.080, 0.108]"
-                },
-                "side": {
-                    "value": "R"
-                },
-                "side_mult": {
-                    "value": "-1"
                 }
             }
         },
