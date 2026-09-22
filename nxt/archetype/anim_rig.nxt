@@ -316,16 +316,22 @@
             }
         },
         "/setup/root/model": {
+            "child_order": [
+                "smooth_preview"
+            ],
             "attrs": {
                 "model_filepath": {
+                    "comment": "Filepath to the Model to be imported.",
                     "type": "raw",
                     "value": "${file::${rig_path}/assets/model.mb}"
                 },
                 "model_group": {
+                    "comment": "The name of the group under which the model is parented.",
                     "type": "raw",
                     "value": "geo"
                 },
                 "model_set": {
+                    "comment": "All imported model geometry is added to this set.",
                     "type": "raw",
                     "value": "${rig_root}_geo_grp"
                 }
@@ -371,6 +377,19 @@
                 "yrig.sets.add_to_set(mesh_transforms, \"${model_set}\", parent=\"${rig_set}\")",
                 "cmds.viewFit()",
                 ""
+            ]
+        },
+        "/setup/root/model/smooth_preview": {
+            "attrs": {
+                "smooth_geo": {
+                    "comment": "Geometry to set the smooth preview setting on. Like hitting 3 in the Maya viewport.",
+                    "type": "list",
+                    "value": "[]"
+                }
+            },
+            "code": [
+                "for geo in ${smooth_geo}:",
+                "    yrig.shape.set_smooth_preview(geo)"
             ]
         },
         "/tools_window/tools/control_shapes": {

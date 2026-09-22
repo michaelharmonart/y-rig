@@ -10,6 +10,8 @@ from maya.api.OpenMaya import (
     MObject,
 )
 
+from yrig.select import maintain_selection
+
 
 def get_shape(object: str) -> str | None:
     """
@@ -76,3 +78,12 @@ def bake_shape(transform: str, zero_pivot: bool = True) -> None:
     cmds.makeIdentity(transform, apply=True)
     if zero_pivot:
         cmds.xform(transform, pivots=(0, 0, 0))
+
+
+def set_smooth_preview(geometry: str, enable: bool = True) -> None:
+    with maintain_selection(maintain_empty=True):
+        cmds.select(geometry, replace=True)
+        if enable:
+            cmds.displaySmoothness(polygonObject=3)
+        else:
+            cmds.displaySmoothness(polygonObject=0)
