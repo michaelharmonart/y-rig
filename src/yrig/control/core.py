@@ -164,7 +164,7 @@ def create_control(
         )
     )
     control_transform = partial_path_name(control_transform_path)
-
+    cmds.setAttr(f"{control_transform}.visibility", keyable=False, channelBox=False)
     if limit_min_scale:  # Comfort feature: make it so it's not possible to have negative scale
         min_scale: float = 0.01
         cmds.transformLimits(
