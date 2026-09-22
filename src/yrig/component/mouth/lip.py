@@ -7,7 +7,7 @@ from maya import cmds
 from yrig.control import Control, create_control
 from yrig.joint import create_joint
 from yrig.maya_api.attribute import BooleanAttribute, ClosestPointOnSurfaceResultAttribute
-from yrig.maya_api.enum import RotateOrder
+from yrig.maya_api.enum import Axis, RotateOrder
 from yrig.maya_api.node import MultiplyNode, UvPinNode
 from yrig.skin.split import tag_for_weight_split
 from yrig.spline import generate_knots
@@ -85,7 +85,7 @@ class LipMidpoint:
             distance_transform,
             space=str(control_parent),
             zero_at_rest=True,
-            axes=(True, False, False),
+            axes=(True, False, True),
         )
         corner_distance_scale = MultiplyNode.create(f"{name}_distance_scale")
         corner_distance_scale.input[0].connect_from(corner_distance)
@@ -184,9 +184,13 @@ class LipSpline:
             curve_pin = create_transform(f"{segment_name}_curve_pin", parent=parent)
 
             pin_to_curve_with_motion_path(
-                self.curve, curve_pin, parameter=(i + 0.5) / self.count, orient=orient
+                self.curve,
+                curve_pin,
+                parameter=(i + 0.5) / self.count,
+                orient=orient,
+                up_axis=Axis.Y,
+                up_vector=(0, 1, 0),
             )
-
             closest_point_reader = closest_point_on_surface_reader(curve_pin, surface)
             self.closest_points.append(closest_point_reader)
 
