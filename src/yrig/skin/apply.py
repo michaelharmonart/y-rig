@@ -6,11 +6,12 @@ from typing import Any
 from yrig.build.progress import progress_step
 from yrig.maya_api.node import SkinCluster
 from yrig.name import get_short_name
-from yrig.skin.core import get_skin_clusters, skin_geometry
+from yrig.skin.core import _resolve_skin_cluster, get_skin_clusters, skin_geometry
 from yrig.skin.ng import apply_ng_skin_weights, get_influences_from_ng_skin_weights
 from yrig.skin.serialize import (
     SkinBindData,
     _validate_influences,
+    apply_skin_bind_data,
     apply_skin_weight_data,
     load_skin_bind_data,
     load_skin_weight_data,
@@ -26,6 +27,19 @@ def _get_bind_data(weights_filepath: Path) -> SkinBindData | None:
         return load_skin_bind_data(bind_filepath)
     else:
         return None
+
+
+def apply_skin_data(filepath: Path, geometry: str) -> None:
+    """
+    Apply weights from a ``.yskin`` file and bind data from a ``.ybind` file
+    """
+    skin_cluster = _resolve_skin_cluster(geometry)
+    if skin_cluster is None:
+        raise RuntimeError(f"Couldn't find a skinCluster on {geometry}")
+    apply_weights(filepath, geometry)
+    bind_data = _get_bind_data(filepath)
+    if bind_data is not None:
+        apply_skin_bind_data(skin_cluster, bind_data)
 
 
 def apply_weights(filepath: Path, geometry: str) -> None:
@@ -70,6 +84,19 @@ def apply_ng_weights(filepath: Path, mesh: str) -> None:
     apply_ng_skin_weights(filepath, mesh)
 
 
+def apply_ng_data(filepath: Path, mesh: str) -> None:
+    """
+    Apply weights from a ngSkinTools file and apply bind data if present.
+    """
+    skin_cluster = _resolve_skin_cluster(mesh)
+    if skin_cluster is None:
+        raise RuntimeError(f"Couldn't find a skinCluster on {mesh}")
+    apply_ng_skin_weights(filepath, mesh)
+    bind_data = _get_bind_data(filepath)
+    if bind_data is not None:
+        apply_skin_bind_data(skin_cluster, bind_data)
+
+
 def skin_and_apply_ng_weights(filepath: Path, mesh: str) -> SkinCluster:
     """
     Skin geometry using influences from an ngSkinTools file and apply weights.
@@ -97,7 +124,7 @@ def skin_and_apply_ng_weights(filepath: Path, mesh: str) -> SkinCluster:
     return skin_cluster
 
 
-def apply_weights_from_directories(
+def apply_skin_data_from_directories(
     directories: Sequence[Path],
     geometry: Sequence[str],
     *,
@@ -130,12 +157,12 @@ def apply_weights_from_directories(
                     ng_skin_filepath: Path = directory / f"{geo_mapped_file}.json"
                     yskin_filepath: Path = directory / f"{geo_mapped_file}.yskin"
                     if ng_skin_filepath.exists():
-                        apply_ng_weights(ng_skin_filepath, geo)
+                        apply_ng_data(ng_skin_filepath, geo)
                         geo_applied_weight_files[geo] = ng_skin_filepath
                         applied = True
                         break
                     elif yskin_filepath.exists():
-                        apply_weights(yskin_filepath, geo)
+                        apply_skin_data(yskin_filepath, geo)
                         geo_applied_weight_files[geo] = yskin_filepath
                         applied = True
                         break

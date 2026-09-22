@@ -425,7 +425,7 @@
         "/tools_window/tools/skin": {
             "instance": "/panel",
             "child_order": [
-                "skin_weights_io"
+                "skin_data_io"
             ],
             "attrs": {
                 "text": {
@@ -433,7 +433,7 @@
                 }
             }
         },
-        "/tools_window/tools/skin/skin_weights_io": {
+        "/tools_window/tools/skin/skin_data_io": {
             "instance": "/io_pair",
             "child_order": [
                 "import",
@@ -445,14 +445,15 @@
                 },
                 "text": {
                     "type": "raw",
-                    "value": "Skin Weights"
+                    "value": "Skin Data"
                 }
             }
         },
-        "/tools_window/tools/skin/skin_weights_io/export": {
+        "/tools_window/tools/skin/skin_data_io/export": {
             "attrs": {
                 "text": {
-                    "value": "Export Skin Weights"
+                    "type": "raw",
+                    "value": "Export Skin Data"
                 }
             },
             "code": [
@@ -462,24 +463,25 @@
                 "export_path = Path(\"${export_path}\")",
                 "",
                 "selection = yrig.select.get_selection()",
-                "yrig.skin.export.batch_export_skin_weights(export_path, selected_only=True)"
+                "yrig.skin.export.batch_export_skin_data(export_path, selected_only=True)"
             ]
         },
-        "/tools_window/tools/skin/skin_weights_io/import": {
+        "/tools_window/tools/skin/skin_data_io/import": {
             "attrs": {
                 "resolved_skin_directories": {
                     "type": "raw",
                     "value": "${filelist::${import_filepath}}"
                 },
                 "text": {
-                    "value": "Import Skin Weights"
+                    "type": "raw",
+                    "value": "Import Skin Data"
                 }
             },
             "code": [
                 "skin_directories = [Path(dir) for dir in ${resolved_skin_directories}]",
                 "",
                 "selection = yrig.select.get_selection()",
-                "yrig.skin.appy.apply_weights_from_directories(",
+                "yrig.skin.apply.apply_skin_data_from_directories(",
                 "    skin_directories, ",
                 "    geometry=selection,",
                 ")"
