@@ -28,7 +28,7 @@ maya = [
 
 [tool.ruff]
 line-length = 100
-exclude = ["third_party", "maya-setup.py"]
+exclude = ["third_party", "maya-setup.py", "shifter/components/**/settingsUI.py"]
 
 [tool.ruff.lint]
 preview = true
