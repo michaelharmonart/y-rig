@@ -67,8 +67,10 @@
             "code": [
                 "from yrig.skin import skin_and_apply_weights_from_directories",
                 "from yrig.skin.core import skin_geometry",
+                "from yrig.name import natural_sort_key",
                 "def_in_set = cmds.sets(\"${def_set}\", query=True)",
-                "def_joints = cmds.ls(def_in_set, type=\"joint\")  # type: ignore    ",
+                "def_joints = sorted(cmds.ls(def_in_set, type=\"joint\"), key=natural_sort_key)",
+                "      ",
                 "",
                 "geo_list = ${geo_list}",
                 "geo_to_skin = geo_list if geo_list else cmds.sets(\"${geo_set}\", query=True)",
