@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Iterable, Sequence
 from dataclasses import asdict, dataclass
 from enum import Enum
 from pathlib import Path
@@ -16,7 +17,9 @@ from maya.api.OpenMaya import (
 
 from yrig.control.utils import get_tagged_controls
 from yrig.io import confirm_overwrite
+from yrig.io.json import export_json, load_json
 from yrig.maya_api.utils import get_depend_node
+from yrig.name import natural_sort_key
 from yrig.transform import create_transform, get_shapes
 
 log = logging.getLogger(__name__)
@@ -153,12 +156,7 @@ def control_shape_data_from_json(json_str: str) -> ControlShapeData:
 
 
 def control_shape_data_from_library(curve_shape: ControlShape | str) -> ControlShapeData:
-    """
-    Args:
-        curve_shape(ControlShape): Name of the control shape to retrieve.
-    Returns:
-        dict: Curve data.
-    """
+    """Load control shape data from the shape library."""
     if isinstance(curve_shape, str):
         curve_shape: ControlShape = ControlShape[curve_shape.strip().upper()]
     if curve_shape not in _control_shape_data_cache:
@@ -179,6 +177,7 @@ def control_shape_data_from_library(curve_shape: ControlShape | str) -> ControlS
 def create_shape_from_named_curve_data(
     named_curve: NamedNurbsCurveData, parent: str, use_name: bool = True
 ) -> str:
+    """Create a NURBS curve shape from serialized curve data."""
     curve = named_curve.curve
     positions: list[tuple[float, float, float]] = curve.cv_positions
     degree: int | list = curve.degree
@@ -228,6 +227,7 @@ def create_curve_from_data(
     name: str | None = None,
     parent: str | None = None,
 ) -> str:
+    """Create a curve from serialized control shape data."""
     curve_transform: str = create_transform(name=name or "curve")
     for index, named_curve in enumerate(curve_data.curves):
         shape_node = create_shape_from_named_curve_data(
@@ -318,18 +318,65 @@ def write_curve_to_library(
     log.info(f"The control shape for {curve} was written to the shape library at {json_path}")
 
 
-def export_control_shapes_file(filepath: Path, force: bool = False) -> bool:
-    controls = get_tagged_controls()
-    controls_shape_dict_data: dict[str, dict] = {
-        control: get_control_shape_data(control).to_dict() for control in controls
+def _resolve_controls_ordered(controls: Iterable[str] | None) -> list[str]:
+    if controls is None:
+        return sorted(get_tagged_controls(), key=natural_sort_key)
+    else:
+        return sorted(controls, key=natural_sort_key)
+
+
+def export_control_shapes_file(
+    filepath: Path, controls: Iterable[str] | None, force: bool = False
+) -> bool:
+    """Export control shape data for the specified controls."""
+    resolved_controls = _resolve_controls_ordered(controls)
+    controls_shape_dict_data: dict[str, dict[str, ControlShapeData]] = {
+        control: get_control_shape_data(control).to_dict() for control in resolved_controls
     }
     if not confirm_overwrite(filepath, force):
         return False
-    json_dump = json.dumps(controls_shape_dict_data, indent=2)
-    with open(file=filepath, mode="w") as json_file:
-        json_file.write(json_dump)
+    export_json(filepath, controls_shape_dict_data)
     log.info(f"Successfully exported control shapes file to {filepath}")
     return True
+
+
+def add_override_for_controls(
+    filepath: Path, controls: Iterable[str] | None = None, force: bool = False
+) -> bool:
+    """Add control shape overrides to an existing shape file,
+    or if it doesn't exist create it and add the overrides."""
+    resolved_controls = _resolve_controls_ordered(controls)
+    if filepath.exists():
+        control_shapes = load_control_shapes_file(filepath)
+    else:
+        control_shapes = {}
+    override_controls_shapes: dict[str, ControlShapeData] = {
+        control: get_control_shape_data(control) for control in resolved_controls
+    }
+    control_shapes.update(override_controls_shapes)
+    sorted_control_shapes = dict(
+        sorted(control_shapes.items(), key=lambda item: natural_sort_key(item[0]))
+    )
+    if not confirm_overwrite(filepath, force):
+        return False
+    export_json(
+        filepath,
+        {control: data.to_dict() for control, data in control_shapes.items()},
+    )
+    log.info(
+        f"Successfully added overrides for control shape(s): {', '.join(resolved_controls)} to file at {filepath}"
+    )
+    return True
+
+
+def load_control_shapes_file(filepath: Path) -> dict[str, ControlShapeData]:
+    if not filepath.exists():
+        raise RuntimeError(f"There was no control shapes file found at {filepath}")
+
+    with open(filepath) as json_file:
+        control_dict = load_json(filepath, dict)
+
+    return {control: ControlShapeData.from_dict(data) for control, data in control_dict.items()}
 
 
 # Storing control data on the shape node is dumb, but for alwaysDrawOnTop it's the only way.
@@ -427,18 +474,40 @@ def apply_control_shape_data(control: str, data: ControlShapeData) -> None:
     cmds.delete(old_control_shapes)  # type: ignore
 
 
-def apply_control_shapes_file(filepath: Path) -> None:
-    if not filepath.exists():
-        raise RuntimeError(f"There was no control shapes file found at {filepath}")
+def compose_control_shapes_files(
+    filepaths: Sequence[Path],
+) -> dict[str, ControlShapeData]:
+    """Compose control shape data from multiple files."""
+    composed: dict[str, ControlShapeData] = {}
+    for filepath in reversed(filepaths):
+        if filepath.exists() and filepath.is_file():
+            control_shapes = load_control_shapes_file(filepath)
+        composed.update(control_shapes)
+    return composed
 
-    existing_controls: set[str] = set(get_tagged_controls())
-    control_dict: dict[str, dict]
-    with open(filepath) as json_file:
-        json_data = json_file.read()
-        control_dict = json.loads(json_data)
-    for control, control_shape_data_dict in control_dict.items():
-        if control not in existing_controls:
+
+def apply_control_shapes_file(filepath: Path, controls: Iterable[str] | None = None) -> None:
+    """Apply control shape data from a file."""
+    resolved_controls = set(_resolve_controls_ordered(controls))
+    control_shapes_data = load_control_shapes_file(filepath)
+    for control, control_shape_data in control_shapes_data.items():
+        if control not in resolved_controls:
             continue
-        control_shape_data = ControlShapeData.from_dict(control_shape_data_dict)
         apply_control_shape_data(control, control_shape_data)
     log.info(f"Control shapes loaded and applied from {filepath}")
+
+
+def apply_control_shapes_files(
+    filepaths: Iterable[Path], controls: Iterable[str] | None = None
+) -> None:
+    """
+    Apply composed control shape data from multiple files.
+    The highest layer should be given first, and then weaker layers/parents afterward.
+    """
+    resolved_controls = set(_resolve_controls_ordered(controls))
+    for control, control_shape_data in compose_control_shapes_files(list(filepaths)).items():
+        if control not in resolved_controls:
+            continue
+        apply_control_shape_data(control, control_shape_data)
+
+    log.info("Control shapes loaded and applied from %s", list(filepaths))

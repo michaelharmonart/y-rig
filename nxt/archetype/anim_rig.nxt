@@ -114,7 +114,11 @@
             "/psd_import": true,
             "/psd_import/shapes": true,
             "/root/rig_hierarchy": true,
-            "/setup/root": false
+            "/setup/root": false,
+            "/tools_window/tools/control_shapes/control_shapes_io": true,
+            "/tools_window/tools/control_shapes/control_shapes_io/export": true,
+            "/tools_window/tools/control_shapes/control_shapes_io/import": true,
+            "/tools_window/tools/skin/skin_data_io": true
         },
         "locks": {
             "$YRIG_NXT_DIR/core.nxt": false,
@@ -549,10 +553,17 @@
             "attrs": {
                 "relative_filepath": {
                     "value": "data/control_shapes.json"
+                },
+                "resolved_import_paths": {
+                    "type": "raw",
+                    "value": "${filelist::${import_filepath}}"
                 }
             }
         },
         "/tools_window/tools/control_shapes/control_shapes_io/export": {
+            "child_order": [
+                "export_selected"
+            ],
             "attrs": {
                 "text": {
                     "value": "Export Control Shapes"
@@ -563,25 +574,64 @@
                 "if not export_root_path.exists():",
                 "    raise NotADirectoryError",
                 "export_path = Path(\"${export_path}\")",
-                "yrig.control.serialize.export_control_shapes_file(filepath=export_path, force=${force})"
+                "yrig.control.serialize.export_control_shapes_file(",
+                "    filepath=export_path, ",
+                "    force=${force}",
+                ")"
+            ]
+        },
+        "/tools_window/tools/control_shapes/control_shapes_io/export/export_selected": {
+            "instance": "/menuItem",
+            "attrs": {
+                "text": {
+                    "value": "Export Selected Control Shapes"
+                }
+            },
+            "code": [
+                "export_root_path = Path(\"${export_root_path}\")",
+                "if not export_root_path.exists():",
+                "    raise NotADirectoryError",
+                "export_path = Path(\"${export_path}\")",
+                "yrig.control.serialize.add_override_for_controls(",
+                "    filepath=export_path, ",
+                "    yrig.select.get_selection(), ",
+                "    force=${force}",
+                ")"
             ]
         },
         "/tools_window/tools/control_shapes/control_shapes_io/import": {
+            "child_order": [
+                "import_selected"
+            ],
             "attrs": {
                 "text": {
                     "value": "Import Control Shapes"
                 }
             },
             "code": [
-                "import_path = Path(\"${import_filepath}\")",
-                "yrig.control.serialize.apply_control_shapes_file(import_path)"
+                "import_paths = [Path(filepath) for filepath in ${resolved_import_paths}]",
+                "yrig.control.serialize.apply_control_shapes_files(import_paths)"
+            ]
+        },
+        "/tools_window/tools/control_shapes/control_shapes_io/import/import_selected": {
+            "instance": "/menuItem",
+            "attrs": {
+                "text": {
+                    "value": "Import Selected Control Shapes"
+                }
+            },
+            "code": [
+                "import_paths = [Path(filepath) for filepath in ${resolved_import_paths}]",
+                "yrig.control.serialize.apply_control_shapes_files(",
+                "    import_paths, ",
+                "    yrig.select.get_selection(),",
+                ")"
             ]
         },
         "/tools_window/tools/skin": {
             "instance": "/panel",
             "child_order": [
-                "skin_data_io",
-                "weight_split"
+                "skin_data_io"
             ],
             "attrs": {
                 "text": {
