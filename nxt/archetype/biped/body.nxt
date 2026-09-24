@@ -66,6 +66,7 @@
         },
         "/setup": {
             "child_order": [
+                "new_scene",
                 "shifter_component_build",
                 "root"
             ]

@@ -69,7 +69,7 @@
             ],
             "/setup": [
                 -840.0,
-                -20.0
+                0.0
             ],
             "/setup/rig_hierarchy": [
                 0.0,
@@ -361,7 +361,13 @@
         "/setup": {
             "start_point": true,
             "child_order": [
+                "new_scene",
                 "root"
+            ]
+        },
+        "/setup/new_scene": {
+            "code": [
+                "cmds.file(new=True, force=True)"
             ]
         },
         "/setup/root": {
