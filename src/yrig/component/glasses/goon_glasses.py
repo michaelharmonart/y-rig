@@ -1,5 +1,3 @@
-from maya import cmds
-
 from yrig.control import create_control
 from yrig.joint import create_joint
 from yrig.transform import create_transform
@@ -28,12 +26,9 @@ class Glasses:
     # -------------------
 
     def setup_structure(self) -> None:
-        self.main_grp = create_transform(name=f"eye_{self.side}", parent=self.parent)
-        self.component_grp = create_transform(
-            name=f"eye_component_{self.side}", parent=self.main_grp
+        self.control_grp = create_transform(
+            name=f"{self.part}_ctls_{self.side}", parent=self.control_parent
         )
-        cmds.hide(self.component_grp)
-        self.control_grp = create_transform(name=f"eye_control_{self.side}", parent=self.main_grp)
 
     def create_controls(self) -> None:
         self.controls = []
