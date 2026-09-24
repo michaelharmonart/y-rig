@@ -68,8 +68,8 @@
                 -12.525269102154974
             ],
             "/setup": [
-                -820.0,
-                0.0
+                -840.0,
+                -20.0
             ],
             "/setup/rig_hierarchy": [
                 0.0,
@@ -115,10 +115,11 @@
             "/psd_import/shapes": true,
             "/root/rig_hierarchy": true,
             "/setup/root": false,
-            "/tools_window/tools/control_shapes/control_shapes_io": true,
+            "/tools_window/tools/control_shapes/control_shapes_io": false,
             "/tools_window/tools/control_shapes/control_shapes_io/export": true,
             "/tools_window/tools/control_shapes/control_shapes_io/import": true,
-            "/tools_window/tools/skin/skin_data_io": true
+            "/tools_window/tools/geometry/geometry_io": false,
+            "/tools_window/tools/skin/skin_data_io": false
         },
         "locks": {
             "$YRIG_NXT_DIR/core.nxt": false,
@@ -626,6 +627,49 @@
                 "    import_paths, ",
                 "    yrig.select.get_selection(),",
                 ")"
+            ]
+        },
+        "/tools_window/tools/geometry/geometry_io": {
+            "instance": "/io_pair",
+            "child_order": [
+                "import",
+                "export"
+            ],
+            "attrs": {
+                "geo_group": {
+                    "type": "raw",
+                    "value": "geo"
+                },
+                "relative_filepath": {
+                    "value": "assets/model.mb"
+                }
+            }
+        },
+        "/tools_window/tools/geometry/geometry_io/export": {
+            "attrs": {
+                "text": {
+                    "value": "Export Geometry"
+                }
+            },
+            "code": [
+                "export_root_path = \"${export_root_path}\"",
+                "if not export_root_path or not Path(export_root_path).is_dir():",
+                "    raise ValueError(f\"Invalid directory: {export_root_path}\")",
+                "export_path = Path(\"${export_path}\")",
+                "",
+                "yrig.io.export_maya_file(export_path, binary=True, nodes=[\"${geo_group}\"])"
+            ]
+        },
+        "/tools_window/tools/geometry/geometry_io/import": {
+            "attrs": {
+                "text": {
+                    "value": "Import Geometry"
+                }
+            },
+            "code": [
+                "import_path = Path(\"${import_filepath}\")",
+                "",
+                "yrig.io.import_maya_file(import_path)"
             ]
         },
         "/tools_window/tools/skin": {

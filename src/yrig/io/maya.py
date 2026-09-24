@@ -90,30 +90,32 @@ def export_maya_file(
     Returns:
         True if the file was exported, or False if the export was cancelled or failed.
     """
-    if not confirm_overwrite(filepath, force):
-        return False
     export_suffix = ".mb" if binary else ".ma"
     export_type = "mayaBinary" if binary else "mayaAscii"
 
     if export_suffix != filepath.suffix:
         raise ValueError(f"Wrong file extension for {export_type}: {export_suffix} : {filepath}")
+
+    if not confirm_overwrite(filepath, force):
+        return False
+
+    kwargs: dict = {
+        "options": "v=0;",
+        "constructionHistory": True,
+        "expressions": True,
+        "constraints": True,
+        "shader": True,
+        "channels": True,
+        "preserveReferences": True,
+        "exportUnloadedReferences": False,
+    }
     if nodes is not None:
         with maintain_selection():
             cmds.select(*nodes, replace=True)
-            cmds.file(
-                str(filepath),
-                exportSelected=True,
-                type=export_type,
-                force=True,
-            )
+            cmds.file(str(filepath), exportSelected=True, type=export_type, force=True, **kwargs)
             log.info(f"Exported {export_type} file to {filepath}")
     else:
-        cmds.file(
-            str(filepath),
-            exportAll=True,
-            type=export_type,
-            force=True,
-        )
+        cmds.file(str(filepath), exportAll=True, type=export_type, force=True, **kwargs)
         log.info(f"Exported {export_type} file to {filepath}")
     if not binary and not write_node_uuid:
         _remove_node_uuid_lines(filepath)
