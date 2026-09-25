@@ -10,17 +10,9 @@
     ],
     "meta_data": {
         "positions": {
-            "/node2": [
-                -1264.1403073330887,
-                -13.318422904299439
-            ],
             "/shifter_build": [
-                -1248.3150191717723,
-                -95.06613748571294
-            ],
-            "/shifter_component_build": [
-                -1250.821884428789,
-                -12.208554328941151
+                -1220.0,
+                0.0
             ]
         }
     },
@@ -34,11 +26,13 @@
             }
         },
         "/setup": {
-            "start_point": false,
-            "execute_in": "/shifter_component_build"
+            "child_order": [
+                "new_scene",
+                "shifter_component_build",
+                "root"
+            ]
         },
-        "/shifter_component_build": {
-            "start_point": true,
+        "/setup/shifter_component_build": {
             "instance": "/shifter_build",
             "child_order": [
                 "world_control_color"
@@ -53,7 +47,7 @@
                 }
             }
         },
-        "/shifter_component_build/world_control_color": {
+        "/setup/shifter_component_build/world_control_color": {
             "attrs": {
                 "color": {
                     "type": "raw",
