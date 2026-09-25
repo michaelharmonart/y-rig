@@ -124,7 +124,10 @@
                 "        export_root_path = \"${export_root_path}\"",
                 "        if not export_root_path or not Path(export_root_path).is_dir():",
                 "            raise ValueError(f\"Invalid directory: {export_root_path}\")",
-                "        yrig.io.export_maya_file(body_rig_temp_filepath, binary=True, force=True)"
+                "        try:",
+                "            yrig.io.export_maya_file(body_rig_temp_filepath, binary=True, force=True)",
+                "        except Exception as e:",
+                "            STAGE.log.warning(\"Couldn't export body build cache: {e}\")"
             ]
         },
         "/setup/shifter_component_build/attribute_defaults": {
