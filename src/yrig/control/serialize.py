@@ -326,7 +326,7 @@ def _resolve_controls_ordered(controls: Iterable[str] | None) -> list[str]:
 
 
 def export_control_shapes_file(
-    filepath: Path, controls: Iterable[str] | None, force: bool = False
+    filepath: Path, controls: Iterable[str] | None = None, force: bool = False
 ) -> bool:
     """Export control shape data for the specified controls."""
     resolved_controls = _resolve_controls_ordered(controls)

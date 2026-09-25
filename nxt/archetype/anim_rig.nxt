@@ -160,10 +160,8 @@
                 }
             },
             "code": [
-                "control_shapes_filepath_str = \"${control_shapes_filepath}\"",
-                "if control_shapes_filepath_str:",
-                "    control_shapes_filepath = Path(control_shapes_filepath_str)",
-                "    yrig.control.serialize.apply_control_shapes_file(control_shapes_filepath)"
+                "import_paths = [Path(filepath) for filepath in ${filelist::${control_shapes_filepath}}]",
+                "yrig.control.serialize.apply_control_shapes_files(import_paths)"
             ]
         },
         "/apply/deformation": {
@@ -601,7 +599,7 @@
                 "export_path = Path(\"${export_path}\")",
                 "yrig.control.serialize.add_override_for_controls(",
                 "    filepath=export_path, ",
-                "    yrig.select.get_selection(), ",
+                "    controls=yrig.select.get_selection(), ",
                 "    force=${force}",
                 ")"
             ]
