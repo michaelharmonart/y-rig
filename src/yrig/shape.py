@@ -1,4 +1,3 @@
-import json  # noqa
 import hashlib
 
 from maya import cmds
@@ -13,6 +12,7 @@ from maya.api.OpenMaya import (
     MObject,
 )
 
+from yrig.io.json import dumps_json
 from yrig.maya_api.utils import get_dag_path
 from yrig.select import maintain_selection
 
@@ -130,7 +130,7 @@ def shape_topology_signature(shape: str) -> tuple:
 def shape_topology_hash(shape: str) -> str:
     """Return a SHA-256 hash of a shape's topology."""
     signature = shape_topology_signature(shape)
-    signature_json = json.dumps(signature, separators=(",", ":"))
+    signature_json = dumps_json(signature, pretty=False)
     return hashlib.sha256(signature_json.encode()).hexdigest()
 
 
