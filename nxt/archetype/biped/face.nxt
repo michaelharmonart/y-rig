@@ -197,8 +197,7 @@
                 "delete_face_guides",
                 "hide_joints",
                 "model_override",
-                "skin_tools_data",
-                "versioning"
+                "skin_tools_data"
             ]
         },
         "/finalize/delete_face_guides": {
