@@ -72,6 +72,23 @@ class Component(LimbComponent):
         self.connect_standard()
         pm.parent(self.rollRef[0], self.ikHandleUpvRef, self.parent_comp.ctl)  # type: ignore
 
+    def _connect_reference_array(self) -> None:
+        # Set the Ik Reference
+        self.connectRef(self.settings["ikrefarray"], self.ik_cns)
+        if self.settings["upvrefarray"]:
+            self.connectRef("Auto,Hand,Swing," + self.settings["upvrefarray"], self.upv_cns, True)
+        else:
+            self.connectRef("Auto,Hand,Swing,", self.upv_cns, True)
+
+        if self.settings["pinrefarray"]:
+            self.connectRef2(
+                "Auto," + self.settings["pinrefarray"],
+                self.mid_cns,
+                self.pin_att,
+                [self.ctrn_loc],
+                False,
+            )
+
     def finalize(self) -> None:
         """Tag split joints for automatic weight splitting.
 

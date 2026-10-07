@@ -10,10 +10,11 @@ from mgear.shifter import component
 from yrig.maya_api.node import QuatSlerpNode, QuatToEulerNode
 from yrig.skin.split import tag_for_weight_split
 from yrig.spline.matrix_spline.build import matrix_spline_from_transforms
+from yrig.transform import create_transform, match_location
 from yrig.transform.constraint import (
     matrix_constraint,
 )
-from yrig.transform.quat import create_swing_only_transform, twist_extract_quat
+from yrig.transform.quat import create_swing_only_transform, twist_extract_euler, twist_extract_quat
 
 #############################################
 # COMPONENT
@@ -841,7 +842,7 @@ class Component(component.Main):
 
         if self.settings["upvrefarray"]:
             ref_names = self.settings["upvrefarray"].split(",")
-            ref_names = ["Auto", *ref_names]
+            ref_names = ["Auto", "Hand", "Swing", *ref_names]
             if len(ref_names) > 1:
                 self.upvref_att = self.addAnimEnumParam("upvref", "UpV Ref", 0, ref_names)
 
@@ -877,6 +878,7 @@ class Component(component.Main):
 
         """
         self._setup_ik_upv()
+        self._setup_ik_upv_constraint()
         self._setup_control_vis()
         self._setup_control_rotation_orders()
         self._setup_ik_solver()
@@ -895,13 +897,30 @@ class Component(component.Main):
             self.limbChainUpvRef,
             "ikSCsolver",
         )
+        self.ik_upv_ref_twist = pm.PyNode(
+            create_transform(self.getName("ikHandleLimbChainUpvRefTwist"), self.limbChainUpvRef[0])
+        )
+        self.ik_ctl_twist_ref = pm.PyNode(
+            create_transform(self.getName("ikCtlTwistRef"), self.limbChainUpvRef[0])
+        )
+
+        match_location(str(self.ik_ctl_twist_ref), str(self.ik_ctl))
+        matrix_constraint(str(self.ik_ctl), str(self.ik_ctl_twist_ref), scale=False, shear=False)
+        euler_node = twist_extract_euler(
+            str(self.ik_ctl_twist_ref), reference_space=self.limbChainUpvRef[0], axis="x"
+        )
+        euler_node.input_rotate_order.connect_from(f"{self.ik_upv_ref_twist}.rotateOrder")
+        euler_node.output_rotate.connect_to(f"{self.ik_upv_ref_twist}.rotate")
+
         pm.pointConstraint(self.ik_ctl, self.ikHandleUpvRef)
-        # pm.parentConstraint(self.limbChainUpvRef[0], self.upv_cns, mo=True)
+
+    def _setup_ik_upv_constraint(self) -> None:
         # handle special case for full mirror behaviour negating
         # scaleY axis to -1
+        default_spaces = self.ik_upv_ref_twist, self.ik_ctl, self.limbChainUpvRef[0]
         if self.upv_cns.sy.get() < 0:
             references = []
-            for x in [self.limbChainUpvRef[0]]:
+            for x in default_spaces:
                 ref_trans_name = self.upv_cns.getName() + "_" + x.getName() + "_space_ref"
                 ref_trans = primitive.addTransform(
                     x,
@@ -909,11 +928,9 @@ class Component(component.Main):
                 )
                 transform.matchWorldTransform(self.upv_cns, ref_trans)
                 references.append(ref_trans)
-            self.ikH_parCns = pm.parentConstraint(references[0], self.upv_cns, mo=True)
-            self.ikH_cns_driver = references[0]
+            pm.parentConstraint(*references, self.upv_cns, mo=True)
         else:
-            self.ikH_parCns = pm.parentConstraint(self.limbChainUpvRef[0], self.upv_cns, mo=True)
-            self.ikH_cns_driver = self.limbChainUpvRef[0]
+            pm.parentConstraint(*default_spaces, self.upv_cns, mo=True)
 
     def _setup_control_vis(self) -> None:
         # Visibilities -------------------------------------
@@ -1274,16 +1291,18 @@ class Component(component.Main):
     def _connect_reference_array(self) -> None:
         # Set the Ik Reference
         self.connectRef(self.settings["ikrefarray"], self.ik_cns)
-        self.connectRef(self.settings["upvrefarray"], self.upv_cns, True)
+        if self.settings["upvrefarray"]:
+            self.connectRef("Auto,Hand," + self.settings["upvrefarray"], self.upv_cns, True)
+        else:
+            self.connectRef("Auto,Hand", self.upv_cns, True)
 
         if self.settings["pinrefarray"]:
             self.connectRef2(
-                self.settings["pinrefarray"],
+                "Auto," + self.settings["pinrefarray"],
                 self.mid_cns,
                 self.pin_att,
                 [self.ctrn_loc],
                 False,
-                ["Auto"],
             )
 
     def finalize(self) -> None:
