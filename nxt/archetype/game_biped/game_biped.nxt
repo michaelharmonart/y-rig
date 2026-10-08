@@ -1,0 +1,29 @@
+{
+    "version": "1.17",
+    "alias": "game_biped",
+    "color": "#1770c9",
+    "mute": false,
+    "solo": false,
+    "references": [
+        "archetype/game_biped/face.nxt",
+        "archetype/game_biped/body.nxt",
+        "archetype/anim_rig.nxt"
+    ],
+    "meta_data": {
+        "positions": {
+            "/shifter_build": [
+                -1240.0,
+                0.0
+            ]
+        }
+    },
+    "nodes": {
+        "/": {
+            "attrs": {
+                "rig_path": {
+                    "value": "character/game_biped"
+                }
+            }
+        }
+    }
+}

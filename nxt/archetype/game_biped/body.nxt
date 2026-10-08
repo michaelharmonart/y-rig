@@ -1,0 +1,35 @@
+{
+    "version": "1.17",
+    "alias": "body",
+    "color": "#6d3589",
+    "mute": false,
+    "solo": false,
+    "references": [
+        "/users/student/c/collindv/sandwichRepo/y-rig/nxt/util/mgear.nxt"
+    ],
+    "nodes": {
+        "/setup": {
+            "child_order": [
+                "new_scene",
+                "shifter_component_build",
+                "root"
+            ],
+            "attrs": {
+                "dev_build": {
+                    "value": "True"
+                }
+            }
+        },
+        "/setup/shifter_component_build": {
+            "instance": "/shifter_build",
+            "attrs": {
+                "dev_build": {
+                    "value": "True"
+                },
+                "guide_filepath": {
+                    "value": "${file::${rig_path}/data/guide.sgt}"
+                }
+            }
+        }
+    }
+}
