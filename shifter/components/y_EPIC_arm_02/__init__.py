@@ -30,15 +30,9 @@ class Component(component.Main):
         self.normal = self.getNormalFromPos(self.guide.apos)
         self.binormal = self.getBiNormalFromPos(self.guide.apos)
 
-        self.length0 = vector.getDistance(
-            self.guide.apos[0], self.guide.apos[1]
-        )
-        self.length1 = vector.getDistance(
-            self.guide.apos[1], self.guide.apos[2]
-        )
-        self.length2 = vector.getDistance(
-            self.guide.apos[2], self.guide.apos[3]
-        )
+        self.length0 = vector.getDistance(self.guide.apos[0], self.guide.apos[1])
+        self.length1 = vector.getDistance(self.guide.apos[1], self.guide.apos[2])
+        self.length2 = vector.getDistance(self.guide.apos[2], self.guide.apos[3])
 
         # custom colors
         self.color_offset_fk = [1, 0.25, 0]  # orange
@@ -84,9 +78,7 @@ class Component(component.Main):
         else:
             t_npo = t
 
-        self.fk0_npo = primitive.addTransform(
-            self.root, self.getName("fk0_npo"), t_npo
-        )
+        self.fk0_npo = primitive.addTransform(self.root, self.getName("fk0_npo"), t_npo)
 
         self.fk0_ctl = self.addCtl(
             self.fk0_npo,
@@ -115,9 +107,7 @@ class Component(component.Main):
         else:
             t_npo = t
 
-        self.fk1_npo = primitive.addTransform(
-            self.fk0_ctl, self.getName("fk1_npo"), t_npo
-        )
+        self.fk1_npo = primitive.addTransform(self.fk0_ctl, self.getName("fk1_npo"), t_npo)
 
         self.fk1_ctl = self.addCtl(
             self.fk1_npo,
@@ -134,9 +124,7 @@ class Component(component.Main):
             self.fk0_ctl,
             self.fk1_ctl,
         ]:
-            attribute.setKeyableAttributes(
-                f_ctl, ["tx", "ty", "tz", "ro", "rx", "ry", "rz"]
-            )
+            attribute.setKeyableAttributes(f_ctl, ["tx", "ty", "tz", "ro", "rx", "ry", "rz"])
 
         # FK 2
         t = transform.getTransformLookingAt(
@@ -155,9 +143,7 @@ class Component(component.Main):
         else:
             t_npo = t
 
-        self.fk2_npo = primitive.addTransform(
-            self.fk1_ctl, self.getName("fk2_npo"), t_npo
-        )
+        self.fk2_npo = primitive.addTransform(self.fk1_ctl, self.getName("fk2_npo"), t_npo)
 
         self.fk2_ctl = self.addCtl(
             self.fk2_npo,
@@ -222,9 +208,7 @@ class Component(component.Main):
         v *= self.size * 0.8
         v += self.guide.apos[1]
 
-        self.upv_cns = primitive.addTransformFromPos(
-            self.root, self.getName("upv_cns"), v
-        )
+        self.upv_cns = primitive.addTransformFromPos(self.root, self.getName("upv_cns"), v)
 
         self.upv_ctl = self.addCtl(
             self.upv_cns,
@@ -249,9 +233,7 @@ class Component(component.Main):
         if self.settings["rest_T_Pose"]:
             arm_length = vector.getDistance(
                 self.guide.pos["root"], self.guide.pos["elbow"]
-            ) + vector.getDistance(
-                self.guide.pos["elbow"], self.guide.pos["wrist"]
-            )
+            ) + vector.getDistance(self.guide.pos["elbow"], self.guide.pos["wrist"])
             if self.negate:
                 wrist_pos = self.guide.pos["root"] - datatypes.Vector(arm_length, 0, 0)
             else:
@@ -260,9 +242,7 @@ class Component(component.Main):
         else:
             wrist_pos = self.guide.pos["wrist"]
 
-        self.ik_cns = primitive.addTransformFromPos(
-            self.root, self.getName("ik_cns"), wrist_pos
-        )
+        self.ik_cns = primitive.addTransformFromPos(self.root, self.getName("ik_cns"), wrist_pos)
 
         t = transform.getTransformFromPos(wrist_pos)
         self.ikcns_ctl = self.addCtl(
@@ -320,18 +300,12 @@ class Component(component.Main):
             "xz",
             self.negate,
         )
-        self.ik_ctl_ref = primitive.addTransform(
-            self.ik_ctl, self.getName("ikCtl_ref"), ik_ref_t
-        )
+        self.ik_ctl_ref = primitive.addTransform(self.ik_ctl, self.getName("ikCtl_ref"), ik_ref_t)
 
         # IK rotation controls
         if self.settings["ikTR"]:
-            self.ikRot_npo = primitive.addTransform(
-                self.root, self.getName("ikRot_npo"), m
-            )
-            self.ikRot_cns = primitive.addTransform(
-                self.ikRot_npo, self.getName("ikRot_cns"), m
-            )
+            self.ikRot_npo = primitive.addTransform(self.root, self.getName("ikRot_npo"), m)
+            self.ikRot_cns = primitive.addTransform(self.ikRot_npo, self.getName("ikRot_cns"), m)
             self.ikRot_ctl = self.addCtl(
                 self.ikRot_cns,
                 "ikRot_ctl",
@@ -354,12 +328,8 @@ class Component(component.Main):
             "xz",
             self.negate,
         )
-        self.ik_ref = primitive.addTransform(
-            self.ik_ctl_ref, self.getName("ik_ref"), trnIK_ref
-        )
-        self.fk_ref = primitive.addTransform(
-            self.fk_ctl[2], self.getName("fk_ref"), trnIK_ref
-        )
+        self.ik_ref = primitive.addTransform(self.ik_ctl_ref, self.getName("ik_ref"), trnIK_ref)
+        self.fk_ref = primitive.addTransform(self.fk_ctl[2], self.getName("fk_ref"), trnIK_ref)
 
         # Chain --------------------------------------------
         # The outputs of the ikfk2bone solver
@@ -387,9 +357,7 @@ class Component(component.Main):
         bShape.setAttr("visibility", False)
 
         # Elbow bone1 ref
-        self.elbow_ref = primitive.addTransform(
-            self.root, self.getName("elbow_ref"), t
-        )
+        self.elbow_ref = primitive.addTransform(self.root, self.getName("elbow_ref"), t)
 
         # Elbow control
 
@@ -410,45 +378,29 @@ class Component(component.Main):
         )
 
         t = transform.getInterpolateTransformMatrix(tA, tB)
-        self.ctrn_loc = primitive.addTransform(
-            self.root, self.getName("ctrn_loc"), t
-        )
+        self.ctrn_loc = primitive.addTransform(self.root, self.getName("ctrn_loc"), t)
 
         # match IK FK references
-        self.match_fk0_off = self.add_match_ref(
-            self.fk_ctl[1], self.root, "matchFk0_npo", False
-        )
+        self.match_fk0_off = self.add_match_ref(self.fk_ctl[1], self.root, "matchFk0_npo", False)
 
-        self.match_fk0 = self.add_match_ref(
-            self.fk_ctl[0], self.match_fk0_off, "fk0_mth"
-        )
+        self.match_fk0 = self.add_match_ref(self.fk_ctl[0], self.match_fk0_off, "fk0_mth")
 
-        self.match_fk1_off = self.add_match_ref(
-            self.fk_ctl[2], self.root, "matchFk1_npo", False
-        )
+        self.match_fk1_off = self.add_match_ref(self.fk_ctl[2], self.root, "matchFk1_npo", False)
 
-        self.match_fk1 = self.add_match_ref(
-            self.fk_ctl[1], self.match_fk1_off, "fk1_mth"
-        )
+        self.match_fk1 = self.add_match_ref(self.fk_ctl[1], self.match_fk1_off, "fk1_mth")
 
         if self.settings["ikTR"]:
             reference = self.ikRot_ctl
 
-            self.match_ikRot = self.add_match_ref(self.ikRot_ctl,
-                                                  self.fk2_ctl,
-                                                  "ikRot_mth")
+            self.match_ikRot = self.add_match_ref(self.ikRot_ctl, self.fk2_ctl, "ikRot_mth")
         else:
             reference = self.ik_ctl
 
-        self.match_fk2 = self.add_match_ref(self.fk_ctl[2],
-                                            reference,
-                                            "fk2_mth")
+        self.match_fk2 = self.add_match_ref(self.fk_ctl[2], reference, "fk2_mth")
 
         self.match_ik = self.add_match_ref(self.ik_ctl, self.fk2_ctl, "ik_mth")
 
-        self.match_ikUpv = self.add_match_ref(
-            self.upv_ctl, self.fk0_ctl, "upv_mth"
-        )
+        self.match_ikUpv = self.add_match_ref(self.upv_ctl, self.fk0_ctl, "upv_mth")
 
         # Eff locator
         self.eff_loc = primitive.addTransformFromPos(
@@ -458,9 +410,7 @@ class Component(component.Main):
         # Mid Controler ------------------------------------
 
         t = transform.getTransform(self.ctrn_loc)
-        self.mid_cns = primitive.addTransform(
-            self.ctrn_loc, self.getName("mid_cns"), t
-        )
+        self.mid_cns = primitive.addTransform(self.ctrn_loc, self.getName("mid_cns"), t)
         self.mid_ctl = self.addCtl(
             self.mid_cns,
             "mid_ctl",
@@ -498,18 +448,10 @@ class Component(component.Main):
             transform.getTransform(self.ctrn_loc),
         )
 
-        self.tws1A_npo = primitive.addTransform(
-            self.mid_ctl, self.getName("tws1A_npo"), tA
-        )
-        self.tws1A_loc = primitive.addTransform(
-            self.tws1A_npo, self.getName("tws1A_loc"), tA
-        )
-        self.tws1B_npo = primitive.addTransform(
-            self.mid_ctl, self.getName("tws1B_npo"), tB
-        )
-        self.tws1B_loc = primitive.addTransform(
-            self.tws1B_npo, self.getName("tws1B_loc"), tB
-        )
+        self.tws1A_npo = primitive.addTransform(self.mid_ctl, self.getName("tws1A_npo"), tA)
+        self.tws1A_loc = primitive.addTransform(self.tws1A_npo, self.getName("tws1A_loc"), tA)
+        self.tws1B_npo = primitive.addTransform(self.mid_ctl, self.getName("tws1B_npo"), tB)
+        self.tws1B_loc = primitive.addTransform(self.tws1B_npo, self.getName("tws1B_loc"), tB)
 
         self.tws2_npo = primitive.addTransform(
             self.root,
@@ -576,9 +518,7 @@ class Component(component.Main):
             self.auxChainPos.append(p_vec)
             i = i + ii
         t = self.root.getMatrix(worldSpace=True)
-        self.aux_npo = primitive.addTransform(
-            self.root, self.getName("aux_npo"), t
-        )
+        self.aux_npo = primitive.addTransform(self.root, self.getName("aux_npo"), t)
         self.auxTwistChain = primitive.add2DChain(
             self.aux_npo,
             self.getName("auxTwist%s_jnt"),
@@ -611,9 +551,7 @@ class Component(component.Main):
         # We have attribute least one division attribute the start, the end
         # and one for the elbow. + 2 for elbow angle control
         self.extra_div = 2
-        self.divisions = (
-            self.settings["div0"] + self.settings["div1"] + self.extra_div
-        )
+        self.divisions = self.settings["div0"] + self.settings["div1"] + self.extra_div
 
         tagP = self.parentCtlTag
         self.tweak_ctl = []
@@ -622,9 +560,7 @@ class Component(component.Main):
         self.upper_jnt_indices = []
         self.lower_jnt_indices = []
         for i in range(self.divisions):
-            div_cns = primitive.addTransform(
-                self.root, self.getName(f"div{i}_loc")
-            )
+            div_cns = primitive.addTransform(self.root, self.getName(f"div{i}_loc"))
 
             self.div_cns.append(div_cns)
 
@@ -645,16 +581,12 @@ class Component(component.Main):
             tagP = tweak_ctl
             self.tweak_ctl.append(tweak_ctl)
 
-            roll_off = primitive.addTransform(
-                tweak_ctl, self.getName(f"roll{i}_off")
-            )
+            roll_off = primitive.addTransform(tweak_ctl, self.getName(f"roll{i}_off"))
 
             self.roll_offset.append(roll_off)
 
             # joint Description Name
-            jd_names = ast.literal_eval(
-                self.settings["jointNamesDescription_custom"]
-            )
+            jd_names = ast.literal_eval(self.settings["jointNamesDescription_custom"])
             jdn_upperarm = jd_names[0]
             jdn_lowerarm = jd_names[1]
             jdn_upperarm_twist = jd_names[2]
@@ -664,7 +596,9 @@ class Component(component.Main):
             # setting the joints
             if i == 0:
                 if self.settings["div0"]:
-                    self.arm_root_base = primitive.addTransform(self.root, self.getName("divRoot_loc"))
+                    self.arm_root_base = primitive.addTransform(
+                        self.root, self.getName("divRoot_loc")
+                    )
                 else:
                     self.arm_root_base = roll_off
 
@@ -717,9 +651,7 @@ class Component(component.Main):
                 self.jnt_pos.append(
                     {
                         "obj": roll_off,
-                        "name": string.replaceSharpWithPadding(
-                            twist_name, twist_idx
-                        ),
+                        "name": string.replaceSharpWithPadding(twist_name, twist_idx),
                         "newActiveJnt": current_parent,
                         "data_contracts": "Twist,Squash",
                     }
@@ -763,9 +695,7 @@ class Component(component.Main):
         )
 
         # Bendy controls
-        t = transform.getInterpolateTransformMatrix(
-            self.fk_ctl[0], self.tws1A_npo, 0.5
-        )
+        t = transform.getInterpolateTransformMatrix(self.fk_ctl[0], self.tws1A_npo, 0.5)
         self.armBendyA_loc = primitive.addTransform(
             self.root,
             self.getName("armBendyA_loc"),
@@ -793,9 +723,7 @@ class Component(component.Main):
             self.armBendyA_npo.sz.set(-1)
         attribute.setKeyableAttributes(self.armBendyA_ctl, self.t_params)
 
-        t = transform.getInterpolateTransformMatrix(
-            self.fk_ctl[0], self.tws1A_npo, 0.9
-        )
+        t = transform.getInterpolateTransformMatrix(self.fk_ctl[0], self.tws1A_npo, 0.9)
         self.armBendyB_npo = primitive.addTransform(
             self.tws1A_loc, self.getName("armBendyB_npo"), t
         )
@@ -906,15 +834,9 @@ class Component(component.Main):
         self.blend_att = self.addAnimParam(
             "blend", "Fk/Ik Blend", "double", self.settings["blend"], 0, 1
         )
-        self.roll_att = self.addAnimParam(
-            "roll", "Roll upv", "double", 0, -180, 180
-        )
-        self.armpitRoll_att = self.addAnimParam(
-            "armpitRoll", "Armpit Roll", "double", 0
-        )
-        self.scale_att = self.addAnimParam(
-            "ikscale", "Scale", "double", 1, 0.001, 10
-        )
+        self.roll_att = self.addAnimParam("roll", "Roll upv", "double", 0, -180, 180)
+        self.armpitRoll_att = self.addAnimParam("armpitRoll", "Armpit Roll", "double", 0)
+        self.scale_att = self.addAnimParam("ikscale", "Scale", "double", 1, 0.001, 10)
 
         self.maxstretch_att = self.addAnimParam(
             "maxstretch",
@@ -925,50 +847,28 @@ class Component(component.Main):
             100,
         )
 
-        self.slide_att = self.addAnimParam(
-            "slide", "Slide", "double", 0.5, 0, 1
-        )
+        self.slide_att = self.addAnimParam("slide", "Slide", "double", 0.5, 0, 1)
 
-        self.softness_att = self.addAnimParam(
-            "softness", "Softness", "double", 0, 0, 1
-        )
+        self.softness_att = self.addAnimParam("softness", "Softness", "double", 0, 0, 1)
 
-        self.reverse_att = self.addAnimParam(
-            "reverse", "Reverse", "double", 0, 0, 1
-        )
+        self.reverse_att = self.addAnimParam("reverse", "Reverse", "double", 0, 0, 1)
 
-        self.roundness_att = self.addAnimParam(
-            "roundness", "Roundness", "double", 0, 0, 1
-        )
+        self.roundness_att = self.addAnimParam("roundness", "Roundness", "double", 0, 0, 1)
 
-        self.volume_att = self.addAnimParam(
-            "volume", "Volume Joint Scale", "double", 0, 0, 1
-        )
+        self.volume_att = self.addAnimParam("volume", "Volume Joint Scale", "double", 0, 0, 1)
 
-        self.bendyVis_att = self.addAnimParam(
-            "Bendy_vis", "Bendy vis", "bool", False
-        )
+        self.bendyVis_att = self.addAnimParam("Bendy_vis", "Bendy vis", "bool", False)
 
         self.elbowBendyVis_att = self.addAnimParam(
             "elbowBendy_vis", "Elbow Bendy vis", "bool", False
         )
 
-        self.upvAimVis_att = self.addAnimParam(
-            "UpvAim_vis", "Upv Aim vis", "bool", True
-        )
-        self.upvCtlVis_att = self.addAnimParam(
-            "UpvCtl_vis", "Upv Roll Ctl vis", "bool", False
-        )
-        self.tweakVis_att = self.addAnimParam(
-            "Tweak_vis", "Tweak Vis", "bool", False
-        )
+        self.upvAimVis_att = self.addAnimParam("UpvAim_vis", "Upv Aim vis", "bool", True)
+        self.upvCtlVis_att = self.addAnimParam("UpvCtl_vis", "Upv Roll Ctl vis", "bool", False)
+        self.tweakVis_att = self.addAnimParam("Tweak_vis", "Tweak Vis", "bool", False)
 
-        self.midCtl_att = self.addAnimParam(
-            "mid_ctl_vis", "Mid Ctl Vis", "bool", False
-        )
-        self.ikCnsCtl_att = self.addAnimParam(
-            "ik_cns_ctl_vis", "IK Cns Ctl Vis", "bool", False
-        )
+        self.midCtl_att = self.addAnimParam("mid_ctl_vis", "Mid Ctl Vis", "bool", False)
+        self.ikCnsCtl_att = self.addAnimParam("ik_cns_ctl_vis", "IK Cns Ctl Vis", "bool", False)
 
         # Ref
         if self.settings["ikrefarray"]:
@@ -985,25 +885,19 @@ class Component(component.Main):
             ref_names = ["Auto", "ik_ctl"]
             if self.settings["ikrefarray"]:
                 ref_names = ref_names + self.settings["ikrefarray"].split(",")
-            self.ikRotRef_att = self.addAnimEnumParam(
-                "ikRotRef", "Ik Rot Ref", 0, ref_names
-            )
+            self.ikRotRef_att = self.addAnimEnumParam("ikRotRef", "Ik Rot Ref", 0, ref_names)
 
         if self.settings["upvrefarray"]:
             ref_names = self.settings["upvrefarray"].split(",")
             ref_names = ["Auto"] + ref_names
             if len(ref_names) > 1:
-                self.upvref_att = self.addAnimEnumParam(
-                    "upvref", "UpV Ref", 0, ref_names
-                )
+                self.upvref_att = self.addAnimEnumParam("upvref", "UpV Ref", 0, ref_names)
 
         if self.settings["pinrefarray"]:
             ref_names = self.settings["pinrefarray"].split(",")
             ref_names = ["Auto"] + ref_names
             if len(ref_names) > 1:
-                self.pin_att = self.addAnimEnumParam(
-                    "elbowref", "Elbow Ref", 0, ref_names
-                )
+                self.pin_att = self.addAnimEnumParam("elbowref", "Elbow Ref", 0, ref_names)
         if self.validProxyChannels:
             attribute.addProxyAttribute(
                 [self.blend_att, self.roundness_att],
@@ -1015,9 +909,7 @@ class Component(component.Main):
                     self.upv_ctl,
                 ],
             )
-            attribute.addProxyAttribute(
-                self.roll_att, [self.ik_ctl, self.upv_ctl]
-            )
+            attribute.addProxyAttribute(self.roll_att, [self.ik_ctl, self.upv_ctl])
 
         # Setup ------------------------------------------
         # Eval Fcurve
@@ -1025,12 +917,8 @@ class Component(component.Main):
             self.st_value = self.guide.paramDefs["st_profile"].value
             self.sq_value = self.guide.paramDefs["sq_profile"].value
         else:
-            self.st_value = fcurve.getFCurveValues(
-                self.settings["st_profile"], self.divisions
-            )
-            self.sq_value = fcurve.getFCurveValues(
-                self.settings["sq_profile"], self.divisions
-            )
+            self.st_value = fcurve.getFCurveValues(self.settings["st_profile"], self.divisions)
+            self.sq_value = fcurve.getFCurveValues(self.settings["sq_profile"], self.divisions)
 
         self.st_att = [
             self.addSetupParam(
@@ -1056,12 +944,8 @@ class Component(component.Main):
             for i in range(self.divisions)
         ]
 
-        self.resample_att = self.addSetupParam(
-            "resample", "Resample", "bool", True
-        )
-        self.absolute_att = self.addSetupParam(
-            "absolute", "Absolute", "bool", False
-        )
+        self.resample_att = self.addSetupParam("resample", "Resample", "bool", True)
+        self.absolute_att = self.addSetupParam("absolute", "Absolute", "bool", False)
         self.volume_blenshape_att = self.addSetupParam(
             "volume_blendshape", "Volume Blendshape", "double", 0, 0, 10
         )
@@ -1091,9 +975,7 @@ class Component(component.Main):
         if self.upv_cns.sy.get() < 0:
             references = []
             for x in [self.armChainUpvRef[0]]:
-                ref_trans_name = (
-                    self.upv_cns.getName() + "_" + x.getName() + "_space_ref"
-                )
+                ref_trans_name = self.upv_cns.getName() + "_" + x.getName() + "_space_ref"
                 ref_trans = primitive.addTransform(
                     x,
                     ref_trans_name,
@@ -1125,9 +1007,7 @@ class Component(component.Main):
         for shp in self.upv_ctl.getShapes():
             pm.connectAttr(self.blend_att, shp.attr("visibility"))  # ty: ignore[unresolved-attribute]
 
-        add_node = node.createPlusMinusAverage1D(
-            [self.blend_att, self.ikCnsCtl_att]
-        )
+        add_node = node.createPlusMinusAverage1D([self.blend_att, self.ikCnsCtl_att])
         cond_node = node.createConditionNode(add_node.output1D, 1.5, 3, 1, 0)
         cond_node.colorIfFalseR.set(0)
         for shp in self.ikcns_ctl.getShapes():
@@ -1501,19 +1381,13 @@ class Component(component.Main):
         # Volume -------------------------------------------
         distA_node = node.createDistNode(self.tws0_loc, self.tws1_loc)
         distB_node = node.createDistNode(self.tws1_loc, self.tws2_loc)
-        add_node = node.createAddNode(
-            distA_node + ".distance", distB_node + ".distance"
-        )
-        div_node = node.createDivNode(
-            add_node + ".output", self.root.attr("sx")
-        )
+        add_node = node.createAddNode(distA_node + ".distance", distB_node + ".distance")
+        div_node = node.createDivNode(add_node + ".output", self.root.attr("sx"))
 
         dm_node = pm.createNode("decomposeMatrix")  # ty: ignore[unresolved-attribute]
         pm.connectAttr(self.root.attr("worldMatrix"), dm_node + ".inputMatrix")  # ty: ignore[unresolved-attribute]
 
-        div_node2 = node.createDivNode(
-            div_node + ".outputX", dm_node + ".outputScaleX"
-        )
+        div_node2 = node.createDivNode(div_node + ".outputX", dm_node + ".outputScaleX")
         self.volDriver_att = div_node2.outputX
 
         # connecting bendy scaele compensation after
@@ -1521,20 +1395,14 @@ class Component(component.Main):
         distA_node = node.createDistNode(self.tws0_loc, self.mid_ctl)
         distB_node = node.createDistNode(self.mid_ctl, self.tws2_loc)
 
-        div_nodeArm = node.createDivNode(
-            distA_node + ".distance", dm_node.attr("outputScaleX")
-        )
-        div_node2 = node.createDivNode(
-            div_nodeArm + ".outputX", distA_node.attr("distance").get()
-        )
+        div_nodeArm = node.createDivNode(distA_node + ".distance", dm_node.attr("outputScaleX"))
+        div_node2 = node.createDivNode(div_nodeArm + ".outputX", distA_node.attr("distance").get())
         pm.connectAttr(div_node2.attr("outputX"), self.tws1A_loc.attr("sx"))  # ty: ignore[unresolved-attribute]
         pm.connectAttr(  # ty: ignore[unresolved-attribute]
             div_node2.attr("outputX"), self.armBendyA_loc.attr("sx")
         )
 
-        div_nodeForearm = node.createDivNode(
-            distB_node + ".distance", dm_node.attr("outputScaleX")
-        )
+        div_nodeForearm = node.createDivNode(distB_node + ".distance", dm_node.attr("outputScaleX"))
         div_node2 = node.createDivNode(
             div_nodeForearm + ".outputX", distB_node.attr("distance").get()
         )
@@ -1592,18 +1460,13 @@ class Component(component.Main):
                     self.armTwistChain[i] + ".worldMatrix",
                     div_cns + ".parentInverseMatrix",
                 )
-            elif (
-                i == (self.settings["div0"] + div_offset)
-                and self.settings["div1"] == 0
-            ):
+            elif i == (self.settings["div0"] + div_offset) and self.settings["div1"] == 0:
                 mulmat_node = applyop.gear_mulmatrix_op(
                     self.elbow_ref + ".worldMatrix",
                     div_cns + ".parentInverseMatrix",
                 )
             else:
-                ftc = self.forearmTwistChain[
-                    i - (self.settings["div0"] + div_offset)
-                ]
+                ftc = self.forearmTwistChain[i - (self.settings["div0"] + div_offset)]
                 mulmat_node = applyop.gear_mulmatrix_op(
                     ftc + ".worldMatrix", div_cns + ".parentInverseMatrix"
                 )

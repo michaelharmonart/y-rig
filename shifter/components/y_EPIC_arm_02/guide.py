@@ -87,9 +87,7 @@ class Guide(guide.ComponentGuide):
         vTemp = transform.getOffsetPosition(self.root, [7, 0, 0])
         self.eff = self.addLoc("eff", self.wrist, vTemp)
 
-        self.dispcrv = self.addDispCurve(
-            "crv", [self.root, self.elbow, self.wrist, self.eff]
-        )
+        self.dispcrv = self.addDispCurve("crv", [self.root, self.elbow, self.wrist, self.eff])
 
         self.blade = self.addBlade("blade", self.wrist, self.eff)
 
@@ -118,17 +116,11 @@ class Guide(guide.ComponentGuide):
         self.pWeightSplitDegree = self.addParam("weight_split_degree", "long", 2, 1)
 
         # FCurves
-        self.pSt_profile = self.addFCurveParam(
-            "st_profile", [[0, 0], [0.5, -0.7], [1, 0]]
-        )
-        self.pSq_profile = self.addFCurveParam(
-            "sq_profile", [[0, 0], [0.5, 0.7], [1, 0]]
-        )
+        self.pSt_profile = self.addFCurveParam("st_profile", [[0, 0], [0.5, -0.7], [1, 0]])
+        self.pSq_profile = self.addFCurveParam("sq_profile", [[0, 0], [0.5, 0.7], [1, 0]])
 
         self.pUseIndex = self.addParam("useIndex", "bool", False)
-        self.pParentJointIndex = self.addParam(
-            "parentJointIndex", "long", -1, None, None
-        )
+        self.pParentJointIndex = self.addParam("parentJointIndex", "long", -1, None, None)
 
     def get_divisions(self):
         """Returns correct segments divisions"""
@@ -196,19 +188,11 @@ class componentSettings(MayaQWidgetDockableMixin, guide.componentMainSettings): 
 
         # populate component settings
 
-        self.populateCheck(
-            self.settingsTab.TPoseRest_checkBox, "rest_T_Pose"
-        )
+        self.populateCheck(self.settingsTab.TPoseRest_checkBox, "rest_T_Pose")
 
-        self.settingsTab.ikfk_slider.setValue(
-            int(self.root.attr("blend").get() * 100)
-        )
-        self.settingsTab.ikfk_spinBox.setValue(
-            int(self.root.attr("blend").get() * 100)
-        )
-        self.settingsTab.maxStretch_spinBox.setValue(
-            self.root.attr("maxstretch").get()
-        )
+        self.settingsTab.ikfk_slider.setValue(int(self.root.attr("blend").get() * 100))
+        self.settingsTab.ikfk_spinBox.setValue(int(self.root.attr("blend").get() * 100))
+        self.settingsTab.maxStretch_spinBox.setValue(self.root.attr("maxstretch").get())
         self.populateCheck(self.settingsTab.ikTR_checkBox, "ikTR")
         self.populateCheck(self.settingsTab.mirrorMid_checkBox, "mirrorMid")
         self.populateCheck(self.settingsTab.mirrorIK_checkBox, "mirrorIK")
@@ -217,9 +201,7 @@ class componentSettings(MayaQWidgetDockableMixin, guide.componentMainSettings): 
         self.settingsTab.div0_spinBox.setValue(self.root.attr("div0").get())
         self.settingsTab.div1_spinBox.setValue(self.root.attr("div1").get())
         self.populateCheck(self.settingsTab.weight_split_enable_checkBox, "weight_split_tag")
-        self.settingsTab.spline_degree_spinBox.setValue(
-            self.root.attr("weight_split_degree").get()
-        )
+        self.settingsTab.spline_degree_spinBox.setValue(self.root.attr("weight_split_degree").get())
         ikRefArrayItems = self.root.attr("ikrefarray").get().split(",")
         for item in ikRefArrayItems:
             self.settingsTab.ikRefArray_listWidget.addItem(item)
@@ -301,9 +283,7 @@ class componentSettings(MayaQWidgetDockableMixin, guide.componentMainSettings): 
             )
         )
 
-        self.settingsTab.squashStretchProfile_pushButton.clicked.connect(
-            self.setProfile
-        )
+        self.settingsTab.squashStretchProfile_pushButton.clicked.connect(self.setProfile)
 
         self.settingsTab.ikTR_checkBox.stateChanged.connect(
             partial(self.updateCheck, self.settingsTab.ikTR_checkBox, "ikTR")
