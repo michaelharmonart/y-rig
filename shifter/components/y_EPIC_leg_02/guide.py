@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+
 from functools import partial
 
 from maya.app.general.mayaMixin import (  # ty: ignore[unresolved-import]
@@ -105,24 +106,18 @@ class Guide(guide.ComponentGuide):
         self.pDiv1 = self.addParam("div1", "long", 2, 0, None)
 
         # FCurves
-        self.pSt_profile = self.addFCurveParam(
-            "st_profile", [[0, 0], [0.5, -0.7], [1, 0]]
-        )
+        self.pSt_profile = self.addFCurveParam("st_profile", [[0, 0], [0.5, -0.7], [1, 0]])
 
-        self.pSq_profile = self.addFCurveParam(
-            "sq_profile", [[0, 0], [0.5, 0.7], [1, 0]]
-        )
+        self.pSq_profile = self.addFCurveParam("sq_profile", [[0, 0], [0.5, 0.7], [1, 0]])
 
         self.pUseIndex = self.addParam("useIndex", "bool", False)
 
-        self.pParentJointIndex = self.addParam(
-            "parentJointIndex", "long", -1, None, None
-        )
+        self.pParentJointIndex = self.addParam("parentJointIndex", "long", -1, None, None)
 
     def get_divisions(self):
         """Returns correct segments divisions"""
 
-        self.divisions = self.root.div0.get() + self.root.div1.get() + 4
+        self.divisions = self.root.div0.get() + self.root.div1.get() + 4  # ty: ignore[unresolved-attribute]
         return self.divisions
 
 
@@ -178,20 +173,12 @@ class componentSettings(MayaQWidgetDockableMixin, guide.componentMainSettings): 
         self.tabs.insertTab(1, self.settingsTab, "Component Settings")
 
         # populate component settings
-        self.populateCheck(
-            self.settingsTab.TPoseRest_checkBox, "rest_T_Pose"
-        )
-        self.settingsTab.ikfk_slider.setValue(
-            int(self.root.attr("blend").get() * 100)
-        )
+        self.populateCheck(self.settingsTab.TPoseRest_checkBox, "rest_T_Pose")
+        self.settingsTab.ikfk_slider.setValue(int(self.root.attr("blend").get() * 100))
 
-        self.settingsTab.ikfk_spinBox.setValue(
-            int(self.root.attr("blend").get() * 100)
-        )
+        self.settingsTab.ikfk_spinBox.setValue(int(self.root.attr("blend").get() * 100))
 
-        self.settingsTab.maxStretch_spinBox.setValue(
-            self.root.attr("maxstretch").get()
-        )
+        self.settingsTab.maxStretch_spinBox.setValue(self.root.attr("maxstretch").get())
 
         self.populateCheck(self.settingsTab.mirrorMid_checkBox, "mirrorMid")
         self.populateCheck(self.settingsTab.leafJoints_checkBox, "leafJoints")
@@ -241,9 +228,7 @@ class componentSettings(MayaQWidgetDockableMixin, guide.componentMainSettings): 
             partial(self.updateSpinBox, self.settingsTab.div1_spinBox, "div1")
         )
 
-        self.settingsTab.squashStretchProfile_pushButton.clicked.connect(
-            self.setProfile
-        )
+        self.settingsTab.squashStretchProfile_pushButton.clicked.connect(self.setProfile)
 
         self.settingsTab.mirrorMid_checkBox.stateChanged.connect(
             partial(
