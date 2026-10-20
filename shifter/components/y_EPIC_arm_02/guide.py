@@ -40,7 +40,7 @@ AUTHOR = "Miquel Campos"
 URL = "www.mcsgear.com"
 EMAIL = ""
 VERSION = [2, 0, 0]
-TYPE = "EPIC_arm_02"
+TYPE = "y_EPIC_arm_02"
 NAME = "arm"
 DESCRIPTION = ""
 
