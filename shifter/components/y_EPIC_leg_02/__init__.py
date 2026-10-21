@@ -522,6 +522,8 @@ class Component(component.Main):
         self.tweak_ctl = []
         self.div_cns = []
         self.roll_offset = []
+        self.upper_jnt_indices = []
+        self.lower_jnt_indices = []
 
         # joint Description Name
         jd_names = ast.literal_eval(self.settings["jointNamesDescription_custom"])
@@ -581,6 +583,7 @@ class Component(component.Main):
                 else:
                     rot_off_root = rot_off
 
+                self.upper_jnt_indices.append(len(self.jnt_pos))
                 self.jnt_pos.append(
                     {
                         "obj": self.leg_root_base,
@@ -608,6 +611,7 @@ class Component(component.Main):
                         }
                     )
             elif i == self.settings["div0"] + 1:
+                self.lower_jnt_indices.append(len(self.jnt_pos))
                 self.jnt_pos.append(
                     {
                         "obj": roll_off,
@@ -624,6 +628,10 @@ class Component(component.Main):
                 twist_idx = self.settings["div1"]
                 increment = -1
             else:
+                if twist_name == jdn_thigh_twist:
+                    self.upper_jnt_indices.append(len(self.jnt_pos))
+                else:
+                    self.lower_jnt_indices.append(len(self.jnt_pos))
                 self.jnt_pos.append(
                     {
                         "obj": roll_off,
@@ -1512,9 +1520,9 @@ class Component(component.Main):
             )
 
     def finalize(self):
-        """Tag upper-arm and forearm joints for automatic weight splitting."""
+        """Tag thigh and calf joints for automatic weight splitting."""
         if self.settings["weight_split_tag"]:
-            for segment_indices in (self.upper_jnt_indices, self.lower_jnt_indices):  # ty: ignore[unresolved-attribute]
+            for segment_indices in (self.upper_jnt_indices, self.lower_jnt_indices):
                 if len(segment_indices) > 1:
                     segment_joints = [self.jointList[index].name() for index in segment_indices]
                     tag_for_weight_split(

@@ -104,6 +104,8 @@ class Guide(guide.ComponentGuide):
         # Divisions
         self.pDiv0 = self.addParam("div0", "long", 2, 0, None)
         self.pDiv1 = self.addParam("div1", "long", 2, 0, None)
+        self.pWeightSplitTag = self.addParam("weight_split_tag", "bool", True)
+        self.pWeightSplitDegree = self.addParam("weight_split_degree", "long", 2, 1)
 
         # FCurves
         self.pSt_profile = self.addFCurveParam("st_profile", [[0, 0], [0.5, -0.7], [1, 0]])
