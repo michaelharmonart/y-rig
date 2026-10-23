@@ -116,7 +116,15 @@ class Eye:
         self.create_controls()
         self.create_joints()
 
-        for vis_attr in ["sub_blink", "sub_eyelid", "sub_socket"]:
+        cmds.addAttr(
+            self.main_ctrl.transform,
+            longName="Socket",
+            attributeType="enum",
+            enumName="-------------",
+            keyable=True,
+        )
+
+        for vis_attr in ["sub_socket"]:
             cmds.addAttr(
                 self.main_ctrl.transform,
                 longName=vis_attr,
@@ -124,6 +132,24 @@ class Eye:
                 defaultValue=False,
                 keyable=True,
             )
+
+        cmds.addAttr(
+            self.main_ctrl.transform,
+            longName="Eyelid_Controls",
+            attributeType="enum",
+            enumName="-------------",
+            keyable=True,
+        )
+
+        cmds.addAttr(
+            self.main_ctrl.transform,
+            longName="eyelidFollow",
+            attributeType="double",
+            minValue=0.0,
+            maxValue=1.0,
+            defaultValue=0.1,
+            keyable=True,
+        )
 
         """self.eyelid = Eyelid(
             side=self.side,
@@ -201,6 +227,7 @@ class Eye:
         self.eye_look_offset_node.blender.set(0.1)
         self.eye_look_offset_node.color2.set((0, 0, 0))
         self.eye_look_offset_node.output.connect_to(f"{self.eyelid.look_offset}.rotate")
+        self.eye_look_offset_node.blender.connect_from(f"{self.main_ctrl.transform}.eyelidFollow")
 
         matrix_constraint(
             source_transform=self.look_parent,
