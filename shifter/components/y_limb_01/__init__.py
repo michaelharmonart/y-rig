@@ -482,7 +482,7 @@ class Component(component.Main):
                 self.mid_cns.sz.set(-1)
         else:
             attribute.setInvertMirror(self.mid_ctl, ["tx", "ty", "tz"])
-        attribute.setKeyableAttributes(self.mid_ctl, self.t_params)
+        attribute.setKeyableAttributes(self.mid_ctl)
 
     def _add_twist_chains(self) -> None:
         # Roll twist chain ---------------------------------
@@ -1073,6 +1073,7 @@ class Component(component.Main):
             scale=False,
             shear=False,
         )
+        pm.connectAttr(f"{self.eff_loc}.scale", f"{self.lower_twist}.scale")
 
         upper_twist_quat = twist_extract_quat(str(self.bone1), str(self.upper_swing), axis="x")
         upper_twist_euler = QuatToEulerNode.create(f"{self.bone0}_twist")
@@ -1115,7 +1116,7 @@ class Component(component.Main):
             scale=False,
             shear=False,
         )
-
+        pm.scaleConstraint(self.bone0_tr, self.lower_twist, self.ctrn_loc, maintainOffset=False)
         matrix_spline_from_transforms(
             name=f"{self.upperBendy_ctl}_aim_spline",
             cv_transforms=[str(self.bone0_tr), str(self.midBendy_npo)],
