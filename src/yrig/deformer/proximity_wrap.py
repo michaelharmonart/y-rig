@@ -8,7 +8,8 @@ def create_proximity_wrap(
     driven: str | Sequence[str],
     name: str | None = None,
 ) -> str:
-    resolved_name = name or f"{'_'.join(driven)}_wrap"
+
+    resolved_name = name or f"{driven if isinstance(driven, str) else '_'.join(driven)}_wrap"
     wrap_node: str = cmds.deformer(driven, type="proximityWrap", name=resolved_name)[0]  # type: ignore
     cmds.proximityWrap(
         wrap_node,
