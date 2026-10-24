@@ -64,6 +64,11 @@
                     "type": "raw",
                     "value": "${file::data/skin}"
                 },
+                "skip_geo": {
+                    "comment": "Geometry in this collection will not be skinned even if fallback skinning is enabled.",
+                    "type": "list",
+                    "value": "[]"
+                },
                 "strip_suffix": {
                     "comment": "If set, the suffix will be striiped from geo names when searching for the skin files."
                 }

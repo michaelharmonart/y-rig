@@ -139,6 +139,10 @@
             "/visibility_sets_io": [
                 280,
                 20
+            ],
+            "/wrap": [
+                204.8390738764619,
+                -427.4448021197598
             ]
         },
         "collapse": {
@@ -1291,6 +1295,19 @@
                 "import_path = Path(\"${import_filepath}\")",
                 "",
                 "yrig.sets.import_sets(import_path, parent=\"${rig_set}\")"
+            ]
+        },
+        "/wrap": {
+            "attrs": {
+                "wrap_mapping": {
+                    "type": "dict",
+                    "value": "{}"
+                }
+            },
+            "code": [
+                "wrap_mapping = ${wrap_mapping}",
+                "for source, target in wrap_mapping.items():",
+                "    yrig.deformer.proximity_wrap.create_proximity_wrap(source, target)"
             ]
         }
     }
