@@ -189,10 +189,10 @@ class ArrayAttribute(Attribute, Iterable[AttributeType], Generic[AttributeType])
         for index in self.get_indices():
             yield self[index]
 
-    def clear(self) -> None:
+    def clear(self, break_connections: bool = True) -> None:
         """Remove all existing elements from this array."""
         for index in self.get_indices():
-            cmds.removeMultiInstance(f"{self.attr_path}[{index}]", b=True)
+            cmds.removeMultiInstance(f"{self.attr_path}[{index}]", b=break_connections)
 
 
 class ValueArrayAttribute(Attribute[Sequence[T]], Generic[T]):

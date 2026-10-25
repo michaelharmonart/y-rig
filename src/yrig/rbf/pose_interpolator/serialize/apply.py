@@ -8,6 +8,7 @@ from maya import cmds
 
 from yrig.maya_api.attribute import Attribute
 from yrig.maya_api.node import PoseInterpolatorManagerNode, PoseInterpolatorNode
+from yrig.name import get_short_name
 from yrig.rbf.pose_interpolator.core import resolve_pose_interpolator_shape
 from yrig.rbf.pose_interpolator.serialize.directory import (
     filter_pose_interpolator_directory_data,
@@ -209,7 +210,10 @@ def find_child_pose_interpolator(
         source_node = str(source_attr).split(".", 1)[0]
         pose_interpolator_shape = resolve_pose_interpolator_shape(source_node)
         pose_interpolator_transform = get_transform(pose_interpolator_shape)
-        if name in {pose_interpolator_shape, pose_interpolator_transform}:
+        if name in {
+            get_short_name(pose_interpolator_shape),
+            get_short_name(pose_interpolator_transform),
+        }:
             source_node = str(source_attr).split(".", 1)[0]
             resolve_pose_interpolator_shape(source_node)
             return PoseInterpolatorNode.from_existing(source_node)
@@ -325,6 +329,7 @@ def _import_directory_contents(
                 parent,
                 create_folders,
                 merge_directories,
+                existing_policy,
             )
         )
     for pose_interpolator_data in data.pose_interpolators:

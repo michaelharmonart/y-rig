@@ -685,6 +685,10 @@
                     "value": "RBF"
                 },
                 "pose_directory": {},
+                "rbf_group": {
+                    "type": "raw",
+                    "value": "rbf"
+                },
                 "relative_filepath": {
                     "value": "data/psd/name.ypose"
                 }
@@ -704,7 +708,10 @@
             "code": [
                 "import_path = Path(\"${import_filepath}\")",
                 "",
-                "yrig.rbf.pose_interpolator.import_pose_file(import_path, directories=[\"${pose_directory}\"])"
+                "yrig.rbf.pose_interpolator.import_pose_file(",
+                "    import_path, ",
+                "    parent=\"${rbf_group}\",",
+                ")"
             ]
         },
         "/setup": {
