@@ -69,6 +69,10 @@ class Attribute(Generic[T]):
         """Set the value of this attribute."""
         self.set(val)
 
+    def is_settable(self) -> bool:
+        """True if this attribute is settable."""
+        return cmds.getAttr(self.attr_path, settable=True)
+
     def get_input(self) -> Attribute | None:
         """Return the source attribute connected to this attribute."""
         connections = cmds.listConnections(
