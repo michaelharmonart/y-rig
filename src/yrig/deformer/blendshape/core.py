@@ -226,6 +226,23 @@ def connect_target_deltas(source_target_attr: str, driven_target_attr: str) -> N
             )
 
 
+def copy_target_deltas(
+    blendshape: BlendShapeNode | str,
+    input_index: int,
+    source_index: int,
+    destination_index: int,
+    *,
+    replace: bool = True,
+) -> None:
+    if replace:
+        cmds.blendShape(str(blendshape), edit=True, resetTargetDelta=(input_index, source_index))
+    cmds.blendShape(
+        str(blendshape),
+        edit=True,
+        copyDelta=(input_index, source_index, destination_index),
+    )
+
+
 def connect_to_psd_network(
     blendshape: str | BlendShapeNode, psd_network: str, create_missing: bool = True
 ) -> tuple[str, list[str]]:

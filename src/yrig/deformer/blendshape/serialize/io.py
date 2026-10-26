@@ -34,7 +34,13 @@ def import_blendshape(
         targets: Specify target names to import.
     """
     data = load_json(filepath, BlendShapeData)
-    apply_blendshape_data(blendshape, data, directories, targets, parent_directory)
+    apply_blendshape_data(
+        blendshape,
+        data,
+        directories=directories,
+        targets=targets,
+        parent_directory=parent_directory,
+    )
     log.info(f"Imported shapes from {filepath}")
 
 

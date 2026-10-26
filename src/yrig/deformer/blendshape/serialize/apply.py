@@ -41,6 +41,14 @@ if TYPE_CHECKING:
         BlendShapeInputTargetItemAttribute,
     )
 
+from enum import StrEnum
+
+
+class ExistingPolicy(StrEnum):
+    UPDATE = "update"
+    SKIP = "skip"
+    DUPLICATE = "duplicate"
+
 
 @contextmanager
 def preserve_all_target_directories(blendshape: BlendShapeNode) -> Generator[None, None, None]:
@@ -75,6 +83,66 @@ def set_component_list_indices(
     fn_comp.addElements(indices)
     fn_data.add(comp_mob)
     plug.setMObject(data_mob)
+
+
+def find_child_blendshape_target(
+    blendshape: BlendShapeNode,
+    parent_directory_index: int,
+    name: str,
+) -> int | None:
+    """Return the index of a target directly inside the directory, or None."""
+    child_indices = blendshape.target_directory[parent_directory_index].child_indices.get()
+
+    for child_index in child_indices:
+        if child_index < 0:
+            continue
+
+        if blendshape.weight[child_index].get_alias() == name:
+            return child_index
+
+    return None
+
+
+def merge_target_group(
+    blendshape: BlendShapeNode,
+    data: BlendShapeTargetGroupData,
+    input_target_index: int,
+    parent_directory_index: int,
+    existing_policy: ExistingPolicy = ExistingPolicy.UPDATE,
+) -> int | None:
+    """Add a target group, or update an existing target with the same name."""
+    if existing_policy != ExistingPolicy.DUPLICATE:
+        existing_index = find_child_blendshape_target(blendshape, parent_directory_index, data.name)
+        if existing_index is not None:
+            if existing_policy == ExistingPolicy.SKIP:
+                return None
+
+            input_geometry_attr = blendshape.input[input_target_index].input_geometry.get_input()
+            if input_geometry_attr is None:
+                raise RuntimeError(f"No input geometry connected to target {input_target_index}.")
+
+            input_geometry = get_dag_path(str(input_geometry_attr).split(".", 1)[0])
+            target_group = blendshape.input_target[input_target_index].input_target_group[
+                existing_index
+            ]
+            with preserve_all_target_directories(blendshape):
+                target_group.input_target_item.clear()
+                apply_blendshape_target_group_data(
+                    blendshape,
+                    data,
+                    input_geometry,
+                    input_target_index,
+                    existing_index,
+                )
+
+            return existing_index
+
+    return add_target_group(
+        blendshape,
+        data,
+        input_target_index,
+        parent_directory_index,
+    )
 
 
 def add_target_group(
@@ -141,6 +209,7 @@ def apply_directory_children(
     parent_directory_index: int = 0,
     target_groups_to_skip: Collection[str] | None = None,
     target_directories_indices_to_skip: Collection[int] | None = None,
+    existing_policy: ExistingPolicy = ExistingPolicy.UPDATE,
 ) -> None:
     target_directory_to_apply = data.directory[target_directory_index]
     existing_directory_map = get_existing_child_directories(blendshape, parent_directory_index)
@@ -168,6 +237,7 @@ def apply_directory_children(
                 parent_directory_index=maya_directory_index,
                 target_groups_to_skip=target_groups_to_skip,
                 target_directories_indices_to_skip=target_directories_indices_to_skip,
+                existing_policy=existing_policy,
             )
         # Indices >= 0 are target groups
         else:
@@ -179,11 +249,12 @@ def apply_directory_children(
                         and target_group_data.name in target_groups_to_skip
                     ):
                         continue
-                    add_target_group(
+                    merge_target_group(
                         blendshape,
                         data=target_group_data,
                         input_target_index=input_target_index,
                         parent_directory_index=parent_directory_index,
+                        existing_policy=existing_policy,
                     )
 
 
@@ -232,7 +303,8 @@ def apply_blendshape_target_group_data(
 ) -> None:
     if blendshape.weight[target_group_index].get_alias() != data.name:
         blendshape.weight[target_group_index].set_alias(data.name)
-    blendshape.weight[target_group_index].set(0)
+    if blendshape.weight[target_group_index].is_settable():
+        blendshape.weight[target_group_index].set(0)
     target_group = blendshape.input_target[input_target_index].input_target_group[
         target_group_index
     ]
@@ -276,6 +348,7 @@ def _apply_explicit_targets(
     target_names: Collection[str],
     target_index_map: dict[str, int],
     parent_directory_index: int,
+    existing_policy: ExistingPolicy,
 ) -> set[str]:
     """Reparent explicitly-named targets directly under parent_directory_index. Returns names applied."""
     applied: set[str] = set()
@@ -288,11 +361,12 @@ def _apply_explicit_targets(
         for input_target_index, input_target in data.targets.items():
             if target_group_index in input_target.groups:
                 target_group_data = input_target.groups[target_group_index]
-                add_target_group(
+                merge_target_group(
                     blendshape,
                     data=target_group_data,
                     input_target_index=input_target_index,
                     parent_directory_index=parent_directory_index,
+                    existing_policy=existing_policy,
                 )
                 applied.add(target_name)
     return applied
@@ -304,10 +378,13 @@ def _apply_directories(
     directories: Collection[str],
     parent_directory_index: int,
     target_groups_to_skip: set[str],
+    existing_policy: ExistingPolicy,
 ) -> None:
     directory_indices_map = get_directory_indices(data.directory, directories)
     directory_indices_set = set(directory_indices_map.values())
-    existing_child_directories_map = get_existing_child_directories(blendshape, 0)
+    existing_child_directories_map = get_existing_child_directories(
+        blendshape, parent_directory_index
+    )
     for directory_index in directory_indices_map.values():
         directory_name = data.directory[directory_index].name
         maya_directory_index = existing_child_directories_map.get(directory_name)
@@ -324,15 +401,18 @@ def _apply_directories(
             parent_directory_index=maya_directory_index,
             target_groups_to_skip=target_groups_to_skip,
             target_directories_indices_to_skip=directory_indices_set,
+            existing_policy=existing_policy,
         )
 
 
 def apply_blendshape_data(
     blendshape: str | BlendShapeNode,
     data: BlendShapeData,
+    *,
     directories: Collection[str] | None = None,
     targets: Collection[str] | None = None,
     parent_directory: str | None = None,
+    existing_policy: ExistingPolicy = ExistingPolicy.UPDATE,
 ) -> None:
     """
     Apply blendShape data to a designated blendshape node.
@@ -382,7 +462,12 @@ def apply_blendshape_data(
         # Apply reparented targets first as they're easy.
         if targets is not None:
             already_added_targets = _apply_explicit_targets(
-                blendshape_node, data, targets, data_target_to_index_map, parent_directory_index
+                blendshape_node,
+                data,
+                targets,
+                data_target_to_index_map,
+                parent_directory_index,
+                existing_policy,
             )
 
     if directories is not None:
@@ -392,6 +477,7 @@ def apply_blendshape_data(
             directories,
             parent_directory_index=parent_directory_index,
             target_groups_to_skip=already_added_targets,
+            existing_policy=existing_policy,
         )
     else:
         apply_directory_children(
@@ -400,4 +486,5 @@ def apply_blendshape_data(
             target_directory_index=0,
             parent_directory_index=parent_directory_index,
             target_groups_to_skip=already_added_targets,
+            existing_policy=existing_policy,
         )
