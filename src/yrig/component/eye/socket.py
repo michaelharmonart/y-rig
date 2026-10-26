@@ -37,6 +37,47 @@ class Socket:
         self.control_size = control_size
         self.divisions = divisions
 
+    def disconnect_socket_joint_scale_shear(self) -> None:
+        """Remove scale/shear drivers from socket joints."""
+
+        for joints in self.sub_socket_joints.values():
+            for joint in joints:
+                for attr in (
+                    "scale",
+                    "scaleX",
+                    "scaleY",
+                    "scaleZ",
+                    "shear",
+                    "shearXY",
+                    "shearXZ",
+                    "shearYZ",
+                ):
+                    destination = f"{joint}.{attr}"
+
+                    source = cmds.connectionInfo(
+                        destination,
+                        sourceFromDestination=True,
+                    )
+
+                    if source:
+                        cmds.disconnectAttr(source, destination)  # type:ignore
+
+                cmds.setAttr(
+                    f"{joint}.scale",
+                    1,  # type:ignore
+                    1,  # type:ignore
+                    1,  # type:ignore
+                    type="double3",
+                )
+
+                cmds.setAttr(
+                    f"{joint}.shear",
+                    0,  # type:ignore
+                    0,  # type:ignore
+                    0,  # type:ignore
+                    type="double3",
+                )
+
     def create_eyelid_driver_spline(
         self,
         name: str,
@@ -409,3 +450,5 @@ class Socket:
                 sub_controls=[control.transform for control in self.sub_socket_controls[vertical]],
                 parent="setup",
             )
+        # Prevent inverse global-scale compensation on socket joints.
+        self.disconnect_socket_joint_scale_shear()
