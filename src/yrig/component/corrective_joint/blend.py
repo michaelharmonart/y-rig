@@ -176,9 +176,7 @@ class BlendCorrective:
             for axis in "XYZ":
                 DoubleAttribute(f"{translate_mult}.input2{axis}").set(value)
         else:
-            weight_mult = cmds.createNode(
-                "multDoubleLinear", name=f"{self.name}_translate_weight"
-            )
+            weight_mult = cmds.createNode("multDoubleLinear", name=f"{self.name}_translate_weight")
             cmds.connectAttr(weight, f"{weight_mult}.input1")
             DoubleAttribute(f"{weight_mult}.input2").set(self.translate_blend)
             for axis in "XYZ":
@@ -214,9 +212,7 @@ class BlendCorrective:
         )
 
         delta = self._build_relative_delta()
-        signed_twist = (
-            self._build_signed_twist(delta) if self.driver_axis is not None else None
-        )
+        signed_twist = self._build_signed_twist(delta) if self.driver_axis is not None else None
         weight = self._build_weight(signed_twist)
 
         rotation_blend = QuatSlerpNode.create(f"{self.name}_rotation_slerp")
