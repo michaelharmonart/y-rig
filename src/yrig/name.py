@@ -6,7 +6,7 @@ RIGHT_SIDE_NAME = "R"
 MIDDLE_SIDE_NAME = "M"
 SIDE_NAMES: tuple[str, ...] = (LEFT_SIDE_NAME, RIGHT_SIDE_NAME, MIDDLE_SIDE_NAME)
 
-GET_SIDE_REGEX = re.compile(rf"(?:(?<=_)|^)(?:{'|'.join(SIDE_NAMES)})(?=_|$)")
+GET_SIDE_REGEX = re.compile(rf"(?:(?<=_)|^)(?:{'|'.join(SIDE_NAMES)})(?=_|\d?|$)")
 
 
 def get_side(name: str) -> str | None:

@@ -235,7 +235,9 @@ def copy_target_deltas(
     replace: bool = True,
 ) -> None:
     if replace:
-        cmds.blendShape(str(blendshape), edit=True, resetTargetDelta=(input_index, source_index))
+        cmds.blendShape(
+            str(blendshape), edit=True, resetTargetDelta=(input_index, destination_index)
+        )
     cmds.blendShape(
         str(blendshape),
         edit=True,
