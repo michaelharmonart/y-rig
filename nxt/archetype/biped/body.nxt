@@ -80,6 +80,15 @@
                 }
             }
         },
+        "/apply/deformation/main/wrap_from_sim": {
+            "instance": "/wrap",
+            "attrs": {
+                "wrap_mapping": {
+                    "type": "dict",
+                    "value": "{}"
+                }
+            }
+        },
         "/setup": {
             "child_order": [
                 "new_scene",

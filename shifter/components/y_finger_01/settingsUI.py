@@ -67,6 +67,9 @@ class Ui_Form:
         self.ikRefArrayRemove_pushButton = QtWidgets.QPushButton(">>", self.ikRefArray_groupBox)
         self.ikRefArrayRemove_pushButton.setObjectName("ikRefArrayRemove_pushButton")
 
+        self.isThumb_checkBox = QtWidgets.QCheckBox("Is Thumb", self.groupBox)
+        self.isThumb_checkBox.setObjectName("isThumb_checkBox")
+
     def create_layout(self, Form):
         self.gridLayout = QtWidgets.QGridLayout(Form)
         self.gridLayout.setObjectName("gridLayout")
@@ -93,6 +96,9 @@ class Ui_Form:
         self.verticalLayout.addWidget(self.neutralPose_checkBox)
         self.gridLayout_2.addLayout(self.verticalLayout, 0, 0, 1, 1)
         self.gridLayout.addWidget(self.groupBox, 0, 0, 1, 1)
+
+        self.verticalLayout.addWidget(self.neutralPose_checkBox)
+        self.verticalLayout.addWidget(self.isThumb_checkBox)
 
         self.gridLayout_3 = QtWidgets.QGridLayout(self.ikRefArray_groupBox)
         self.gridLayout_3.setObjectName("gridLayout_3")

@@ -69,6 +69,10 @@ class Attribute(Generic[T]):
         """Set the value of this attribute."""
         self.set(val)
 
+    def is_settable(self) -> bool:
+        """True if this attribute is settable."""
+        return cmds.getAttr(self.attr_path, settable=True)
+
     def get_input(self) -> Attribute | None:
         """Return the source attribute connected to this attribute."""
         connections = cmds.listConnections(
@@ -185,10 +189,10 @@ class ArrayAttribute(Attribute, Iterable[AttributeType], Generic[AttributeType])
         for index in self.get_indices():
             yield self[index]
 
-    def clear(self) -> None:
+    def clear(self, break_connections: bool = True) -> None:
         """Remove all existing elements from this array."""
         for index in self.get_indices():
-            cmds.removeMultiInstance(f"{self.attr_path}[{index}]", b=True)
+            cmds.removeMultiInstance(f"{self.attr_path}[{index}]", b=break_connections)
 
 
 class ValueArrayAttribute(Attribute[Sequence[T]], Generic[T]):

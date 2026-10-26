@@ -139,6 +139,10 @@
             "/visibility_sets_io": [
                 280,
                 20
+            ],
+            "/wrap": [
+                204.8390738764619,
+                -427.4448021197598
             ]
         },
         "collapse": {
@@ -681,6 +685,10 @@
                     "value": "RBF"
                 },
                 "pose_directory": {},
+                "rbf_group": {
+                    "type": "raw",
+                    "value": "rbf"
+                },
                 "relative_filepath": {
                     "value": "data/psd/name.ypose"
                 }
@@ -700,7 +708,10 @@
             "code": [
                 "import_path = Path(\"${import_filepath}\")",
                 "",
-                "yrig.rbf.pose_interpolator.import_pose_file(import_path, directories=[\"${pose_directory}\"])"
+                "yrig.rbf.pose_interpolator.import_pose_file(",
+                "    import_path, ",
+                "    parent=\"${rbf_group}\",",
+                ")"
             ]
         },
         "/setup": {
@@ -1291,6 +1302,19 @@
                 "import_path = Path(\"${import_filepath}\")",
                 "",
                 "yrig.sets.import_sets(import_path, parent=\"${rig_set}\")"
+            ]
+        },
+        "/wrap": {
+            "attrs": {
+                "wrap_mapping": {
+                    "type": "dict",
+                    "value": "{}"
+                }
+            },
+            "code": [
+                "wrap_mapping = ${wrap_mapping}",
+                "for source, target in wrap_mapping.items():",
+                "    yrig.deformer.proximity_wrap.create_proximity_wrap(source, target)"
             ]
         }
     }
