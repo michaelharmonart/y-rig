@@ -2,9 +2,13 @@ from collections.abc import Callable, Iterable
 
 from maya import cmds
 
-from yrig.deformer.blendshape.core import copy_target_deltas, get_name_to_target_index_map
+from yrig.deformer.blendshape.core import (
+    copy_target_deltas,
+    get_blendshape_target_names,
+    get_name_to_target_index_map,
+)
 from yrig.maya_api.node import BlendShapeNode
-from yrig.name import flip_side
+from yrig.name import Side, filter_side, flip_side
 
 
 def mirror_blendshape_targets(
@@ -32,16 +36,16 @@ def mirror_blendshape_targets(
                 "This should create a mirror target if it doesn't already exist. Ideally it would even put it in the right directory."
             )
         mirrored_target_index = name_to_index_map[mirrored_target]
-
         for input_index in blendshape_node.input_target.get_indices():
             input_target = blendshape_node.input_target[input_index]
             existing_target_group_indices = set(input_target.input_target_group.get_indices())
             if original_target_index not in existing_target_group_indices:
                 continue
+
+            # TODO: Switch this out for our own shape mirroring logic. This is buns slow.
             copy_target_deltas(
                 blendshape_node, input_index, original_target_index, mirrored_target_index
             )
-            # TODO: Expose these options
             cmds.blendShape(
                 str(blendshape_node),
                 edit=True,
@@ -49,5 +53,28 @@ def mirror_blendshape_targets(
                 symmetryAxis="X",
                 symmetrySpace=1,  # Object space
             )
+
             mirrored[original_target] = mirrored_target
     return mirrored
+
+
+def mirror_all_blendshape_targets(
+    blendshape: BlendShapeNode | str,
+    *,
+    left_to_right: bool = True,
+    map_mirror_target: Callable[[str], str] | None = None,
+) -> dict[str, str]:
+    blendshape_node = (
+        blendshape
+        if isinstance(blendshape, BlendShapeNode)
+        else BlendShapeNode.from_existing(blendshape)
+    )
+    source_side = Side.LEFT if left_to_right else Side.RIGHT
+
+    targets = filter_side(get_blendshape_target_names(str(blendshape_node)), source_side)
+
+    return mirror_blendshape_targets(
+        blendshape_node,
+        targets,
+        map_mirror_target=map_mirror_target,
+    )

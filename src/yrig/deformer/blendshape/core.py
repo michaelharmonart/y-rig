@@ -139,6 +139,12 @@ def get_name_to_target_index_map(blendshape: str) -> dict[str, int]:
     }
 
 
+def get_blendshape_target_names(blendshape: str) -> list[str]:
+    """Return all target names on a blendShape node."""
+    aliases = cmds.aliasAttr(blendshape, query=True) or []
+    return aliases[::2]
+
+
 def get_target_weights(
     blendshape: str, target: str | int, input_index: int = 0
 ) -> dict[int, float]:

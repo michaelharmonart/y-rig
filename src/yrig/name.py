@@ -1,5 +1,9 @@
+from __future__ import annotations
+
 import re
 import unicodedata
+from collections.abc import Iterable
+from enum import StrEnum
 
 LEFT_SIDE_NAME = "L"
 RIGHT_SIDE_NAME = "R"
@@ -9,7 +13,21 @@ SIDE_NAMES: tuple[str, ...] = (LEFT_SIDE_NAME, RIGHT_SIDE_NAME, MIDDLE_SIDE_NAME
 GET_SIDE_REGEX = re.compile(rf"(?:(?<=_)|^)(?:{'|'.join(SIDE_NAMES)})(?=_|\d?|$)")
 
 
-def get_side(name: str) -> str | None:
+class Side(StrEnum):
+    LEFT = "L"
+    RIGHT = "R"
+    MIDDLE = "M"
+
+    @classmethod
+    def from_name(cls, name: str) -> Side:
+        return {
+            LEFT_SIDE_NAME: cls.LEFT,
+            RIGHT_SIDE_NAME: cls.RIGHT,
+            MIDDLE_SIDE_NAME: cls.MIDDLE,
+        }[name]
+
+
+def get_side(name: str) -> Side | None:
     """
     Extracts the side token from a control name. eg. Front_Leg_L_CTL will return "L"
     Valid sides: ["L", "R", "M"]
@@ -20,7 +38,12 @@ def get_side(name: str) -> str | None:
     """
     # Create a pattern that matches any of the sides preceded by "_" and followed by "_" or end of string
     match = re.search(GET_SIDE_REGEX, name)
-    return match.group(0) if match else None
+    return Side.from_name(match.group(0)) if match else None
+
+
+def filter_side(names: Iterable[str], side: Side) -> list[str]:
+    """Return names matching the specified side token."""
+    return [name for name in names if get_side(name) == side]
 
 
 def _flip_match_side(match: re.Match[str]) -> str:

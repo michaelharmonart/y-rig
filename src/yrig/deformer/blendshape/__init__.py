@@ -6,7 +6,7 @@ from .core import (
     import_maya_shape_file,
     set_target_weights,
 )
-from .mirror import mirror_blendshape_targets
+from .mirror import mirror_all_blendshape_targets, mirror_blendshape_targets
 from .serialize import (
     batch_export_blendshapes,
     export_blendshape,
@@ -26,6 +26,7 @@ __all__ = [
     "import_blendshape",
     "import_blendshapes_from_directories",
     "import_maya_shape_file",
+    "mirror_all_blendshape_targets",
     "mirror_blendshape_targets",
     "set_target_weights",
 ]
