@@ -237,6 +237,8 @@ class Eyelid:
         # ---------------------------------------------------------
 
         def get_local_y(pin: str, suffix: str) -> str:
+            """Get pin Y relative to the isolated eye setup."""
+
             mm = cmds.createNode(
                 "multMatrix",
                 name=f"{name}_{suffix}_compare_MM",
@@ -253,7 +255,7 @@ class Eyelid:
             )
 
             cmds.connectAttr(
-                f"{self.main_ctrl}.worldInverseMatrix[0]",
+                f"{self.eyes_setup_grp}.worldInverseMatrix[0]",
                 f"{mm}.matrixIn[1]",
             )
 
@@ -1447,7 +1449,7 @@ class Eyelid:
 
         self.collision_grp = create_transform(
             name=f"eyelid_collision_{self.side}_grp",
-            parent=self.component_grp,
+            parent=self.blink_setup_grp,
         )
 
         self.eyelid_ik = {
