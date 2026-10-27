@@ -1,4 +1,8 @@
-from enum import IntEnum
+from __future__ import annotations
+
+from enum import IntEnum, StrEnum
+
+from maya.api.OpenMayaAnim import MFnAnimCurve
 
 
 class AimMatrixAxisMode(IntEnum):
@@ -16,7 +20,7 @@ class Axis(IntEnum):
     NEG_Z = 5
 
     @classmethod
-    def from_str(cls, value: str) -> "Axis":
+    def from_str(cls, value: str) -> Axis:
         match value.lower():
             case "x":
                 return cls.X
@@ -171,6 +175,74 @@ class SkinClusterSkinningMethod(IntEnum):
 class SkinClusterWeightDistribution(IntEnum):
     DISTANCE = 0
     NEIGHBORS = 1
+
+
+class KeyframeInfinityType(StrEnum):
+    CONSTANT = "constant"
+    LINEAR = "linear"
+    CYCLE = "cycle"
+    CYCLE_RELATIVE = "cycleRelative"
+    OSCILLATE = "oscillate"
+
+    @property
+    def ktype(self) -> int:
+        match self:
+            case self.CONSTANT:
+                return MFnAnimCurve.kConstant
+            case self.LINEAR:
+                return MFnAnimCurve.kLinear
+            case self.CYCLE:
+                return MFnAnimCurve.kCycle
+            case self.CYCLE_RELATIVE:
+                return MFnAnimCurve.kCycleRelative
+            case self.OSCILLATE:
+                return MFnAnimCurve.kOscillate
+
+
+class KeyframeTangentType(StrEnum):
+    AUTO = "auto"
+    AUTO_CUSTOM = "autocustom"
+    AUTO_EASE = "autoease"
+    AUTO_MIX = "automix"
+    CLAMPED = "clamped"
+    FAST = "fast"
+    FLAT = "flat"
+    LINEAR = "linear"
+    PLATEAU = "plateau"
+    SLOW = "slow"
+    SPLINE = "spline"
+    STEP = "step"
+    STEP_NEXT = "stepnext"
+
+    @property
+    def ktype(self) -> int:
+        match self:
+            case KeyframeTangentType.AUTO:
+                return MFnAnimCurve.kTangentAuto
+            case KeyframeTangentType.AUTO_CUSTOM:
+                return MFnAnimCurve.kTangentAutoCustom
+            case KeyframeTangentType.AUTO_EASE:
+                return MFnAnimCurve.kTangentAutoEase
+            case KeyframeTangentType.AUTO_MIX:
+                return MFnAnimCurve.kTangentAutoMix
+            case KeyframeTangentType.CLAMPED:
+                return MFnAnimCurve.kTangentClamped
+            case KeyframeTangentType.FAST:
+                return MFnAnimCurve.kTangentFast
+            case KeyframeTangentType.FLAT:
+                return MFnAnimCurve.kTangentFlat
+            case KeyframeTangentType.LINEAR:
+                return MFnAnimCurve.kTangentLinear
+            case KeyframeTangentType.PLATEAU:
+                return MFnAnimCurve.kTangentPlateau
+            case KeyframeTangentType.SLOW:
+                return MFnAnimCurve.kTangentSlow
+            case KeyframeTangentType.SPLINE:
+                return MFnAnimCurve.kTangentSmooth
+            case KeyframeTangentType.STEP:
+                return MFnAnimCurve.kTangentStep
+            case KeyframeTangentType.STEP_NEXT:
+                return MFnAnimCurve.kTangentStepNext
 
 
 class UnsignedAxis(IntEnum):
