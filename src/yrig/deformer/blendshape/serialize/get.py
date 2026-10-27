@@ -213,16 +213,14 @@ def get_blendshape_data(
     input_data = get_blendshape_input_data_list(blendshape_node)
 
     full_directory_data = get_blendshape_directory_dict(blendshape_node)
-
     needed_group_indices = resolve_needed_group_indices(
-        full_directory_data, directories, target_groups_to_export, existing_group_indices
+        full_directory_data, directories, target_groups_to_export
     )
     directory_data = (
         full_directory_data
         if needed_group_indices is None
         else prune_blendshape_directory_dict(
             full_directory_data,
-            existing_group_indices=existing_group_indices,
             directories_to_keep=directories or set(),
             group_indices_to_keep=needed_group_indices,
         )
