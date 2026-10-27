@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from collections import deque
 from contextlib import contextmanager
 from dataclasses import replace
@@ -42,6 +43,8 @@ if TYPE_CHECKING:
     )
 
 from enum import StrEnum
+
+log = logging.getLogger(__name__)
 
 
 class ExistingPolicy(StrEnum):
@@ -222,7 +225,13 @@ def apply_directory_children(
                 and source_directory_index in target_directories_indices_to_skip
             ):
                 continue
-            child_directory = data.directory[source_directory_index]
+
+            child_directory = data.directory.get(source_directory_index)
+            if child_directory is None:
+                log.warning(
+                    f"No directory with index {child_index} found in data. It's likely malformed due to Maya not removing deleted directory from the parent directory."
+                )
+                continue
             maya_directory_index = existing_directory_map.get(child_directory.name)
             if maya_directory_index is None:
                 maya_directory_index = add_target_directory(
@@ -243,7 +252,12 @@ def apply_directory_children(
         else:
             for input_target_index, input_target in data.targets.items():
                 if child_index in input_target.groups:
-                    target_group_data = input_target.groups[child_index]
+                    target_group_data = input_target.groups.get(child_index)
+                    if target_group_data is None:
+                        log.warning(
+                            f"No target group with index {child_index} found in data. It's likely malformed due to Maya not removing deleted targets from the parent directory."
+                        )
+                        continue
                     if (
                         target_groups_to_skip is not None
                         and target_group_data.name in target_groups_to_skip

@@ -11,7 +11,11 @@ from maya.api.OpenMaya import (
     MPointArray,
 )
 
-from yrig.deformer.blendshape.core import get_target_index_to_name_map, resolve_target_index
+from yrig.deformer.blendshape.core import (
+    get_existing_target_group_indices,
+    get_target_index_to_name_map,
+    resolve_target_index,
+)
 from yrig.maya_api.attribute import (
     BlendShapeInputTargetAttribute,
     BlendShapeInputTargetGroupAttribute,
@@ -172,15 +176,20 @@ def get_blendshape_directory_dict(
     blendshape: BlendShapeNode,
 ) -> dict[int, BlendShapeTargetDirectory]:
     indices = blendshape.target_directory.get_indices()
+    existing_group_indices = get_existing_target_group_indices(blendshape)
+    valid_indices = {-index for index in indices if index != 0} | existing_group_indices
     directory_dict: dict[int, BlendShapeTargetDirectory] = {}
     for index in indices:
         target_directory_attr = blendshape.target_directory[index]
         # Maya is stupid and sometimes creates child index lists that have duplicates...
         child_indices = list(dict.fromkeys(target_directory_attr.child_indices.get()))
+        valid_child_indices = [
+            child_index for child_index in child_indices if child_index in valid_indices
+        ]
         directory = BlendShapeTargetDirectory(
             name=target_directory_attr.directory_name.get(),
             parent_index=target_directory_attr.parent_index.get(),
-            child_indices=child_indices,
+            child_indices=valid_child_indices,
         )
         directory_dict[index] = directory
     return directory_dict
@@ -202,15 +211,18 @@ def get_blendshape_data(
         else None
     )
     input_data = get_blendshape_input_data_list(blendshape_node)
+
     full_directory_data = get_blendshape_directory_dict(blendshape_node)
+
     needed_group_indices = resolve_needed_group_indices(
-        full_directory_data, directories, target_groups_to_export
+        full_directory_data, directories, target_groups_to_export, existing_group_indices
     )
     directory_data = (
         full_directory_data
         if needed_group_indices is None
         else prune_blendshape_directory_dict(
             full_directory_data,
+            existing_group_indices=existing_group_indices,
             directories_to_keep=directories or set(),
             group_indices_to_keep=needed_group_indices,
         )

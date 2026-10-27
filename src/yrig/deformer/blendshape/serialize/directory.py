@@ -42,6 +42,7 @@ def compute_needed_indices(
     directory_data: dict[int, BlendShapeTargetDirectory],
     directories_to_keep: Collection[str],
     group_indices_to_keep: Collection[int],
+    existing_group_indices: Collection[int] | None = None,
 ) -> set[int]:
     """
     Walk the directory tree and return the set of directory indices
@@ -53,7 +54,11 @@ def compute_needed_indices(
     def mark_children(index: int) -> None:
         if index in needed_indices:
             return
-        needed_indices.add(index)
+        if index > 0:
+            if existing_group_indices is None or index in existing_group_indices:
+                needed_indices.add(index)
+        else:
+            needed_indices.add(index)
         if index < 0:
             directory = directory_data[-index]
             for child in directory.child_indices:
@@ -61,12 +66,17 @@ def compute_needed_indices(
 
     def mark_needed(index: int) -> bool:
         if index >= 0:
-            return index in group_indices_to_keep
+            if (
+                existing_group_indices is None or index in existing_group_indices
+            ) and index in group_indices_to_keep:
+                needed_indices.add(index)
+                return True
+            return False
         directory = directory_data[-index]
         if directory.name in directories_to_keep:
             mark_children(index)
             return True
-        if any(mark_needed(child) for child in directory.child_indices):
+        if any(mark_needed(index=child) for child in directory.child_indices):
             needed_indices.add(index)
             return True
         return False
@@ -82,9 +92,13 @@ def prune_blendshape_directory_dict(
     directory_data: dict[int, BlendShapeTargetDirectory],
     directories_to_keep: Collection[str],
     group_indices_to_keep: Collection[int],
+    existing_group_indices: Collection[int] | None = None,
 ) -> dict[int, BlendShapeTargetDirectory]:
     needed_indices = compute_needed_indices(
-        directory_data, directories_to_keep, group_indices_to_keep
+        directory_data,
+        directories_to_keep,
+        group_indices_to_keep,
+        existing_group_indices,
     )
 
     pruned_directory_data = {
@@ -107,6 +121,7 @@ def resolve_needed_group_indices(
     directory_data: dict[int, BlendShapeTargetDirectory],
     directories_to_keep: Collection[str] | None = None,
     group_indices_to_keep: Collection[int] | None = None,
+    existing_group_indices: Collection[int] | None = None,
 ) -> set[int] | None:
     """
     Resolve the final set of blendShape group (weight) indices to import/export,
@@ -117,8 +132,10 @@ def resolve_needed_group_indices(
     """
     if directories_to_keep is None and group_indices_to_keep is None:
         return None
+
     needed_indices = compute_needed_indices(
         directory_data,
+        existing_group_indices=existing_group_indices,
         directories_to_keep=directories_to_keep or set(),
         group_indices_to_keep=group_indices_to_keep or set(),
     )
