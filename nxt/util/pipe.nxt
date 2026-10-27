@@ -36,7 +36,8 @@
                 "import_usd",
                 "group_model",
                 "rename_transforms",
-                "merge_groups"
+                "merge_groups",
+                "bake_face_colors"
             ],
             "attrs": {
                 "model_group": {
@@ -56,6 +57,24 @@
                     "value": "Ingest Model from Pipe"
                 }
             }
+        },
+        "/tools_window/tools/pipe/ingest_model/bake_face_colors": {
+            "code": [
+                "from yrig.color.bake import face_color_from_texture",
+                "",
+                "root = \"${model_group}\"",
+                "",
+                "transforms = cmds.listRelatives(",
+                "    root, allDescendents=True, type=\"transform\", fullPath=True",
+                ") or []",
+                "",
+                "for object in transforms:",
+                "    try:",
+                "        face_color_from_texture(object)",
+                "    except Exception as e:",
+                "        log = yrig.build.nxt_api.get_node_logger(\"${_nxtpath}\")",
+                "        log.warning(f\"Couldn't bake face colors for {object}, {e}\")"
+            ]
         },
         "/tools_window/tools/pipe/ingest_model/group_model": {
             "attrs": {
