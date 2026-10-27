@@ -141,8 +141,8 @@
                 20
             ],
             "/wrap": [
-                204.8390738764619,
-                -427.4448021197598
+                120.0,
+                -420.0
             ]
         },
         "collapse": {
@@ -165,7 +165,7 @@
             "/tools_window/tools/control_shapes/control_shapes_io/import": true,
             "/tools_window/tools/geometry/geometry_io": true,
             "/tools_window/tools/skin/skin_data_io": true,
-            "/tools_window/tools/visibility_sets_io": true
+            "/tools_window/tools/visibility_sets_io": false
         },
         "locks": {
             "$YRIG_NXT_DIR/core.nxt": false,
@@ -1257,8 +1257,8 @@
         "/tools_window/tools/visibility_sets_io": {
             "instance": "/io_pair",
             "child_order": [
-                "export",
-                "import"
+                "import",
+                "export"
             ],
             "attrs": {
                 "relative_filepath": {
