@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from collections import deque
 from contextlib import contextmanager
 from dataclasses import replace
@@ -42,6 +43,8 @@ if TYPE_CHECKING:
     )
 
 from enum import StrEnum
+
+log = logging.getLogger(__name__)
 
 
 class ExistingPolicy(StrEnum):
@@ -222,6 +225,7 @@ def apply_directory_children(
                 and source_directory_index in target_directories_indices_to_skip
             ):
                 continue
+
             child_directory = data.directory[source_directory_index]
             maya_directory_index = existing_directory_map.get(child_directory.name)
             if maya_directory_index is None:

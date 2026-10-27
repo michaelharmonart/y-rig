@@ -282,3 +282,12 @@ def connect_to_psd_network(
                 weight_attr.connect_from(network_alias_attr)
                 connected.append(network_alias_attr)
     return resolved_psd_network, connected
+
+
+def get_existing_target_group_indices(blendshape: BlendShapeNode) -> set[int]:
+    existing_group_indices: set[int] = set()
+    for index in blendshape.input_target.get_indices():
+        input_target = blendshape.input_target[index]
+        target_group_indices = input_target.input_target_group.get_indices()
+        existing_group_indices.update(target_group_indices)
+    return existing_group_indices

@@ -66,7 +66,7 @@ def compute_needed_indices(
         if directory.name in directories_to_keep:
             mark_children(index)
             return True
-        if any(mark_needed(child) for child in directory.child_indices):
+        if any(mark_needed(index=child) for child in directory.child_indices):
             needed_indices.add(index)
             return True
         return False
@@ -84,7 +84,9 @@ def prune_blendshape_directory_dict(
     group_indices_to_keep: Collection[int],
 ) -> dict[int, BlendShapeTargetDirectory]:
     needed_indices = compute_needed_indices(
-        directory_data, directories_to_keep, group_indices_to_keep
+        directory_data,
+        directories_to_keep,
+        group_indices_to_keep,
     )
 
     pruned_directory_data = {
@@ -117,6 +119,7 @@ def resolve_needed_group_indices(
     """
     if directories_to_keep is None and group_indices_to_keep is None:
         return None
+
     needed_indices = compute_needed_indices(
         directory_data,
         directories_to_keep=directories_to_keep or set(),
