@@ -2,9 +2,11 @@ from dataclasses import dataclass
 
 from yrig.control import Control, ControlShape, create_control
 from yrig.joint import create_joint
-from yrig.maya_api.enum import RotateOrder
+from yrig.macro import set_driven_key
+from yrig.maya_api.enum import KeyframeInfinityType, RotateOrder
 from yrig.transform import create_transform, matrix_constraint
 from yrig.transform.constraint import local_constraint
+from yrig.transform.quat import twist_extract_euler
 
 
 @dataclass
@@ -68,9 +70,23 @@ class FaceBase:
             "face_muppet_M_space", transform=self.muppet_control.transform, parent=parent
         )
         matrix_constraint(self.muppet_control.transform, self.muppet_space)
-        self.mid_driven = create_transform("face_mid_M_driven", parent=self.muppet_space)
+        self.mid_muppet = create_transform("face_mid_M_muppet", parent=self.muppet_space)
 
-        local_constraint(self.lower_control.transform, self.mid_driven, reference_space)
+        self.jaw_space = create_transform(
+            "jaw_M_space",
+            transform=self.jaw_control.transform,
+            parent=self.muppet_control.transform,
+        )
+        self.jaw_rotation = twist_extract_euler(self.jaw_control.transform, self.jaw_space, "x")
+        self.mid_driven = create_transform("face_mid_M_driven", parent=self.mid_muppet)
+        self.jaw_rotation_map = set_driven_key(
+            self.jaw_rotation.output_rotate.x,
+            f"{self.mid_driven}.rotateX",
+            {-25: -25, 0: 0},
+            post_infinity=KeyframeInfinityType.CONSTANT,
+        )
+
+        local_constraint(self.lower_control.transform, self.mid_muppet, reference_space)
         self.mid_joint = create_joint(
             name="face_mid_M",
             transform=self.muppet_control,
