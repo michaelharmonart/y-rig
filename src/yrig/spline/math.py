@@ -368,8 +368,16 @@ def get_weights_along_spline(
         ``(cv, weight)`` tuples (same format as
         :func:`point_on_spline_weights`).
     """
+
     cv_ids = list(range(len(cvs)))
-    resolved_sample_points = max(sample_points, len(cvs) * 2)
+    # If we have a TON of CVs then the default LUT of 128 samples will be too few samples.
+    # This makes sure we have enough for those situations
+    samples_per_span = max(2, degree * 3)
+    number_of_spans = len(cvs) - degree
+    resolved_sample_points = max(
+        sample_points,
+        number_of_spans * samples_per_span,
+    )
     if not knots:
         knots = generate_knots(len(cv_ids), degree=degree)
 
