@@ -1,10 +1,11 @@
 from maya import cmds
-from maya.api.OpenMaya import MMatrix
+from maya.api.OpenMaya import MMatrix, MSpace, MTransformationMatrix
 
 from yrig.joint import create_joint
 from yrig.maya_api.attribute import DoubleAttribute, IntegerAttribute
 from yrig.maya_api.node import (
     DecomposeMatrixNode,
+    MultiplyDivideNode,
     QuatNormalizeNode,
     QuatSlerpNode,
     QuatToEulerNode,
@@ -32,7 +33,7 @@ class BlendCorrective:
         driver_axis: str | None = None,
         driver_rot_range: tuple[float, float] = (-90.0, 90.0),
         mult_range: tuple[float, float] = (0.0, 1.0),
-        translate_blend: float = 0.0,
+        translate_blend: float = 1.0,
         pop_amount: float | None = None,
         pop_axis: str = "Y",
     ) -> None:
@@ -40,7 +41,7 @@ class BlendCorrective:
         self.driver = driver
         self.joint_parent = joint_parent
         self.parent = parent
-        self.deform_parent = deform_parent or joint_parent
+        self.deform_parent = deform_parent or driver
         self.part = part
         self.side = side
         self.blend = blend
@@ -90,18 +91,45 @@ class BlendCorrective:
         )
         cmds.hide(self.component_grp)
 
-    def _build_relative_delta(self) -> DecomposeMatrixNode:
+    def _build_relative_motion(self) -> tuple[DecomposeMatrixNode, str]:
         relative_matrix = localize_world_matrix(self.driver, self.joint_parent)
         rest_relative_matrix: MMatrix = (
             get_world_matrix(self.driver) * get_world_matrix(self.joint_parent).inverse()
         )
-        delta_matrix = multiply_matrices(
-            f"{self.name}_relative_delta",
-            (relative_matrix.matrix_sum, rest_relative_matrix.inverse()),
+        rest_transform = MTransformationMatrix(rest_relative_matrix)
+        rest_translation = rest_transform.translation(MSpace.kWorld)
+        rest_rotation = rest_transform.rotation(asQuaternion=True)
+
+        relative_decompose = DecomposeMatrixNode.create(f"{self.name}_relative_decompose")
+        relative_decompose.input_matrix.connect_from(relative_matrix.matrix_sum)
+
+        rotation_pick = cmds.createNode("pickMatrix", name=f"{self.name}_rotation_pick")
+        relative_matrix.matrix_sum.connect_to(f"{rotation_pick}.inputMatrix")
+        IntegerAttribute(f"{rotation_pick}.useTranslate").set(0)
+        IntegerAttribute(f"{rotation_pick}.useScale").set(0)
+        IntegerAttribute(f"{rotation_pick}.useShear").set(0)
+
+        rotation_delta_matrix = multiply_matrices(
+            f"{self.name}_rotation_delta",
+            (f"{rotation_pick}.outputMatrix", rest_rotation.inverse().asMatrix()),
         )
-        delta = DecomposeMatrixNode.create(f"{self.name}_delta_decompose")
-        delta.input_matrix.connect_from(delta_matrix.matrix_sum)
-        return delta
+        rotation_delta = DecomposeMatrixNode.create(f"{self.name}_rotation_decompose")
+        rotation_delta.input_matrix.connect_from(rotation_delta_matrix.matrix_sum)
+
+        translation_delta = cmds.createNode(
+            "plusMinusAverage", name=f"{self.name}_translation_delta"
+        )
+        IntegerAttribute(f"{translation_delta}.operation").set(2)
+        relative_decompose.output_translate.connect_to(f"{translation_delta}.input3D[0]")
+        cmds.setAttr(
+            f"{translation_delta}.input3D[1]",
+            rest_translation.x,
+            rest_translation.y,
+            rest_translation.z,
+            type="double3",
+        )
+
+        return rotation_delta, f"{translation_delta}.output3D"
 
     def _build_signed_twist(self, delta: DecomposeMatrixNode) -> str:
         driver_axis = self.driver_axis
@@ -134,16 +162,29 @@ class BlendCorrective:
         activation.output_max.set(self.mult_range[1])
         activation.input_value.connect_from(signed_twist)
 
-        blend_mult = cmds.createNode("multDoubleLinear", name=f"{self.name}_blend_weight")
+        blend_mult = cmds.createNode("multDL", name=f"{self.name}_blend_weight")
+
         activation.output.connect_to(f"{blend_mult}.input1")
         DoubleAttribute(f"{blend_mult}.input2").set(self.blend)
+
         return f"{blend_mult}.output"
 
     def _build_pop(self, signed_twist: str | None) -> str | None:
+        self.pop_joint = None
+
         if self.pop_amount is None:
             return None
+
         if signed_twist is None:
             raise RuntimeError("A pop requires a signed twist input")
+
+        self.pop_joint = create_joint(
+            name=f"{self.name}_pop_jnt",
+            transform=self.switch_joint,
+            parent=self.switch_joint,
+            connect=False,
+            add_to_set=False,
+        )
 
         pop_remap = RemapValueNode.create(f"{self.name}_pop_remap")
         pop_remap.input_min.set(self.driver_rot_range[0])
@@ -152,37 +193,21 @@ class BlendCorrective:
         pop_remap.output_max.set(self.pop_amount)
         pop_remap.input_value.connect_from(signed_twist)
 
-        pop_transform = create_transform(
-            name=f"{self.name}_pop",
-            parent=self.switch_joint,
-        )
-        pop_remap.output.connect_to(f"{pop_transform}.translate{self.pop_axis}")
-        return pop_transform
+        pop_remap.output.connect_to(f"{self.pop_joint}.translate{self.pop_axis}")
 
-    def _connect_translation(
-        self,
-        delta: DecomposeMatrixNode,
-        weight: str | None,
-    ) -> None:
+        return self.pop_joint
+
+    def _connect_translation(self, translation: str) -> None:
         if not self.translate_blend:
             return
 
-        translate_mult = cmds.createNode("multiplyDivide", name=f"{self.name}_translate_mult")
-        IntegerAttribute(f"{translate_mult}.operation").set(1)
-        delta.output_translate.connect_to(f"{translate_mult}.input1")
-
-        if weight is None:
-            value = self.blend * self.translate_blend
-            for axis in "XYZ":
-                DoubleAttribute(f"{translate_mult}.input2{axis}").set(value)
-        else:
-            weight_mult = cmds.createNode("multDoubleLinear", name=f"{self.name}_translate_weight")
-            cmds.connectAttr(weight, f"{weight_mult}.input1")
-            DoubleAttribute(f"{weight_mult}.input2").set(self.translate_blend)
-            for axis in "XYZ":
-                cmds.connectAttr(f"{weight_mult}.output", f"{translate_mult}.input2{axis}")
-
-        cmds.connectAttr(f"{translate_mult}.output", f"{self.switch_blend}.translate")
+        translation_mult = MultiplyDivideNode.create(f"{self.name}_translation_mult")
+        translation_mult.operation.set(1)
+        translation_mult.input1.connect_from(translation)
+        translation_mult.input2.set(
+            (self.translate_blend, self.translate_blend, self.translate_blend)
+        )
+        translation_mult.output.connect_to(f"{self.switch_blend}.translate")
 
     def build(self) -> str:
         """Create the corrective hierarchy and return its registered deform joint."""
@@ -201,18 +226,27 @@ class BlendCorrective:
             shear=False,
         )
 
+        self.switch_offset = create_transform(
+            name=f"{self.name}_switch_offset",
+            parent=self.switch_parent,
+            transform=self.driver,
+        )
         self.switch_blend = create_transform(
             name=f"{self.name}_switch_blend",
-            parent=self.switch_parent,
+            parent=self.switch_offset,
         )
-        self.switch_joint = create_transform(
+        self.switch_joint = create_joint(
             name=f"{self.name}_switch",
-            parent=self.switch_blend,
             transform=self.guide,
+            connect=False,
+            parent=self.switch_blend,
+            add_to_set=False,
         )
 
-        delta = self._build_relative_delta()
-        signed_twist = self._build_signed_twist(delta) if self.driver_axis is not None else None
+        rotation_delta, translation_delta = self._build_relative_motion()
+        signed_twist = (
+            self._build_signed_twist(rotation_delta) if self.driver_axis is not None else None
+        )
         weight = self._build_weight(signed_twist)
 
         rotation_blend = QuatSlerpNode.create(f"{self.name}_rotation_slerp")
@@ -220,7 +254,7 @@ class BlendCorrective:
         rotation_blend.input1_quat.y.set(0.0)
         rotation_blend.input1_quat.z.set(0.0)
         rotation_blend.input1_quat.w.set(1.0)
-        rotation_blend.input2_quat.connect_from(delta.output_quat)
+        rotation_blend.input2_quat.connect_from(rotation_delta.output_quat)
         if weight is None:
             rotation_blend.input_t.set(self.blend)
         else:
@@ -228,7 +262,7 @@ class BlendCorrective:
         IntegerAttribute(f"{rotation_blend.name}.angleInterpolation").set(1)
         drive_rotation_with_quat(self.switch_blend, rotation_blend.output_quat)
 
-        self._connect_translation(delta, weight)
+        self._connect_translation(translation_delta)
         output_transform = self._build_pop(signed_twist) or self.switch_joint
 
         self.blend_joint = create_joint(
