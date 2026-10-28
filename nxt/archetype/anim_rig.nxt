@@ -257,7 +257,13 @@
             "code": [
                 "controls = cmds.sets(\"${control_set}\", query=True) or []",
                 "if controls:",
-                "    cmds.dagPose(controls, name=\"${rest_pose}\", addToPose=True)"
+                "    pose = \"${rest_pose}\"",
+                "    if cmds.ls(pose, type=\"dagPose\"):",
+                "        cmds.dagPose(controls, name=\"${rest_pose}\", addToPose=True)",
+                "    else:",
+                "        pose = cmds.dagPose(controls, name=pose, save=True)",
+                "    ",
+                "    "
             ]
         },
         "/apply/visibility_sets": {
