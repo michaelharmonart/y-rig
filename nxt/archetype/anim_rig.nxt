@@ -1,6 +1,6 @@
 {
     "version": "1.17",
-    "alias": "rig",
+    "alias": "anim_rig",
     "color": "#0e8b5d",
     "mute": false,
     "solo": false,
