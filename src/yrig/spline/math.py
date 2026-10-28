@@ -369,13 +369,13 @@ def get_weights_along_spline(
         :func:`point_on_spline_weights`).
     """
     cv_ids = list(range(len(cvs)))
-
+    resolved_sample_points = max(sample_points, len(cvs) * 2)
     if not knots:
         knots = generate_knots(len(cv_ids), degree=degree)
 
     result: list[list[tuple[CV, float]]] = []
     # If we have less points than samples don't bother using a lookup table
-    if len(parameters) <= sample_points:
+    if len(parameters) <= resolved_sample_points:
         for parameter in parameters:
             sample_weights: list[tuple[CV, float]] = point_on_spline_weights(
                 cvs=cvs, t=parameter, degree=degree, knots=knots, normalize=False
@@ -395,8 +395,8 @@ def get_weights_along_spline(
         return [single_weights for _ in parameters]
 
     # Get evenly spaced points from the minimum to maximum t value
-    sample_params = np.linspace(min_t, max_t, sample_points, dtype=float)
-    lut_weights = np.zeros((sample_points, len(cv_ids)), dtype=float)
+    sample_params = np.linspace(min_t, max_t, resolved_sample_points, dtype=float)
+    lut_weights = np.zeros((resolved_sample_points, len(cv_ids)), dtype=float)
 
     for sample_index, sample_parameter in enumerate(sample_params):
         weights: list[tuple[int, float]] = point_on_spline_weights(
@@ -407,9 +407,9 @@ def get_weights_along_spline(
         lut_weights[sample_index, :] = [weight_dict.get(cv_id, 0.0) for cv_id in cv_ids]
 
     # Map each parameter to LUT index positions
-    normalized_positions = (parameter_array - min_t) / t_range * (sample_points - 1)
+    normalized_positions = (parameter_array - min_t) / t_range * (resolved_sample_points - 1)
     lower_indices = np.floor(normalized_positions).astype(int)
-    upper_indices = np.clip(lower_indices + 1, 0, sample_points - 1)
+    upper_indices = np.clip(lower_indices + 1, 0, resolved_sample_points - 1)
     interpolation_alphas = (normalized_positions - lower_indices)[:, None]
 
     # Interpolate weights for all parameters in bulk
