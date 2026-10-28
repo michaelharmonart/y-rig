@@ -334,101 +334,100 @@ def point_on_spline_weights(
     ]
 
 
+def spline_basis_matrix(
+    parameters: Sequence[float],
+    cv_count: int,
+    degree: int = 3,
+    knots: Sequence[float] | None = None,
+    cv_weights: Sequence[float] | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Evaluate spline basis weights for multiple parameters using NumPy.
+
+    Args:
+        parameters: Parameter values in the knot domain.
+        cv_count: Number of control vertices.
+        degree: Spline degree.
+        knots: Knot vector, or None to generate a default clamped vector.
+        cv_weights: Optional rational weight for each CV.
+
+    Returns:
+        CV indices and basis weights, each shaped
+        (len(parameters), degree + 1).
+    """
+    if cv_count <= degree:
+        raise ValueError(f"Curves of degree {degree} require at least {degree + 1} CVs.")
+
+    knot_array = np.asarray(
+        generate_knots(cv_count, degree=degree) if knots is None else knots, dtype=float
+    )
+    if len(knot_array) != cv_count + degree + 1:
+        raise ValueError(
+            f"Knot vector must have length {cv_count + degree + 1}, got {len(knot_array)}."
+        )
+
+    t = np.asarray(parameters, dtype=float)
+    count = len(t)
+
+    spans = np.clip(np.searchsorted(knot_array, t, side="right") - 1, degree, cv_count - 1)
+
+    basis = np.zeros((count, degree + 1))
+    basis[:, 0] = 1.0
+    left = np.zeros((count, degree + 1))
+    right = np.zeros((count, degree + 1))
+
+    for j in range(1, degree + 1):
+        left[:, j] = t - knot_array[spans + 1 - j]
+        right[:, j] = knot_array[spans + j] - t
+        saved = np.zeros(count)
+        for r in range(j):
+            denom = right[:, r + 1] + left[:, j - r]
+            temp = np.divide(basis[:, r], denom, out=np.zeros(count), where=denom != 0.0)  # noqa
+            basis[:, r] = saved + right[:, r + 1] * temp
+            saved = left[:, j - r] * temp
+        basis[:, j] = saved
+
+    cv_indices = spans[:, None] - degree + np.arange(degree + 1)[None, :]
+
+    if cv_weights is not None:
+        w = np.asarray(cv_weights, dtype=float)
+        if w.shape != (cv_count,):
+            raise ValueError(f"Expected {cv_count} CV weights, got shape {w.shape}.")
+        basis = basis * w[cv_indices]
+        total = basis.sum(axis=1, keepdims=True)
+        if np.any(total == 0.0):  # noqa
+            raise ZeroDivisionError("Zero sum of total weight values, unable to normalize.")
+        basis = basis / total  # R_i
+
+    return cv_indices, basis
+
+
 def get_weights_along_spline(
     cvs: Sequence[CV],
     parameters: Sequence[float],
     degree: int = 3,
     knots: Sequence[float] | None = None,
-    sample_points: int = 128,
+    weights: Sequence[float] | None = None,
 ) -> list[list[tuple[CV, float]]]:
-    """Batch-evaluate B-spline basis weights for many parameter values efficiently.
-
-    When the number of parameters exceeds *sample_points* this function
-    builds a lookup table (LUT) of evenly spaced weight samples and
-    linearly interpolates between them, which is significantly faster than
-    calling `point_on_spline_weights` in a tight loop — especially
-    for dense meshes with thousands of vertices.
-
-    When the parameter count is small enough the function falls back to
-    exact per-parameter evaluation automatically.
+    """
+    Evaluate spline weights for multiple parameter values.
 
     Args:
-        cvs: An ordered sequence of control vertices.  The CV objects are
-            returned verbatim in the output tuples.
-        parameters: The parameter values at which to evaluate weights.
-        degree: Degree of the B-spline.  Defaults to ``3`` (cubic).
-        knots: An explicit knot vector.  When ``None`` a uniform clamped
-            vector is generated via :func:`generate_knots`.
-        sample_points: Number of evenly spaced samples used to build the
-            LUT.  Higher values yield more accurate interpolation at the
-            cost of a slightly longer setup phase.  Defaults to ``128``.
+        cvs: Ordered control vertices.
+        parameters: Parameter values in the knot domain.
+        degree: Spline degree.
+        knots: Knot vector, or None to generate a default clamped vector.
+        weights: Optional rational weight for each CV.
 
     Returns:
-        A list with one entry per parameter.  Each entry is a list of
-        ``(cv, weight)`` tuples (same format as
-        :func:`point_on_spline_weights`).
+        A list of (CV, weight) pairs for each parameter.
     """
-
-    cv_ids = list(range(len(cvs)))
-    # If we have a TON of CVs then the default LUT of 128 samples will be too few samples.
-    # This makes sure we have enough for those situations
-    samples_per_span = max(2, degree * 3)
-    number_of_spans = len(cvs) - degree
-    resolved_sample_points = max(
-        sample_points,
-        number_of_spans * samples_per_span,
-    )
-    if not knots:
-        knots = generate_knots(len(cv_ids), degree=degree)
-
-    result: list[list[tuple[CV, float]]] = []
-    # If we have less points than samples don't bother using a lookup table
-    if len(parameters) <= resolved_sample_points:
-        for parameter in parameters:
-            sample_weights: list[tuple[CV, float]] = point_on_spline_weights(
-                cvs=cvs, t=parameter, degree=degree, knots=knots, normalize=False
-            )
-            result.append(sample_weights)
-        return result
-
-    # Precompute lookup table
-    parameter_array = np.array(parameters, dtype=float)
-    min_t, max_t = min(parameters), max(parameters)
-    t_range: float = max_t - min_t
-    if t_range == 0:
-        # All parameters are the same, just calculate the one weight
-        single_weights = point_on_spline_weights(
-            cvs=cvs, t=min_t, degree=degree, knots=knots, normalize=False
-        )
-        return [single_weights for _ in parameters]
-
-    # Get evenly spaced points from the minimum to maximum t value
-    sample_params = np.linspace(min_t, max_t, resolved_sample_points, dtype=float)
-    lut_weights = np.zeros((resolved_sample_points, len(cv_ids)), dtype=float)
-
-    for sample_index, sample_parameter in enumerate(sample_params):
-        weights: list[tuple[int, float]] = point_on_spline_weights(
-            cvs=cv_ids, t=sample_parameter, degree=degree, knots=knots, normalize=False
-        )
-        weight_dict = {cv_id: w for cv_id, w in weights}
-        # Take the weights and put them into the correct row in the array
-        lut_weights[sample_index, :] = [weight_dict.get(cv_id, 0.0) for cv_id in cv_ids]
-
-    # Map each parameter to LUT index positions
-    normalized_positions = (parameter_array - min_t) / t_range * (resolved_sample_points - 1)
-    lower_indices = np.floor(normalized_positions).astype(int)
-    upper_indices = np.clip(lower_indices + 1, 0, resolved_sample_points - 1)
-    interpolation_alphas = (normalized_positions - lower_indices)[:, None]
-
-    # Interpolate weights for all parameters in bulk
-    interpolated_weight_array = (1 - interpolation_alphas) * lut_weights[
-        lower_indices, :
-    ] + interpolation_alphas * lut_weights[upper_indices, :]
-
-    # Reattach CV references to each interpolated weight row
-    for weight_row in interpolated_weight_array:
-        result.append(list(zip(cvs, weight_row.tolist(), strict=True)))
-    return result
+    if len(parameters) == 0:
+        return []
+    cv_indices, basis = spline_basis_matrix(parameters, len(cvs), degree, knots, cv_weights=weights)
+    return [
+        [(cvs[i], w) for i, w in zip(idx_row, w_row, strict=True) if not math.isclose(w, 0.0)]
+        for idx_row, w_row in zip(cv_indices.tolist(), basis.tolist(), strict=True)
+    ]
 
 
 def tangent_on_spline_weights(
