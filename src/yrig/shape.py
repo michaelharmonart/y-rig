@@ -155,6 +155,6 @@ def set_smooth_preview(geometry: str, enable: bool = True) -> None:
     with maintain_selection(maintain_empty=True):
         cmds.select(geometry, replace=True)
         if enable:
-            cmds.displaySmoothness(polygonObject=3)
+            cmds.displaySmoothness(polygonObject=3, pointsWire=16)
         else:
-            cmds.displaySmoothness(polygonObject=0)
+            cmds.displaySmoothness(polygonObject=0, pointsWire=8)
