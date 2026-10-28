@@ -1,6 +1,12 @@
 from .blendshape import BlendShapeNode
 from .core import Node
-from .geometry import ClosestPointOnSurfaceNode, CurveInfoNode, MotionPathNode, UvPinNode
+from .geometry import (
+    ClosestPointOnSurfaceNode,
+    CurveInfoNode,
+    MotionPathNode,
+    NearestPointOnCurveNode,
+    UvPinNode,
+)
 from .geometry_filter import GeometryFilter, WeightGeometryFilter
 from .matrix import (
     AimMatrixNode,
@@ -79,6 +85,7 @@ __all__ = [
     "MultiplyNode",
     "MultiplyPointByMatrixNode",
     "MultiplyVectorByMatrixNode",
+    "NearestPointOnCurveNode",
     "Node",
     "NormalizeNode",
     "PickMatrixNode",
