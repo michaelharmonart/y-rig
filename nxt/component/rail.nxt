@@ -1,0 +1,386 @@
+{
+    "version": "1.17",
+    "alias": "rail",
+    "color": "#732899",
+    "mute": false,
+    "solo": false,
+    "meta_data": {
+        "positions": {
+            "/node": [
+                -224.10671213077373,
+                -224.10671213077373
+            ],
+            "/rail_component": [
+                280,
+                20
+            ]
+        }
+    },
+    "nodes": {
+        "/rail_component": {
+            "instance": "/component",
+            "child_order": [
+                "local_space",
+                "main_spline",
+                "up_spline",
+                "controls",
+                "joints"
+            ],
+            "attrs": {
+                "base_guide": {
+                    "type": "raw",
+                    "value": "${rail_spline}"
+                },
+                "control_parent": {
+                    "value": "rig"
+                },
+                "control_size": {
+                    "type": "int",
+                    "value": "10"
+                },
+                "joint_parent": {
+                    "value": "jnt_org"
+                },
+                "name": {
+                    "type": "raw",
+                    "value": "rail"
+                },
+                "parent": {
+                    "type": "raw",
+                    "value": "${/setup/root/logic.logic_group}"
+                },
+                "rail_spline": {
+                    "type": "raw",
+                    "value": "rail_spline"
+                },
+                "slider_count": {
+                    "type": "int",
+                    "value": "100"
+                },
+                "start_handle_follow": {},
+                "weight_split": {
+                    "type": "bool",
+                    "value": "True"
+                }
+            }
+        },
+        "/rail_component/controls": {
+            "child_order": [
+                "base",
+                "preview_spline",
+                "handles"
+            ],
+            "attrs": {
+                "control_parent": {
+                    "type": "raw",
+                    "value": "${control_group}"
+                }
+            },
+            "code": [
+                ""
+            ]
+        },
+        "/rail_component/controls/base": {
+            "attrs": {
+                "base_control": {
+                    "type": "raw",
+                    "value": "${base_name}_ctl"
+                },
+                "base_joint": {
+                    "type": "raw",
+                    "value": "${base_name}_jnt"
+                },
+                "base_name": {
+                    "type": "raw",
+                    "value": "${name}_${side}_base"
+                },
+                "control_shape": {
+                    "type": "raw",
+                    "value": "circle"
+                },
+                "slide_attr": {
+                    "type": "raw",
+                    "value": "${base_control}.slide"
+                }
+            },
+            "code": [
+                "control = yrig.control.create_control(",
+                "    \"${base_name}\", ",
+                "    parent=\"${control_group}\", ",
+                "    transform=\"${base_guide}\", ",
+                "    direction=\"z\",",
+                "    size=${control_size} * 2,",
+                ")",
+                "self.base_control = control.transform",
+                "",
+                "self.base_joint = yrig.joint.create_joint(\"${base_name}\", control.transform, parent=\"${joint_parent}\", connect=True)",
+                "yrig.transform.matrix_constraint(control.transform, \"${component_group}\")",
+                "self.slide_attr = yrig.maya_api.attribute.ScalarAttribute.create(control.transform ,\"slide\")"
+            ]
+        },
+        "/rail_component/controls/handles": {
+            "attrs": {
+                "base_control": {
+                    "type": "raw",
+                    "value": "${../base.base_control}"
+                },
+                "control_shape": {
+                    "type": "raw",
+                    "value": "cube"
+                },
+                "joint_parent": {
+                    "type": "raw",
+                    "value": "${../base.base_joint}"
+                },
+                "main_spline": {
+                    "type": "raw",
+                    "value": "${../../main_spline.spline}"
+                },
+                "parent": {
+                    "value": "${component_group}"
+                },
+                "preview_spline": {
+                    "type": "raw",
+                    "value": "${../preview_spline.spline}"
+                },
+                "proxy_attrs": {
+                    "type": "list",
+                    "value": "[\"${../base.slide_attr}\"]"
+                },
+                "up_spline": {
+                    "type": "raw",
+                    "value": "${../../up_spline.spline}"
+                }
+            },
+            "code": [
+                "from typing import Iterable",
+                "",
+                "main_spline = \"${main_spline}\"",
+                "up_spline = \"${up_spline}\"",
+                "preview_spline = \"${preview_spline}\"",
+                "",
+                "main_spline_cvs = cmds.ls(f\"{main_spline}.cv[*]\", flatten=True)",
+                "up_spline_cvs = cmds.ls(f\"{up_spline}.cv[*]\", flatten=True)",
+                "preview_spline_cvs = cmds.ls(f\"{preview_spline}.cv[*]\", flatten=True)",
+                "",
+                "main_spline_triplets = zip(*[iter(main_spline_cvs)] * 3)",
+                "up_spline_triplets = zip(*[iter(up_spline_cvs)] * 3)",
+                "",
+                "cv_parent = \"${parent}\"",
+                "",
+                "def create_cv_transforms(name: str, cvs: Iterable[str], driver: str, parent: str, offset: tuple[float, float, float] = (0,0,0)) -> list[str]:",
+                "    created_transforms = []",
+                "    cv_names = [\"start\", \"mid\", \"end\"]",
+                "    for cv, cv_name in zip(cvs, cv_names):",
+                "         cv_position = cmds.xform(cv, query=True, worldSpace=True, translation=True)",
+                "         transform = yrig.transform.create_transform(name=f\"{name}_{cv_name}\", parent=parent)",
+                "         final_position = (cv_position[0] + offset[0], cv_position[1] + offset[1], cv_position[2] + offset[2])",
+                "         cmds.xform(transform, worldSpace=True, translation=final_position)",
+                "         yrig.transform.matrix_constraint(driver, transform)",
+                "         created_transforms.append(transform)",
+                "    return created_transforms",
+                "",
+                "main_spline_pins = []",
+                "up_spline_pins = []",
+                "",
+                "handle_controls = []",
+                "for index, (main_spline_cvs_tuple, up_spline_cvs_tuple) in enumerate(zip(main_spline_triplets, up_spline_triplets)):",
+                "    main_mid_cv = main_spline_cvs_tuple[1]",
+                "    position = cmds.xform(main_mid_cv, query=True, worldSpace=True, translation=True)",
+                "    ",
+                "    handle_name = f\"${name}_${side}_handle{index}\"",
+                "    positions = [",
+                "        cmds.xform(cv, query=True, worldSpace=True, translation=True)",
+                "        for cv in main_spline_cvs_tuple",
+                "    ]",
+                "    z_size = abs(positions[-1][2] - positions[0][2])",
+                "    control = yrig.control.create_control(",
+                "        handle_name, ",
+                "        parent=\"${base_control}\", ",
+                "        control_shape = \"${control_shape}\", ",
+                "        size=${control_size},",
+                "        dimensions=(1,1, (z_size/2) / ${control_size})",
+                "    )",
+                "    handle_controls.append(control)",
+                "    cmds.xform(control.offset, worldSpace=True, translation=position)",
+                "    cmds.setAttr(f\"{control.transform}.scaleX\", lock=True)",
+                "    cmds.setAttr(f\"{control.transform}.scaleY\", lock=True)",
+                "    ",
+                "    for attr in ${proxy_attrs}:",
+                "        cmds.addAttr(control.transform, longName=attr.rsplit(\".\", 1)[-1], proxy=attr)",
+                "    ",
+                "    main_spline_cv_transforms = create_cv_transforms(",
+                "        f\"{handle_name}_main\", ",
+                "        main_spline_cvs_tuple,",
+                "        driver=control.transform, ",
+                "        parent=cv_parent,",
+                "    )",
+                "    main_spline_pins.extend(main_spline_cv_transforms)",
+                "    up_spline_cv_transforms = create_cv_transforms(",
+                "        f\"{handle_name}_up\", ",
+                "        up_spline_cvs_tuple, ",
+                "        driver=control.transform,",
+                "        parent=cv_parent,",
+                "        offset=(1,0,0)",
+                "    )",
+                "    up_spline_pins.extend(up_spline_cv_transforms)",
+                "",
+                "for pin, cv in zip(main_spline_pins, main_spline_cvs):",
+                "    cmds.connectAttr(f\"{pin}.translate\", cv)",
+                "for pin, cv in zip(up_spline_pins, up_spline_cvs):",
+                "    cmds.connectAttr(f\"{pin}.translate\", cv)",
+                "for pin, cv in zip(main_spline_pins, preview_spline_cvs):",
+                "    cmds.connectAttr(f\"{pin}.translate\", cv)",
+                "    ",
+                "    ",
+                "if \"${start_handle_follow}\":",
+                "    yrig.transform.matrix_constraint(\"${start_handle_follow}\", handle_controls[0].offset)"
+            ]
+        },
+        "/rail_component/controls/preview_spline": {
+            "attrs": {
+                "base_control": {
+                    "type": "raw",
+                    "value": "${../base.base_control}"
+                },
+                "line_width": {
+                    "type": "int",
+                    "value": "2"
+                },
+                "spline": {
+                    "type": "raw",
+                    "value": "${rail_spline}_preview_spline"
+                }
+            },
+            "code": [
+                "self.spline =  cmds.duplicate(\"${rail_spline}\", name=f\"${spline}\")[0]",
+                "cmds.parent(self.spline, \"${base_control}\")",
+                "spline_shape = yrig.shape.get_shape(self.spline)",
+                "cmds.setAttr(f\"{spline_shape}.template\", 1)",
+                "cmds.setAttr(f\"{spline_shape}.lineWidth\", ${line_width})",
+                "yrig.shape.set_smooth_preview(self.spline)"
+            ]
+        },
+        "/rail_component/joints": {
+            "attrs": {
+                "base_joint": {
+                    "type": "raw",
+                    "value": "${../controls/base.base_joint}"
+                },
+                "joint_parent": {
+                    "value": "${../controls/base.base_joint}"
+                },
+                "main_spline": {
+                    "type": "raw",
+                    "value": "${../main_spline.spline}"
+                },
+                "slide_attr": {
+                    "type": "raw",
+                    "value": "${../controls/base.slide_attr}"
+                },
+                "up_spline": {
+                    "type": "raw",
+                    "value": "${../up_spline.spline}"
+                }
+            },
+            "code": [
+                "from yrig.maya_api import node",
+                "",
+                "def create_slider(",
+                "    name: str, ",
+                "    main_spline_shape: str, ",
+                "    up_spline_shape: str, ",
+                "    rest_length: float,",
+                "    length_attr: str, ",
+                "    slide_attr: str,",
+                "    u_val: str",
+                ") -> str:",
+                "    joint = yrig.joint.create_joint(name, parent=\"${joint_parent}\")",
+                "    main_motion_path = node.MotionPathNode.create(f\"{name}_main_mp\")",
+                "    up_motion_path = node.MotionPathNode.create(f\"{name}_up_mp\")",
+                "    main_motion_path.geometry_path.connect_from(f\"{main_spline_shape}.local\")",
+                "    main_motion_path.fraction_mode.set(True)",
+                "    up_motion_path.geometry_path.connect_from(f\"{up_spline_shape}.local\")",
+                "    nearest_point = node.NearestPointOnCurveNode.create(f\"{main_motion_path}_np\")",
+                "    nearest_point.input_curve.connect_from(f\"{main_spline_shape}.local\")",
+                "    nearest_point.in_position.connect_from(main_motion_path.all_coordinates)",
+                "    nearest_point.result.parameter.connect_to(up_motion_path.u_value)",
+                "    ",
+                "    main_motion_path.all_coordinates.connect_to(f\"{joint}.translate\")",
+                "    up_vector = node.PlusMinusAverageNode.create(f\"{name}_up_vec\")",
+                "    up_vector.input_3d[1].connect_from(up_motion_path.all_coordinates)",
+                "    up_vector.input_3d[0].connect_from(main_motion_path.all_coordinates)",
+                "    up_vector.operation.set(2)",
+                "    up_vector.output_3d.connect_to(main_motion_path.world_up_vector)",
+                "    main_motion_path.world_up_type.set(3)",
+                "    main_motion_path.rotate.connect_to(f\"{joint}.rotate\")",
+                "    ",
+                "    slide_add = node.SumNode.create(f\"{name}_slide_add\")",
+                "    slide_add.input[0].set(rest_length)",
+                "    slide_add.input[1].connect_from(slide_attr)",
+                "    ",
+                "    u_slide = node.LerpNode.create(f\"{name}_u_slide\")",
+                "    u_slide.input1.set(0)",
+                "    u_slide.input2.connect_from(slide_add.output)",
+                "    u_slide.weight.set(u_val)",
+                "    ",
+                "    u_norm = node.DivideNode.create(f\"{name}_u_norm\")",
+                "    u_norm.input1.connect_from(u_slide.output)",
+                "    u_norm.input2.connect_from(length_attr)",
+                "    ",
+                "    u_norm.output.connect_to(main_motion_path.u_value)",
+                "    ",
+                "    return joint",
+                "",
+                "slider_count = ${slider_count}",
+                "main_spline_shape = yrig.shape.get_shape(\"${main_spline}\")",
+                "main_spline_info = node.CurveInfoNode.create(f\"{main_spline_shape}_info\")",
+                "main_spline_info.input_curve.connect_from(f\"{main_spline_shape}.local\")",
+                "up_spline_shape = yrig.shape.get_shape(\"${up_spline}\")",
+                "rest_length = main_spline_info.arc_length.get()",
+                "",
+                "created_joints = []",
+                "for i in range(slider_count):",
+                "    joint = create_slider(",
+                "        name=f\"${name}_${side}_slider{i}\", ",
+                "        main_spline_shape=main_spline_shape,",
+                "        up_spline_shape=up_spline_shape,",
+                "        rest_length=rest_length,",
+                "        length_attr=main_spline_info.arc_length,",
+                "        slide_attr=\"${slide_attr}\",",
+                "        u_val = i/(slider_count-1),",
+                "    )",
+                "    created_joints.append(joint)",
+                "if ${weight_split}:    ",
+                "    yrig.skin.split.tag_for_weight_split(\"${base_joint}\", created_joints, degree=3)"
+            ]
+        },
+        "/rail_component/local_space": {
+            "code": [
+                "yrig.transform.match_transform(\"${component_group}\", \"${base_guide}\")"
+            ]
+        },
+        "/rail_component/main_spline": {
+            "attrs": {
+                "spline": {
+                    "type": "raw",
+                    "value": "${rail_spline}_main_spline"
+                }
+            },
+            "code": [
+                "self.spline =  cmds.duplicate(\"${rail_spline}\", name=f\"${spline}\")[0]",
+                "cmds.parent(self.spline, \"${component_group}\")",
+                ""
+            ]
+        },
+        "/rail_component/up_spline": {
+            "instance": "../main_spline",
+            "attrs": {
+                "spline": {
+                    "type": "raw",
+                    "value": "${rail_spline}_up_spline"
+                }
+            }
+        }
+    }
+}

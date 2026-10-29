@@ -130,6 +130,9 @@
         },
         "/tools_window": {
             "instance": "/window",
+            "child_order": [
+                "tools"
+            ],
             "attrs": {
                 "_widget_window": {
                     "value": "True"
