@@ -1,6 +1,6 @@
 {
     "version": "1.17",
-    "alias": "mouth",
+    "alias": "mouth_legacy",
     "color": "#0052aa",
     "mute": false,
     "solo": false,
@@ -13,7 +13,7 @@
         }
     },
     "nodes": {
-        "/mouth_component": {
+        "/mouth_legacy_component": {
             "instance": "/component",
             "child_order": [
                 "build",
@@ -47,9 +47,9 @@
                 }
             }
         },
-        "/mouth_component/build": {
+        "/mouth_legacy_component/build": {
             "code": [
-                "from yrig.component.mouth import Mouth, MouthGuides, LipGuides, CheekInterpolateGuides",
+                "from yrig.component.mouth_legacy import Mouth, MouthGuides, LipGuides, CheekInterpolateGuides",
                 "",
                 "left_corner_guide = \"mouth_corner_L\"",
                 "right_corner_guide = \"mouth_corner_R\"",
@@ -109,7 +109,7 @@
                 "    "
             ]
         },
-        "/mouth_component/skin_surface": {
+        "/mouth_legacy_component/skin_surface": {
             "attrs": {
                 "mouth_surface_skin_filepath": {
                     "type": "raw",

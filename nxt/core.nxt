@@ -37,6 +37,10 @@
         },
         "/component": {
             "attrs": {
+                "component_data": {
+                    "type": "raw",
+                    "value": "${rig_path}/data/component/${name}"
+                },
                 "component_group": {
                     "comment": "Name of the group created to house this components internal logic nodes,",
                     "type": "raw",

@@ -49,6 +49,7 @@
             "/io_pair": true,
             "/look_component": true,
             "/mouth_component": true,
+            "/mouth_legacy_component": true,
             "/nose_component": true,
             "/psd_import": true,
             "/psd_io": true,
@@ -114,6 +115,10 @@
                 -480.0
             ],
             "/mouth_component": [
+                -360.0,
+                -840.0
+            ],
+            "/mouth_legacy_component": [
                 -360.0,
                 -600.0
             ],

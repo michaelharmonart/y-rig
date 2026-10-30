@@ -5,10 +5,11 @@
     "mute": false,
     "solo": false,
     "references": [
+        "/users/student/g/graphite/maya-python/y-rig/nxt/component/face/mouth/mouth.nxt",
         "component/face/face_base.nxt",
         "component/face/eye.nxt",
         "component/face/eyebrow.nxt",
-        "component/face/mouth.nxt",
+        "component/face/mouth_legacy.nxt",
         "component/face/tongue.nxt",
         "component/face/teeth.nxt",
         "component/face/nose.nxt",
@@ -178,7 +179,7 @@
             "instance": "/look_component"
         },
         "/build/middle/face/mouth": {
-            "instance": "/mouth_component",
+            "instance": "/mouth_legacy_component",
             "child_order": [
                 "skin_surface"
             ],
