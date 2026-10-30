@@ -36,6 +36,10 @@ class BlendCorrective:
         translate_blend: float = 1.0,
         pop_amount: float | None = None,
         pop_axis: str = "Y",
+        pop_driver: str | None = None,
+        pop_reference: str | None = None,
+        pop_driver_axis: str | None = None,
+        pop_driver_rot_range: tuple[float, float] | None = None,
     ) -> None:
         self.guide = guide
         self.driver = driver
@@ -51,6 +55,10 @@ class BlendCorrective:
         self.translate_blend = translate_blend
         self.pop_amount = pop_amount
         self.pop_axis = pop_axis.upper()
+        self.pop_driver = pop_driver or driver
+        self.pop_reference = pop_reference or joint_parent
+        self.pop_driver_axis = pop_driver_axis.upper() if pop_driver_axis else self.driver_axis
+        self.pop_driver_rot_range = pop_driver_rot_range or driver_rot_range
 
         self.descriptor = get_short_name(guide).removesuffix("_guide")
         self.name = f"{self.part}_{self.side}_{self.descriptor}"
@@ -71,10 +79,25 @@ class BlendCorrective:
             raise ValueError("driver_axis must be one of 'X', 'Y', 'Z', or None")
         if self.pop_axis not in ("X", "Y", "Z"):
             raise ValueError("pop_axis must be one of 'X', 'Y', or 'Z'")
-        if self.pop_amount is not None and self.driver_axis is None:
-            raise ValueError("pop_amount requires driver_axis")
+        if (
+            self.pop_amount is not None
+            and self.driver_axis is None
+            and self.pop_driver_axis is None
+        ):
+            raise ValueError("pop_amount requires pop_driver_axis or driver_axis")
         if self.driver_rot_range[0] == self.driver_rot_range[1]:
             raise ValueError("driver_rot_range endpoints must differ")
+        if self.pop_driver_rot_range[0] == self.pop_driver_rot_range[1]:
+            raise ValueError("pop_driver_rot_range endpoints must differ")
+        if self.pop_driver_axis not in (None, "X", "Y", "Z"):
+            raise ValueError("pop_driver_axis must be one of 'X', 'Y', 'Z', or None")
+        if self.pop_amount is not None:
+            for label, node in (
+                ("pop_driver", self.pop_driver),
+                ("pop_reference", self.pop_reference),
+            ):
+                if not cmds.objExists(node):
+                    raise ValueError(f"{label} does not exist: {node}")
         if not 0.0 <= self.blend <= 1.0:
             raise ValueError("blend must be between 0 and 1")
         if not 0.0 <= self.translate_blend <= 1.0:
@@ -131,12 +154,42 @@ class BlendCorrective:
 
         return rotation_delta, f"{translation_delta}.output3D"
 
-    def _build_signed_twist(self, delta: DecomposeMatrixNode) -> str:
-        driver_axis = self.driver_axis
+    def _build_relative_rotation(
+        self,
+        driver: str,
+        reference: str,
+        name: str,
+    ) -> DecomposeMatrixNode:
+        relative_matrix = localize_world_matrix(driver, reference)
+        rest_relative_matrix = get_world_matrix(driver) * get_world_matrix(reference).inverse()
+        rest_rotation = MTransformationMatrix(rest_relative_matrix).rotation(asQuaternion=True)
+
+        rotation_pick = cmds.createNode("pickMatrix", name=f"{name}_rotation_pick")
+        relative_matrix.matrix_sum.connect_to(f"{rotation_pick}.inputMatrix")
+        IntegerAttribute(f"{rotation_pick}.useTranslate").set(0)
+        IntegerAttribute(f"{rotation_pick}.useScale").set(0)
+        IntegerAttribute(f"{rotation_pick}.useShear").set(0)
+
+        rotation_delta_matrix = multiply_matrices(
+            f"{name}_rotation_delta",
+            (f"{rotation_pick}.outputMatrix", rest_rotation.inverse().asMatrix()),
+        )
+        rotation_delta = DecomposeMatrixNode.create(f"{name}_rotation_decompose")
+        rotation_delta.input_matrix.connect_from(rotation_delta_matrix.matrix_sum)
+        return rotation_delta
+
+    def _build_signed_twist(
+        self,
+        delta: DecomposeMatrixNode,
+        driver_axis: str | None = None,
+        name: str | None = None,
+    ) -> str:
+        driver_axis = driver_axis or self.driver_axis
         if driver_axis is None:
             raise RuntimeError("A driver axis is required to build signed twist")
 
-        twist = QuatNormalizeNode.create(f"{self.name}_twist_normalize")
+        node_name = name or self.name
+        twist = QuatNormalizeNode.create(f"{node_name}_twist_normalize")
         twist.input_quat.w.connect_from(delta.output_quat.w)
         for component in "xyz":
             destination = getattr(twist.input_quat, component)
@@ -145,7 +198,7 @@ class BlendCorrective:
             else:
                 destination.set(0.0)
 
-        twist_euler = QuatToEulerNode.create(f"{self.name}_twist_euler")
+        twist_euler = QuatToEulerNode.create(f"{node_name}_twist_euler")
         twist_euler.input_quat.connect_from(twist.output_quat)
         twist_euler.input_rotate_order.set(0)
         angle = getattr(twist_euler.output_rotate, driver_axis.lower())
@@ -187,8 +240,8 @@ class BlendCorrective:
         )
 
         pop_remap = RemapValueNode.create(f"{self.name}_pop_remap")
-        pop_remap.input_min.set(self.driver_rot_range[0])
-        pop_remap.input_max.set(self.driver_rot_range[1])
+        pop_remap.input_min.set(self.pop_driver_rot_range[0])
+        pop_remap.input_max.set(self.pop_driver_rot_range[1])
         pop_remap.output_min.set(0.0)
         pop_remap.output_max.set(self.pop_amount)
         pop_remap.input_value.connect_from(signed_twist)
@@ -263,7 +316,25 @@ class BlendCorrective:
         drive_rotation_with_quat(self.switch_blend, rotation_blend.output_quat)
 
         self._connect_translation(translation_delta)
-        output_transform = self._build_pop(signed_twist) or self.switch_joint
+        pop_signed_twist = signed_twist
+        if self.pop_amount is not None:
+            same_pop_motion = (
+                self.pop_driver == self.driver
+                and self.pop_reference == self.joint_parent
+                and self.pop_driver_axis == self.driver_axis
+            )
+            if not same_pop_motion:
+                pop_delta = self._build_relative_rotation(
+                    self.pop_driver,
+                    self.pop_reference,
+                    f"{self.name}_pop",
+                )
+                pop_signed_twist = self._build_signed_twist(
+                    pop_delta,
+                    driver_axis=self.pop_driver_axis,
+                    name=f"{self.name}_pop",
+                )
+        output_transform = self._build_pop(pop_signed_twist) or self.switch_joint
 
         self.blend_joint = create_joint(
             name=f"{self.name}_def",
