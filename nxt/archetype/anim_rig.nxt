@@ -1,6 +1,6 @@
 {
     "version": "1.17",
-    "alias": "anim_rig",
+    "alias": "rig",
     "color": "#0e8b5d",
     "mute": false,
     "solo": false,
@@ -141,8 +141,8 @@
                 20
             ],
             "/wrap": [
-                120.0,
-                -420.0
+                204.8390738764619,
+                -427.4448021197598
             ]
         },
         "collapse": {
@@ -165,7 +165,7 @@
             "/tools_window/tools/control_shapes/control_shapes_io/import": true,
             "/tools_window/tools/geometry/geometry_io": true,
             "/tools_window/tools/skin/skin_data_io": true,
-            "/tools_window/tools/visibility_sets_io": false
+            "/tools_window/tools/visibility_sets_io": true
         },
         "locks": {
             "$YRIG_NXT_DIR/core.nxt": false,
@@ -257,13 +257,7 @@
             "code": [
                 "controls = cmds.sets(\"${control_set}\", query=True) or []",
                 "if controls:",
-                "    pose = \"${rest_pose}\"",
-                "    if cmds.ls(pose, type=\"dagPose\"):",
-                "        cmds.dagPose(controls, name=\"${rest_pose}\", addToPose=True)",
-                "    else:",
-                "        pose = cmds.dagPose(controls, name=pose, save=True)",
-                "    ",
-                "    "
+                "    cmds.dagPose(controls, name=\"${rest_pose}\", addToPose=True)"
             ]
         },
         "/apply/visibility_sets": {
@@ -494,12 +488,36 @@
             ]
         },
         "/finalize/model_override": {
+            "attrs": {
+                "rig_root": {
+                    "type": "raw",
+                    "value": "${/setup/root.rig_root}"
+                }
+            },
             "code": [
-                "if not ${dev_build}:",
-                "    geo_group = \"${/setup/root/model.model_group}\"",
-                "    cmds.setAttr(f\"{geo_group}.overrideEnabled\", True)  # type: ignore",
-                "    cmds.setAttr(f\"{geo_group}.overrideDisplayType\", 2)  # type: ignore",
-                ""
+                "",
+                "rig_root = \"${rig_root}\"",
+                "geo_group = \"${/setup/root/model.model_group}\"",
+                "",
+                "# Create display enum",
+                "cmds.addAttr(",
+                "    rig_root,",
+                "    longName=\"Model_Display\",",
+                "    attributeType=\"enum\",",
+                "    enumName=\"Normal:Template:Reference\",",
+                "    defaultValue=0 if ${dev_build} else 2,",
+                "    keyable=True,",
+                ")",
+                "",
+                "# Enable display overrides",
+                "cmds.setAttr(f\"{geo_group}.overrideEnabled\", True)",
+                "",
+                "# Connect enum directly to display type",
+                "cmds.connectAttr(",
+                "    f\"{rig_root}.Model_Display\",",
+                "    f\"{geo_group}.overrideDisplayType\",",
+                "    force=True,",
+                ")"
             ]
         },
         "/finalize/skin_tools_data": {
@@ -1263,8 +1281,8 @@
         "/tools_window/tools/visibility_sets_io": {
             "instance": "/io_pair",
             "child_order": [
-                "import",
-                "export"
+                "export",
+                "import"
             ],
             "attrs": {
                 "relative_filepath": {
