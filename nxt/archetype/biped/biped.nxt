@@ -40,6 +40,7 @@
             "/build/middle/face/nose": true,
             "/build/middle/face/teeth": true,
             "/build/middle/face/tongue": true,
+            "/build/middle/optional_hat": true,
             "/build/right/ear": true,
             "/build/right/eye": true,
             "/build/right/eyebrow": true,
@@ -159,6 +160,62 @@
                     "value": "character/biped"
                 }
             }
+        },
+        "/build/middle/optional_hat": {
+            "attrs": {
+                "build": {
+                    "type": "bool",
+                    "value": "False"
+                },
+                "control_parent": {
+                    "type": "raw",
+                    "value": "face_top_M_ctl"
+                },
+                "control_size": {
+                    "type": "float",
+                    "value": "1.0"
+                },
+                "guide": {
+                    "type": "raw",
+                    "value": "face_top_M"
+                },
+                "joint_parent": {
+                    "type": "raw",
+                    "value": "face_top_M_jnt"
+                },
+                "name": {
+                    "type": "raw",
+                    "value": "hat"
+                }
+            },
+            "code": [
+                "from yrig.joint import create_joint",
+                "from yrig.control import create_control",
+                "",
+                "",
+                "guide = \"${guide}\"",
+                "name = \"${name}\"",
+                "side = \"${side}\"",
+                "control_parent = \"${control_parent}\"",
+                "joint_parent = \"${joint_parent}\"",
+                "control_size = float(${control_size})",
+                "build: bool = ${build}",
+                "",
+                "if build:",
+                "    ctrl = create_control(",
+                "        name=f\"{name}_{side}\",",
+                "        parent=control_parent,",
+                "        transform=guide,",
+                "        size=control_size,",
+                "        control_shape=\"circle\",",
+                "    )",
+                "",
+                "    jnt = create_joint(",
+                "        name=f\"{name}_{side}\",",
+                "        parent=joint_parent,",
+                "        transform=ctrl.transform,",
+                "    )"
+            ]
         },
         "/skin_geometry": {
             "attrs": {
