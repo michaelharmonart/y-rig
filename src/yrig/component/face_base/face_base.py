@@ -75,7 +75,7 @@ class FaceBase:
         self.jaw_space = create_transform(
             "jaw_M_space",
             transform=self.jaw_control.transform,
-            parent=self.muppet_control.transform,
+            parent=self.mid_muppet,
         )
         self.jaw_rotation = twist_extract_euler(self.jaw_control.transform, self.jaw_space, "x")
         self.mid_driven = create_transform("face_mid_M_driven", parent=self.mid_muppet)
