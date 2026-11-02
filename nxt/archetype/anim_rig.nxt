@@ -494,12 +494,40 @@
             ]
         },
         "/finalize/model_override": {
+            "attrs": {
+                "rig_root": {
+                    "type": "raw",
+                    "value": "${/setup/root.rig_root}"
+                },
+                "geo_group": {
+                    "type": "raw",
+                    "value": "${/setup/root/model.model_group}"
+                }
+            },
             "code": [
-                "if not ${dev_build}:",
-                "    geo_group = \"${/setup/root/model.model_group}\"",
-                "    cmds.setAttr(f\"{geo_group}.overrideEnabled\", True)  # type: ignore",
-                "    cmds.setAttr(f\"{geo_group}.overrideDisplayType\", 2)  # type: ignore",
-                ""
+                "",
+                "rig_root = \"${rig_root}\"",
+                "geo_group = \"${geo_group}\"",
+                "",
+                "# Create display enum",
+                "cmds.addAttr(",
+                "    rig_root,",
+                "    longName=\"Model_Display\",",
+                "    attributeType=\"enum\",",
+                "    enumName=\"Normal:Template:Reference\",",
+                "    defaultValue=0 if ${dev_build} else 2,",
+                "    keyable=True,",
+                ")",
+                "",
+                "# Enable display overrides",
+                "cmds.setAttr(f\"{geo_group}.overrideEnabled\", True)",
+                "",
+                "# Connect enum directly to display type",
+                "cmds.connectAttr(",
+                "    f\"{rig_root}.Model_Display\",",
+                "    f\"{geo_group}.overrideDisplayType\",",
+                "    force=True,",
+                ")"
             ]
         },
         "/finalize/skin_tools_data": {
