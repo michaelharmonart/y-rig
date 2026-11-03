@@ -110,7 +110,7 @@ def shape_topology_signature(shape: str) -> tuple:
         )
 
     if dag_path.hasFn(MFn.kNurbsCurve):
-        fn = MFnNurbsCurve(dag_path)
+        fn: MFnNurbsCurve = MFnNurbsCurve(dag_path)
 
         return (
             "nurbsCurve",
@@ -121,14 +121,14 @@ def shape_topology_signature(shape: str) -> tuple:
         )
 
     if dag_path.hasFn(MFn.kNurbsSurface):
-        fn = MFnNurbsSurface(dag_path)
+        fn: MFnNurbsSurface = MFnNurbsSurface(dag_path)
 
         return (
             "nurbsSurface",
             fn.numCVsInU,
             fn.numCVsInV,
-            fn.degreeU,
-            fn.degreeV,
+            fn.degreeInU,
+            fn.degreeInV,
             fn.formInU,
             fn.formInV,
             fn.numSpansInU,
