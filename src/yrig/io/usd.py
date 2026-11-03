@@ -50,7 +50,7 @@ def import_model_usd(
         raise FileNotFoundError(f"No file found at {filepath}")
     imported_top_level_prims: list[str] = cmds.mayaUSDImport(  # type: ignore
         file=str(filepath),
-        primPath=prim_path,
+        primPath=prim_path or "/",
         preferredMaterial="openPBRSurface",
         importInstances=instances,
     )
@@ -70,7 +70,7 @@ def import_rig_data_usd(
         raise FileNotFoundError(f"No file found at {filepath}")
     imported_top_level_prims: list[str] = cmds.mayaUSDImport(  # type: ignore
         file=str(filepath),
-        primPath=prim_path,
+        primPath=prim_path or "/",
         parent=parent,
     )
 
