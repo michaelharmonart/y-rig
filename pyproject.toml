@@ -13,6 +13,7 @@ lint = [
     "maya-stubs>=0.4.2",
     "numpy>=2.4.1",
     "qt-py>=2.0.2",
+    "types-usd>=24.5.2",
 ]
 debug = ["debugpy>=1.8.19"]
 
