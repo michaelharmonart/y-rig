@@ -59,7 +59,10 @@
             ]
         },
         "collapse": {
+            "/tools_window/tools": false,
+            "/tools_window/tools/geometry": true,
             "/tools_window/tools/layout": false,
+            "/tools_window/tools/skin": true,
             "/workflow_tools/test_panel": false
         }
     },
