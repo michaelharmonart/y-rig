@@ -142,7 +142,8 @@
         "/tools_window/tools": {
             "instance": "/tab",
             "child_order": [
-                "geometry"
+                "geometry",
+                "skin"
             ],
             "attrs": {
                 "text": {
@@ -184,6 +185,41 @@
                 "    except Exception as e:",
                 "        log = yrig.build.nxt_api.get_node_logger(\"${_nxtpath}\")",
                 "        log.warning(f\"Couldn't bake face colors for {object}, {e}\")"
+            ]
+        },
+        "/tools_window/tools/skin": {
+            "instance": "/panel",
+            "child_order": [
+                "layout"
+            ],
+            "attrs": {
+                "text": {
+                    "value": "Skin"
+                }
+            }
+        },
+        "/tools_window/tools/skin/layout": {
+            "instance": "/gridLayout",
+            "child_order": [
+                "transfer_skin"
+            ]
+        },
+        "/tools_window/tools/skin/layout/transfer_skin": {
+            "instance": "/button",
+            "attrs": {
+                "text": {
+                    "value": "Transfer Skin"
+                }
+            },
+            "code": [
+                "log = yrig.build.nxt_api.get_node_logger(\"${_nxtpath}\")",
+                "selection = cmds.ls(selection=True)",
+                "if len(selection) != 2:",
+                "    raise RuntimeError(\"Select the source geo, then the target geo.\")",
+                "source = selection[0]",
+                "dest = selection[-1]",
+                "yrig.skin.transfer_skin(source, dest)",
+                "log.info(f\"Transferred skin from {source} to {dest}\")"
             ]
         }
     }
