@@ -40,13 +40,13 @@
             "/build/middle/face/nose": true,
             "/build/middle/face/teeth": true,
             "/build/middle/face/tongue": true,
-            "/build/middle/optional_hat": true,
             "/build/right/ear": true,
             "/build/right/eye": true,
             "/build/right/eyebrow": true,
             "/ear_component": true,
             "/eye_component": true,
             "/face_base_component": true,
+            "/hat": true,
             "/io_pair": true,
             "/look_component": true,
             "/mouth_component": true,
@@ -111,6 +111,10 @@
                 600.0,
                 0.0
             ],
+            "/hat": [
+                -80.0,
+                -840.0
+            ],
             "/look_component": [
                 -360.0,
                 -480.0
@@ -161,7 +165,7 @@
                 }
             }
         },
-        "/build/middle/optional_hat": {
+        "/hat": {
             "attrs": {
                 "build": {
                     "type": "bool",
