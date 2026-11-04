@@ -1,5 +1,6 @@
-from collections.abc import Iterable
-from pathlib import Path
+from collections.abc import Generator, Iterable
+from contextlib import contextmanager
+from pathlib import Path, PurePosixPath
 
 from maya import cmds
 from maya.api.OpenMaya import (
@@ -7,21 +8,107 @@ from maya.api.OpenMaya import (
     MSelectionList,
 )
 
-from yrig.maya_api.node import BlendShapeNode
+from yrig.maya_api.node import BlendShapeNode, ShapeEditorManagerNode
 from yrig.select import maintain_selection
 from yrig.shape import get_shape, get_shape_output
+
+
+@contextmanager
+def preserve_all_shape_editor_directories(
+    manager: ShapeEditorManagerNode,
+) -> Generator[None, None, None]:
+    """
+    When initializing a blendShape Maya just decides a directory to add it to.
+    This screws up our manual handling of directories on import.
+
+    This might be overkill, but since I don't have the Maya source code on hand
+    this is an easy way to guarantee that Maya won't screw up directory data.
+    """
+    directory_indices = manager.blend_shape_directory.get_indices()
+    snapshot = {
+        index: manager.blend_shape_directory[index].child_indices.get()
+        for index in directory_indices
+    }
+    try:
+        yield
+    finally:
+        for index, child_indices in snapshot.items():
+            manager.blend_shape_directory[index].child_indices.set(child_indices)
+
+
+def find_child_directory_index(
+    manager: ShapeEditorManagerNode,
+    parent_directory_index: int,
+    name: str,
+) -> int | None:
+    """Return the index of the direct child directory called ``name``, or None."""
+    child_indices = manager.blend_shape_directory[parent_directory_index].child_indices.get()
+    for child_index in child_indices:
+        if child_index >= 0:  # positive entries are non directory children
+            continue
+        directory_index = -child_index
+        directory = manager.blend_shape_directory[directory_index]
+        if directory.directory_name.get() == name:
+            return directory_index
+    return None
+
+
+def add_blendshape_to_directory(
+    manager: ShapeEditorManagerNode, blendshape: BlendShapeNode, parent_directory_index: int
+) -> int:
+    child_index = manager.blend_shape_parent.next_available_index()
+    blendshape.mid_layer_parent.connect_to(manager.blend_shape_parent[child_index])
+    parent_directory = manager.blend_shape_directory[parent_directory_index]
+    original_child_indices = parent_directory.child_indices.get()
+    parent_directory.child_indices.set([*original_child_indices, child_index])
+    return child_index
+
+
+def add_shape_editor_directory(
+    manager: ShapeEditorManagerNode, name: str, parent_directory_index: int
+) -> int:
+
+    directory_index = manager.blend_shape_directory.next_available_index()
+    directory = manager.blend_shape_directory[directory_index]
+    directory.directory_name.set(name)
+    parent_directory = manager.blend_shape_directory[parent_directory_index]
+    original_child_indices = parent_directory.child_indices.get()
+    parent_directory.child_indices.set([*original_child_indices, -directory_index])
+    return directory_index
 
 
 def create_blendshape(
     geometry: str,
     name: str | None = None,
+    *,
     front_of_chain: bool = True,
-) -> str:
+    parent_directory: PurePosixPath | str = "/",
+) -> BlendShapeNode:
     resolved_name = name or f"{geometry}_BS"
-    result: list[str] = cmds.blendShape(geometry, name=resolved_name, frontOfChain=front_of_chain)  # type: ignore
-    if not result:
+
+    parent_directory_path = PurePosixPath(parent_directory)
+    parent_directories = tuple(
+        part for part in parent_directory_path.parts if part != parent_directory_path.anchor
+    )
+    shape_editor_manager = ShapeEditorManagerNode.from_existing("shapeEditorManager")
+    with preserve_all_shape_editor_directories(shape_editor_manager):
+        maya_result: list[str] = cmds.blendShape(
+            geometry, name=resolved_name, frontOfChain=front_of_chain
+        )  # type: ignore
+    if not maya_result:
         raise RuntimeError(f"Failed to create blendShape: {resolved_name}")
-    return result[0]
+    blendshape_node = BlendShapeNode.from_existing(maya_result[0])
+    parent_index: int = 0
+    for dir in parent_directories:
+        child_index: int | None = find_child_directory_index(
+            shape_editor_manager, parent_index, dir
+        )
+        if child_index is None:
+            parent_index = add_shape_editor_directory(shape_editor_manager, dir, parent_index)
+        else:
+            parent_index = child_index
+    add_blendshape_to_directory(shape_editor_manager, blendshape_node, parent_index)
+    return blendshape_node
 
 
 def import_maya_shape_file(

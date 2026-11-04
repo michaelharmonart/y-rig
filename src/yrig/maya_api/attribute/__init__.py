@@ -7,6 +7,7 @@ from .blendshape import (
     BlendShapeNormalizationGroupAttribute,
     BlendShapeSculptTargetTweaksAttribute,
     BlendShapeTargetDirectoryAttribute,
+    ShapeEditorManagerDirectoryAttribute,
 )
 from .compound import (
     AimMatrixAxisAttribute,
@@ -103,6 +104,7 @@ __all__ = [
     "PoseInterpolatorPoseAttribute",
     "QuatAttribute",
     "ScalarAttribute",
+    "ShapeEditorManagerDirectoryAttribute",
     "SkinClusterInfluenceColor",
     "StringAttribute",
     "UInt64ArrayAttribute",

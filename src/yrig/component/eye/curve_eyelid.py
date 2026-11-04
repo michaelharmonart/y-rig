@@ -13,6 +13,8 @@ from maya.api.OpenMaya import (
 )
 
 from yrig.control import Control, ControlShape, create_control
+from yrig.deformer.blendshape import create_blendshape
+from yrig.deformer.blendshape.core import add_blendshape_target_from_geometry
 from yrig.joint import create_joint
 from yrig.maya_api.node import SumNode
 from yrig.skin.split.tag import tag_for_weight_split
@@ -1927,14 +1929,15 @@ class Eyelid:
             # -----------------------------------------------------
             # Create blendShape
             # -----------------------------------------------------
-
-            blendshape = cmds.blendShape(
-                *targets,
+            blendshape_node = create_blendshape(
                 curve,
                 name=f"{vertical}_blink_{self.side}_BS",
-                frontOfChain=True,
-            )[0]  # type:ignore
-
+                parent_directory=f"/rig/logic/face/eyes/eye_{self.side}",
+                front_of_chain=True,
+            )
+            for target in targets:
+                add_blendshape_target_from_geometry(blendshape_node, target)
+            blendshape = str(blendshape_node)
             # Allow weights greater than 1 for extrapolation.
             cmds.setAttr(
                 f"{blendshape}.weight",

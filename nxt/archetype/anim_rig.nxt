@@ -160,12 +160,14 @@
             "/setup/root": false,
             "/shape_io": true,
             "/skin_data_io": true,
+            "/tools_window/tools/control_shapes": true,
             "/tools_window/tools/control_shapes/control_shapes_io": true,
             "/tools_window/tools/control_shapes/control_shapes_io/export": true,
             "/tools_window/tools/control_shapes/control_shapes_io/import": true,
             "/tools_window/tools/geometry/geometry_io": true,
+            "/tools_window/tools/pipe": true,
             "/tools_window/tools/skin/skin_data_io": true,
-            "/tools_window/tools/visibility_sets_io": false
+            "/tools_window/tools/visibility_sets_io": true
         },
         "locks": {
             "$YRIG_NXT_DIR/core.nxt": false,
@@ -688,6 +690,10 @@
         },
         "/psd_layer": {
             "attrs": {
+                "blendshape_directory": {
+                    "type": "raw",
+                    "value": "rig"
+                },
                 "geometry": {
                     "type": "list",
                     "value": "[]"
@@ -705,7 +711,7 @@
                 "psd_layer = \"${psd_layer}\"",
                 "",
                 "for geo in ${geometry}:",
-                "    yrig.deformer.blendshape.create_blendshape(geometry=geo, name=f\"{geo}_{psd_layer}\")"
+                "    yrig.deformer.blendshape.create_blendshape(geometry=geo, name=f\"{geo}_{psd_layer}\", parent_directory=\"${blendshape_directory}\")"
             ]
         },
         "/rbf_io": {

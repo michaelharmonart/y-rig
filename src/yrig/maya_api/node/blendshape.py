@@ -7,12 +7,15 @@ from yrig.maya_api.attribute import (
     DoubleArrayAttribute,
     EnumAttribute,
     IntegerAttribute,
+    LongAttribute,
     ScalarAttribute,
+    ShapeEditorManagerDirectoryAttribute,
     StringAttribute,
     Vector3Attribute,
 )
 from yrig.maya_api.enum import BlendShapeDeformationOrder, BlendShapeOrigin
 
+from .core import Node
 from .geometry_filter import WeightGeometryFilter
 
 
@@ -47,3 +50,21 @@ class BlendShapeNode(WeightGeometryFilter):
         self.topology_check = BooleanAttribute(f"{self.name}.topologyCheck")
         self.weight = ArrayAttribute(f"{self.name}.weight", ScalarAttribute)
         self.icon = ArrayAttribute(f"{self.name}.icon", StringAttribute)
+
+
+class ShapeEditorManagerNode(Node):
+    """Maya shapeEditorManager node with enhanced interface."""
+
+    node_type = "shapeEditorManager"
+
+    def __init__(self, name: str = "shapeEditorManager") -> None:
+        super().__init__(name)
+
+    def _setup_attributes(self) -> None:
+        self.blend_shape_directory = ArrayAttribute(
+            f"{self.name}.blendShapeDirectory", ShapeEditorManagerDirectoryAttribute
+        )
+        self.blend_shape_parent = ArrayAttribute(f"{self.name}.blendShapeParent", LongAttribute)
+        self.out_blendshape_visibility = ArrayAttribute(
+            f"{self.name}.outBlendShapeParent", BooleanAttribute
+        )

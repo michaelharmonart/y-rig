@@ -1,4 +1,4 @@
-from .blendshape import BlendShapeNode
+from .blendshape import BlendShapeNode, ShapeEditorManagerNode
 from .core import Node
 from .geometry import (
     ClosestPointOnSurfaceNode,
@@ -99,6 +99,7 @@ __all__ = [
     "QuatToEulerNode",
     "RemapValueNode",
     "RowFromMatrixNode",
+    "ShapeEditorManagerNode",
     "SinNode",
     "SkinCluster",
     "SubtractNode",
