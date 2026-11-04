@@ -116,10 +116,10 @@ class Attribute(Generic[T]):
         """Disconnect this attribute from another attribute."""
         cmds.disconnectAttr(str(source_attr), self.attr_path)
 
-    def connect_to(self, dest_attr: str | Attribute) -> None:
+    def connect_to(self, dest_attr: str | Attribute, force: bool = False) -> None:
         """Connect this attribute to another one."""
         dest = str(dest_attr)
-        cmds.connectAttr(self.attr_path, dest)
+        cmds.connectAttr(self.attr_path, dest, force=force)
 
     def disconnect_to(self, dest_attr: str | Attribute) -> None:
         """Disconnect this attribute from another attribute."""

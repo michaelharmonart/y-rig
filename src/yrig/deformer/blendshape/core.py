@@ -56,21 +56,24 @@ def find_child_directory_index(
 def add_blendshape_to_directory(
     manager: ShapeEditorManagerNode, blendshape: BlendShapeNode, parent_directory_index: int
 ) -> int:
-    child_index = manager.blend_shape_parent.next_available_index()
-    blendshape.mid_layer_parent.connect_to(manager.blend_shape_parent[child_index])
+    child_index = blendshape.mid_layer_id.get()
+    with preserve_all_shape_editor_directories(manager):
+        blendshape.mid_layer_parent.set(parent_directory_index)
     parent_directory = manager.blend_shape_directory[parent_directory_index]
     original_child_indices = parent_directory.child_indices.get()
-    parent_directory.child_indices.set([*original_child_indices, child_index])
+    parent_directory.child_indices.set(value=[*original_child_indices, child_index])
+
     return child_index
 
 
 def add_shape_editor_directory(
     manager: ShapeEditorManagerNode, name: str, parent_directory_index: int
 ) -> int:
-
     directory_index = manager.blend_shape_directory.next_available_index()
     directory = manager.blend_shape_directory[directory_index]
-    directory.directory_name.set(name)
+    with preserve_all_shape_editor_directories(manager):
+        directory.directory_name.set(name)
+        directory.parent_index.set(parent_directory_index)
     parent_directory = manager.blend_shape_directory[parent_directory_index]
     original_child_indices = parent_directory.child_indices.get()
     parent_directory.child_indices.set([*original_child_indices, -directory_index])

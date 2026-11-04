@@ -39,6 +39,7 @@ class BlendShapeNode(WeightGeometryFilter):
             f"{self.name}.inputTarget", BlendShapeInputTargetAttribute
         )
         self.local_vertex_frame = BooleanAttribute(f"{self.name}.localVertexFrame")
+        self.mid_layer_id = IntegerAttribute(f"{self.name}.midLayerId")
         self.mid_layer_parent = IntegerAttribute(f"{self.name}.midLayerParent")
         self.offset_deformer = Vector3Attribute(f"{self.name}.offsetDeformer")
         self.origin = EnumAttribute(f"{self.name}.origin", BlendShapeOrigin)
@@ -66,5 +67,5 @@ class ShapeEditorManagerNode(Node):
         )
         self.blend_shape_parent = ArrayAttribute(f"{self.name}.blendShapeParent", LongAttribute)
         self.out_blendshape_visibility = ArrayAttribute(
-            f"{self.name}.outBlendShapeParent", BooleanAttribute
+            f"{self.name}.outBlendShapeVisibility", BooleanAttribute
         )
