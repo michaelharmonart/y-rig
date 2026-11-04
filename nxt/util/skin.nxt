@@ -119,7 +119,7 @@
                 "from yrig.skin.split import auto_split_weights",
                 "",
                 "geo_list = ${geo_list}",
-                "geo_to_split = geo_list if geo_list else cmds.sets(\"${geo_set}\", query=True)",
+                "geo_to_split = geo_list if geo_list else yrig.sets.get_set_members(\"${geo_set}\", flatten=True)",
                 "auto_split_weights(geo_to_split)"
             ]
         },
