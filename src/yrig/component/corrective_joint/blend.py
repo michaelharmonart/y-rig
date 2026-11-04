@@ -61,7 +61,7 @@ class BlendCorrective:
         self.pop_driver_rot_range = pop_driver_rot_range or driver_rot_range
 
         self.descriptor = get_short_name(guide).removesuffix("_guide")
-        self.name = f"{self.part}_{self.side}_{self.descriptor}"
+        self.name = f"{self.part}_{self.side}"
         self._validate()
 
     def _validate(self) -> None:
