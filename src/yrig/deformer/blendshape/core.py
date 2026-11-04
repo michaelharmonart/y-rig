@@ -14,7 +14,7 @@ from yrig.shape import get_shape, get_shape_output
 
 
 @contextmanager
-def preserve_all_shape_editor_directories(
+def preserve_shape_editor_root_directory(
     manager: ShapeEditorManagerNode,
 ) -> Generator[None, None, None]:
     """
@@ -51,8 +51,7 @@ def add_blendshape_to_directory(
     manager: ShapeEditorManagerNode, blendshape: BlendShapeNode, parent_directory_index: int
 ) -> int:
     child_index = blendshape.mid_layer_id.get()
-    with preserve_all_shape_editor_directories(manager):
-        blendshape.mid_layer_parent.set(parent_directory_index)
+    blendshape.mid_layer_parent.set(parent_directory_index)
     parent_directory = manager.blend_shape_directory[parent_directory_index]
     original_child_indices = parent_directory.child_indices.get()
     parent_directory.child_indices.set(value=[*original_child_indices, child_index])
@@ -65,9 +64,8 @@ def add_shape_editor_directory(
 ) -> int:
     directory_index = manager.blend_shape_directory.next_available_index()
     directory = manager.blend_shape_directory[directory_index]
-    with preserve_all_shape_editor_directories(manager):
-        directory.directory_name.set(name)
-        directory.parent_index.set(parent_directory_index)
+    directory.parent_index.set(parent_directory_index)
+    directory.directory_name.set(name)
     parent_directory = manager.blend_shape_directory[parent_directory_index]
     original_child_indices = parent_directory.child_indices.get()
     parent_directory.child_indices.set([*original_child_indices, -directory_index])
@@ -88,7 +86,7 @@ def create_blendshape(
         part for part in parent_directory_path.parts if part != parent_directory_path.anchor
     )
     shape_editor_manager = ShapeEditorManagerNode.from_existing("shapeEditorManager")
-    with preserve_all_shape_editor_directories(shape_editor_manager):
+    with preserve_shape_editor_root_directory(shape_editor_manager):
         maya_result: list[str] = cmds.blendShape(
             geometry, name=resolved_name, frontOfChain=front_of_chain
         )  # type: ignore

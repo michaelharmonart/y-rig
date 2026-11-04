@@ -125,6 +125,13 @@ class Attribute(Generic[T]):
         """Disconnect this attribute from another attribute."""
         cmds.disconnectAttr(self.attr_path, str(dest_attr))
 
+    def disconnect_outputs(self) -> bool:
+        outputs = self.get_outputs()
+        for output in outputs:
+            self.disconnect_to(output)
+            return True
+        return False
+
     def exists(self) -> bool:
         """Check if this attribute exists."""
         return cmds.objExists(self.attr_path)

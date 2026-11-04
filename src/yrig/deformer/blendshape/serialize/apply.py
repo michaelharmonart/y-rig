@@ -54,7 +54,7 @@ class ExistingPolicy(StrEnum):
 
 
 @contextmanager
-def preserve_all_target_directories(blendshape: BlendShapeNode) -> Generator[None, None, None]:
+def preserve_root_target_directory(blendshape: BlendShapeNode) -> Generator[None, None, None]:
     """
     When initializing a new inputTargetGroup plug Maya adds it to the root directory.
     This screws up our manual handling of directories on import.
@@ -123,7 +123,7 @@ def merge_target_group(
             target_group = blendshape.input_target[input_target_index].input_target_group[
                 existing_index
             ]
-            with preserve_all_target_directories(blendshape):
+            with preserve_root_target_directory(blendshape):
                 target_group.input_target_item.clear()
                 apply_blendshape_target_group_data(
                     blendshape,
@@ -159,7 +159,7 @@ def add_target_group(
         raise RuntimeError(f"{input_geometry_attr} had no input geometry.")
     input_geometry_node = str(input_geometry_attr).split(".", 1)[0]
     input_geometry = get_dag_path(input_geometry_node)
-    with preserve_all_target_directories(blendshape):
+    with preserve_root_target_directory(blendshape):
         apply_blendshape_target_group_data(
             blendshape, data, input_geometry, input_target_index, target_group_index
         )
