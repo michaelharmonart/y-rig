@@ -34,7 +34,7 @@ def get_shape(object: str) -> str | None:
         The name of the associated shape node, or ``None`` if no shape exists.
     """
     shape: str
-    if cmds.nodeType(object) == "transform":
+    if cmds.objectType(object, isAType="transform"):
         shape_list: list[str] = cmds.listRelatives(
             object, shapes=True, noIntermediate=True, children=True
         )

@@ -28,12 +28,24 @@ class SetData:
 
 
 def get_set_members(set_name: str, ordered: bool = True, flatten: bool = False) -> list[str]:
-    kwargs = {}
-    if ordered:
-        kwargs["ordered"] = True
-    if flatten:
-        kwargs["flatten"] = True
-    return cmds.sets(set_name, query=True, **kwargs) or []  # type: ignore
+    if not flatten:
+        return cmds.sets(set_name, query=True, ordered=ordered) or []  # type: ignore
+    members: dict[str, None] = {}
+    visited: set[str] = set()
+
+    def collect(name: str) -> None:
+        if name in visited:
+            return
+        visited.add(name)
+        set_members: list[str] = cmds.sets(name, query=True, ordered=ordered) or []  # type: ignore
+        for member in set_members:
+            if cmds.objectType(member, isAType="objectSet"):
+                collect(member)
+            else:
+                members[member] = None
+
+    collect(set_name)
+    return list(members)
 
 
 def get_child_members_and_sets(set_name: str) -> tuple[list[str], list[str]]:
@@ -42,7 +54,7 @@ def get_child_members_and_sets(set_name: str) -> tuple[list[str], list[str]]:
     sets: list[str] = []
     for member in raw_members:
         try:
-            if cmds.nodeType(member) == "objectSet":
+            if cmds.objectType(member, isAType="objectSet"):
                 sets.append(member)
             else:
                 members.append(member)

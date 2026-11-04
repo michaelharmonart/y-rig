@@ -52,7 +52,7 @@
                 "geo_set": {
                     "comment": "Geometry will be skinned to the geometry in this set unless there's a manually defined geo_list,",
                     "type": "raw",
-                    "value": "rig_geo_grp"
+                    "value": "skin_grp"
                 },
                 "resolved_skin_directories": {
                     "comment": "Don't override this. This resolves the historical values of the skin_directory attribute to check through each for skinning files.",
@@ -80,12 +80,12 @@
                 "",
                 "log = yrig.build.nxt_api.get_node_logger(\"${_nxtpath}\")",
                 "",
-                "def_in_set = cmds.sets(\"${def_set}\", query=True)",
+                "def_in_set = cmds.sets(\"${def_set}\", query=True, flatten=True)",
                 "def_joints = sorted(cmds.ls(def_in_set, type=\"joint\"), key=natural_sort_key)",
                 "      ",
                 "",
                 "geo_list = ${geo_list}",
-                "geo_to_skin = geo_list if geo_list else cmds.sets(\"${geo_set}\", query=True)",
+                "geo_to_skin = geo_list if geo_list else cmds.sets(\"${geo_set}\", query=True, flatten=True)",
                 "",
                 "def _fallback_skin(geometry: str):",
                 "    skin_geometry(def_joints, geometry, dual_quaternion=${dual_quaternion})",
@@ -119,7 +119,7 @@
                 "from yrig.skin.split import auto_split_weights",
                 "",
                 "geo_list = ${geo_list}",
-                "geo_to_split = geo_list if geo_list else cmds.sets(\"${geo_set}\", query=True)",
+                "geo_to_split = geo_list if geo_list else yrig.sets.get_set_members(\"${geo_set}\", flatten=True)",
                 "auto_split_weights(geo_to_split)"
             ]
         },
