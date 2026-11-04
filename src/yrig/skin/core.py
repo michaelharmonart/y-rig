@@ -1,4 +1,4 @@
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 
 from maya import cmds
 from maya.api.OpenMaya import (
@@ -348,8 +348,10 @@ def _add_missing_influences(
 def set_skin_weights(
     shape: str,
     weights: dict[int, dict[str, float]],
+    *,
     skin_cluster: str | None = None,
     normalize: bool = True,
+    influence_map: Callable[[str], str] | None = None,
 ) -> str:
     """
     Sets skinCluster weights for all vertices of the given mesh shape.
@@ -370,9 +372,24 @@ def set_skin_weights(
     else:
         resolved_skin_cluster = skin_cluster
 
+    if influence_map is None:
+        resolved_weights = weights
+    else:
+        remapped_weights: dict[int, dict[str, float]] = {}
+        for point_id, point_weights in weights.items():
+            remapped_point: dict[str, float] = {}
+            for old_name, weight in point_weights.items():
+                new_name = influence_map(old_name)
+                # add in case multiple influences map to the same influence
+                remapped_point[new_name] = remapped_point.get(new_name, 0.0) + weight
+            remapped_weights[point_id] = remapped_point
+        resolved_weights = remapped_weights
+
     # Ensure all influences in new_weights exist on the skinCluster
     all_influences_in_data: set[str] = {
-        influence_name for point_weights in weights.values() for influence_name in point_weights
+        influence_name
+        for point_weights in resolved_weights.values()
+        for influence_name in point_weights
     }
     existing_influences = set(
         cmds.skinCluster(resolved_skin_cluster, query=True, influence=True) or []  # type: ignore
@@ -418,7 +435,7 @@ def set_skin_weights(
     weights_flat: list[float] = [0.0] * (num_components * num_influences)
 
     # Fill weights list from new_weights dict
-    for point_id, point_weights in weights.items():
+    for point_id, point_weights in resolved_weights.items():
         base_index = point_id * num_influences
         for influence_name, weight in point_weights.items():
             influence_index = influence_indices[influence_name]
