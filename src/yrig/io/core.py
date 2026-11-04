@@ -40,10 +40,10 @@ def confirm_overwrite(filepath: Path | Iterable[Path], force: bool = False) -> b
     return confirm == "Yes"
 
 
-def promt_user_for_directory(message: str = "Select Directory") -> Path:
+def promt_user_for_directory(message: str = "Select Directory") -> Path | None:
     """Prompt the user to select a directory and return it as a Path object."""
     result = cmds.fileDialog2(fileMode=3, dialogStyle=2, caption=message)
     if result and len(result) > 0:
         return Path(result[0])
     else:
-        raise RuntimeError("No directory selected.")
+        return None

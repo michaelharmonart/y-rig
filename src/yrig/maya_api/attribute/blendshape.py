@@ -13,6 +13,7 @@ from .core import (
     GeometryAttribute,
     Int32ArrayAttribute,
     IntegerAttribute,
+    LongAttribute,
     MatrixArrayAttribute,
     MatrixAttribute,
     PointArrayAttribute,
@@ -145,3 +146,18 @@ class BlendShapeTargetDirectoryAttribute(Attribute):
             f"{attr_path}.directoryParentVisibility"
         )
         self.directory_weight = ScalarAttribute(f"{attr_path}.directoryWeight")
+
+
+class ShapeEditorManagerDirectoryAttribute(Attribute):
+    """A Maya attribute of the same compound type as the shapeEditorManager directory."""
+
+    def __init__(self, attr_path: str) -> None:
+        super().__init__(attr_path)
+
+        self.child_indices = Int32ArrayAttribute(f"{attr_path}.childIndices")
+        self.parent_index = LongAttribute(f"{attr_path}.parentIndex")
+        self.directory_name = StringAttribute(f"{attr_path}.directoryName")
+        self.directory_visibility = BooleanAttribute(f"{attr_path}.directoryVisibility")
+        self.directory_parent_visibility = BooleanAttribute(
+            f"{attr_path}.directoryParentVisibility"
+        )

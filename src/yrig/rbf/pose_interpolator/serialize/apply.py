@@ -1,7 +1,6 @@
 import logging
 import math
-from collections.abc import Generator, Iterable
-from contextlib import contextmanager
+from collections.abc import Iterable
 from enum import StrEnum
 
 from maya import cmds
@@ -33,29 +32,6 @@ class ExistingPolicy(StrEnum):
 
 IDENTITY_ROTATION = (0.0, 0.0, 0.0, 1.0)
 IDENTITY_TRANSLATION = (0.0, 0.0, 0.0)
-
-
-@contextmanager
-def preserve_all_pose_interpolator_directories(
-    manager: PoseInterpolatorManagerNode,
-) -> Generator[None, None, None]:
-    """
-    When initializing a poseInterpolator plug Maya just decides a directory to add it to.
-    This screws up our manual handling of directories on import.
-
-    This might be overkill, but since I don't have the Maya source code on hand
-    this is the only way to guarantee that Maya won't screw up directory data.
-    """
-    directory_indices = manager.pose_interpolator_directory.get_indices()
-    snapshot = {
-        index: manager.pose_interpolator_directory[index].child_indices.get()
-        for index in directory_indices
-    }
-    try:
-        yield
-    finally:
-        for index, child_indices in snapshot.items():
-            manager.pose_interpolator_directory[index].child_indices.set(child_indices)
 
 
 def _apply_attribute(
@@ -181,15 +157,10 @@ def add_pose_interpolator(
     if parent is not None:
         cmds.parent(pose_interpolator_transform, parent)
     target_index = manager.pose_interpolator_parent.next_available_index()
-    parent_directory = manager.pose_interpolator_directory[parent_directory_index]
-    with preserve_all_pose_interpolator_directories(manager):
-        pose_interpolator.mid_layer_id.set(target_index)
-        pose_interpolator.mid_layer_parent.connect_to(
-            manager.pose_interpolator_parent[target_index]
-        )
-    original_child_indices = parent_directory.child_indices.get()
+    pose_interpolator.mid_layer_id.set(value=target_index)
+    pose_interpolator.mid_layer_parent.set(parent_directory_index)
+    pose_interpolator.mid_layer_parent.connect_to(manager.pose_interpolator_parent[target_index])
     apply_pose_interpolator_data(pose_interpolator, data)
-    parent_directory.child_indices.set([*original_child_indices, target_index])
     return pose_interpolator_transform, pose_interpolator
 
 

@@ -110,7 +110,7 @@ def shape_topology_signature(shape: str) -> tuple:
         )
 
     if dag_path.hasFn(MFn.kNurbsCurve):
-        fn = MFnNurbsCurve(dag_path)
+        fn: MFnNurbsCurve = MFnNurbsCurve(dag_path)
 
         return (
             "nurbsCurve",
@@ -121,14 +121,14 @@ def shape_topology_signature(shape: str) -> tuple:
         )
 
     if dag_path.hasFn(MFn.kNurbsSurface):
-        fn = MFnNurbsSurface(dag_path)
+        fn: MFnNurbsSurface = MFnNurbsSurface(dag_path)
 
         return (
             "nurbsSurface",
             fn.numCVsInU,
             fn.numCVsInV,
-            fn.degreeU,
-            fn.degreeV,
+            fn.degreeInU,
+            fn.degreeInV,
             fn.formInU,
             fn.formInV,
             fn.numSpansInU,
@@ -158,3 +158,10 @@ def set_smooth_preview(geometry: str, enable: bool = True) -> None:
             cmds.displaySmoothness(polygonObject=3, pointsWire=16)
         else:
             cmds.displaySmoothness(polygonObject=0, pointsWire=8)
+
+
+def get_shape_output(shape: str, local: bool = True) -> str:
+    shape_output: str = cmds.deformableShape(
+        shape, worldShapeOutAttr=not local, localShapeOutAttr=local
+    )[0]  # type: ignore
+    return f"{shape}.{shape_output}"

@@ -10,6 +10,10 @@
                 -702.7225770097671,
                 -573.8845792637115
             ]
+        },
+        "collapse": {
+            "/tools_window/tools/mgear": true,
+            "/tools_window/tools/mgear/shifter_guides_io": false
         }
     },
     "nodes": {

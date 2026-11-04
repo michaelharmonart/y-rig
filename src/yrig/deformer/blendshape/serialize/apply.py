@@ -54,23 +54,18 @@ class ExistingPolicy(StrEnum):
 
 
 @contextmanager
-def preserve_all_target_directories(blendshape: BlendShapeNode) -> Generator[None, None, None]:
+def preserve_root_target_directory(blendshape: BlendShapeNode) -> Generator[None, None, None]:
     """
-    When initializing a new inputTargetGroup plug Maya just decides a directory to add it to.
+    When initializing a new inputTargetGroup plug Maya adds it to the root directory.
     This screws up our manual handling of directories on import.
 
-    This might be overkill, but since I don't have the Maya source code on hand
-    this is the only way to guarantee that Maya won't screw up directory data.
+    This is an easy way to guarantee that Maya won't screw up directory data.
     """
-    directory_indices = blendshape.target_directory.get_indices()
-    snapshot = {
-        index: blendshape.target_directory[index].child_indices.get() for index in directory_indices
-    }
+    snapshot = blendshape.target_directory[0].child_indices.get()
     try:
         yield
     finally:
-        for index, child_indices in snapshot.items():
-            blendshape.target_directory[index].child_indices.set(child_indices)
+        blendshape.target_directory[0].child_indices.set(snapshot)
 
 
 def set_component_list_indices(
@@ -128,7 +123,7 @@ def merge_target_group(
             target_group = blendshape.input_target[input_target_index].input_target_group[
                 existing_index
             ]
-            with preserve_all_target_directories(blendshape):
+            with preserve_root_target_directory(blendshape):
                 target_group.input_target_item.clear()
                 apply_blendshape_target_group_data(
                     blendshape,
@@ -164,7 +159,7 @@ def add_target_group(
         raise RuntimeError(f"{input_geometry_attr} had no input geometry.")
     input_geometry_node = str(input_geometry_attr).split(".", 1)[0]
     input_geometry = get_dag_path(input_geometry_node)
-    with preserve_all_target_directories(blendshape):
+    with preserve_root_target_directory(blendshape):
         apply_blendshape_target_group_data(
             blendshape, data, input_geometry, input_target_index, target_group_index
         )

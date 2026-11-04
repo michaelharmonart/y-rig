@@ -1,5 +1,5 @@
 import logging
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -161,7 +161,11 @@ def load_skin_weight_data(filepath: Path) -> SkinWeightData:
 
 
 def apply_skin_weight_data(
-    data: SkinWeightData, geometry: str, skin_cluster: str | None = None
+    data: SkinWeightData,
+    geometry: str,
+    skin_cluster: str | None = None,
+    *,
+    influence_map: Callable[[str], str] | None = None,
 ) -> str:
     """
     Apply SkinWeightData to the skinCluster on the given geometry.
@@ -177,7 +181,9 @@ def apply_skin_weight_data(
     shape = get_shape(geometry)
     if shape is None:
         raise RuntimeError(f"{geometry} has no attached shape node")
-    applied_skin_cluster = set_skin_weights(shape, data.skin_weights, skin_cluster=skin_cluster)
+    applied_skin_cluster = set_skin_weights(
+        shape, data.skin_weights, skin_cluster=skin_cluster, influence_map=influence_map
+    )
     return applied_skin_cluster
 
 

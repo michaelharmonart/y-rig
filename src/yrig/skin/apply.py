@@ -56,7 +56,12 @@ def apply_skin_data(filepath: Path, geometry: str) -> None:
         apply_skin_bind_data(skin_cluster, bind_data)
 
 
-def apply_weights(filepath: Path, geometry: str) -> None:
+def apply_weights(
+    filepath: Path,
+    geometry: str,
+    *,
+    influence_map: Callable[[str], str] | None = None,
+) -> None:
     """
     Apply weights from a ``.yskin`` file.
 
@@ -68,11 +73,15 @@ def apply_weights(filepath: Path, geometry: str) -> None:
         skin_weight_data.influences,
         geometry,
     )
-    apply_skin_weight_data(skin_weight_data, geometry)
+    apply_skin_weight_data(skin_weight_data, geometry, influence_map=influence_map)
 
 
 def skin_and_apply_weights(
-    filepath: Path, geometry: str, *, error_on_topology_change: bool = True
+    filepath: Path,
+    geometry: str,
+    *,
+    error_on_topology_change: bool = True,
+    influence_map: Callable[[str], str] | None = None,
 ) -> SkinCluster:
     """
     Skin geometry using influences from a ``.yskin`` file and apply weights.
@@ -89,7 +98,7 @@ def skin_and_apply_weights(
             geometry,
         )
         skin_cluster = skin_geometry(valid_influences, geometry)
-    apply_skin_weight_data(skin_weight_data, geometry)
+    apply_skin_weight_data(skin_weight_data, geometry, influence_map=influence_map)
 
     log.info(f"Loaded yskin file for {geometry} from {filepath}")
     return skin_cluster
