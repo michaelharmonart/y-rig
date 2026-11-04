@@ -18,22 +18,16 @@ def preserve_all_shape_editor_directories(
     manager: ShapeEditorManagerNode,
 ) -> Generator[None, None, None]:
     """
-    When initializing a blendShape Maya just decides a directory to add it to.
+    When initializing a blendShape Maya adds it to the root directory.
     This screws up our manual handling of directories on import.
 
-    This might be overkill, but since I don't have the Maya source code on hand
-    this is an easy way to guarantee that Maya won't screw up directory data.
+    This is an easy way to guarantee that Maya won't screw up directory data.
     """
-    directory_indices = manager.blend_shape_directory.get_indices()
-    snapshot = {
-        index: manager.blend_shape_directory[index].child_indices.get()
-        for index in directory_indices
-    }
+    snapshot = manager.blend_shape_directory[0].child_indices.get()
     try:
         yield
     finally:
-        for index, child_indices in snapshot.items():
-            manager.blend_shape_directory[index].child_indices.set(child_indices)
+        manager.blend_shape_directory[0].child_indices.set(snapshot)
 
 
 def find_child_directory_index(

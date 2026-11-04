@@ -40,22 +40,16 @@ def preserve_all_pose_interpolator_directories(
     manager: PoseInterpolatorManagerNode,
 ) -> Generator[None, None, None]:
     """
-    When initializing a poseInterpolator plug Maya just decides a directory to add it to.
+    When initializing a poseInterpolator plug Maya adds it to the root directory.
     This screws up our manual handling of directories on import.
 
-    This might be overkill, but since I don't have the Maya source code on hand
-    this is the only way to guarantee that Maya won't screw up directory data.
+    This is an easy way to guarantee that Maya won't screw up directory data.
     """
-    directory_indices = manager.pose_interpolator_directory.get_indices()
-    snapshot = {
-        index: manager.pose_interpolator_directory[index].child_indices.get()
-        for index in directory_indices
-    }
+    snapshot = manager.pose_interpolator_directory[0].child_indices.get()
     try:
         yield
     finally:
-        for index, child_indices in snapshot.items():
-            manager.pose_interpolator_directory[index].child_indices.set(child_indices)
+        manager.pose_interpolator_directory[0].child_indices.set(snapshot)
 
 
 def _apply_attribute(
@@ -183,7 +177,7 @@ def add_pose_interpolator(
     target_index = manager.pose_interpolator_parent.next_available_index()
     parent_directory = manager.pose_interpolator_directory[parent_directory_index]
     with preserve_all_pose_interpolator_directories(manager):
-        pose_interpolator.mid_layer_id.set(target_index)
+        pose_interpolator.mid_layer_id.set(value=target_index)
         pose_interpolator.mid_layer_parent.connect_to(
             manager.pose_interpolator_parent[target_index]
         )

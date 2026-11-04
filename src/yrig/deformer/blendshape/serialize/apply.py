@@ -56,21 +56,16 @@ class ExistingPolicy(StrEnum):
 @contextmanager
 def preserve_all_target_directories(blendshape: BlendShapeNode) -> Generator[None, None, None]:
     """
-    When initializing a new inputTargetGroup plug Maya just decides a directory to add it to.
+    When initializing a new inputTargetGroup plug Maya adds it to the root directory.
     This screws up our manual handling of directories on import.
 
-    This might be overkill, but since I don't have the Maya source code on hand
-    this is the only way to guarantee that Maya won't screw up directory data.
+    This is an easy way to guarantee that Maya won't screw up directory data.
     """
-    directory_indices = blendshape.target_directory.get_indices()
-    snapshot = {
-        index: blendshape.target_directory[index].child_indices.get() for index in directory_indices
-    }
+    snapshot = blendshape.target_directory[0].child_indices.get()
     try:
         yield
     finally:
-        for index, child_indices in snapshot.items():
-            blendshape.target_directory[index].child_indices.set(child_indices)
+        blendshape.target_directory[0].child_indices.set(snapshot)
 
 
 def set_component_list_indices(
