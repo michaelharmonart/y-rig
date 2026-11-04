@@ -9,16 +9,18 @@ from maya.api.OpenMaya import (
 
 from yrig.maya_api.node import BlendShapeNode
 from yrig.select import maintain_selection
+from yrig.shape import get_shape, get_shape_output
 
 
 def create_blendshape(
     geometry: str,
-    name: str,
+    name: str | None = None,
     front_of_chain: bool = True,
 ) -> str:
-    result: list[str] = cmds.blendShape(geometry, name=name, frontOfChain=front_of_chain)  # type: ignore
+    resolved_name = name or f"{geometry}_BS"
+    result: list[str] = cmds.blendShape(geometry, name=resolved_name, frontOfChain=front_of_chain)  # type: ignore
     if not result:
-        raise RuntimeError(f"Failed to create blendShape: {name}")
+        raise RuntimeError(f"Failed to create blendShape: {resolved_name}")
     return result[0]
 
 
@@ -291,3 +293,29 @@ def get_existing_target_group_indices(blendshape: BlendShapeNode) -> set[int]:
         target_group_indices = input_target.input_target_group.get_indices()
         existing_group_indices.update(target_group_indices)
     return existing_group_indices
+
+
+def add_blendshape_target_from_geometry(
+    blendshape: str | BlendShapeNode,
+    geometry: str,
+    name: str | None = None,
+    default_value: float = 1,
+    *,
+    local: bool = True,
+) -> int:
+    blendshape_node = (
+        blendshape
+        if isinstance(blendshape, BlendShapeNode)
+        else BlendShapeNode.from_existing(blendshape)
+    )
+    index = blendshape_node.input_target[0].input_target_group.next_available_index()
+    target_item = blendshape_node.input_target[0].input_target_group[index].input_target_item[6000]
+
+    shape = get_shape(geometry)
+    if shape is None:
+        raise RuntimeError(f"Couldn't find shape for {geometry}.")
+    shape_out = get_shape_output(shape, local)
+    target_item.input_geom_target.connect_from(shape_out)
+    blendshape_node.weight[index].set_alias(name or geometry)
+    blendshape_node.weight[index].set(default_value)
+    return index
