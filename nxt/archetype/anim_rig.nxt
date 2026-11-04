@@ -495,13 +495,13 @@
         },
         "/finalize/model_override": {
             "attrs": {
-                "rig_root": {
-                    "type": "raw",
-                    "value": "${/setup/root.rig_root}"
-                },
                 "geo_group": {
                     "type": "raw",
                     "value": "${/setup/root/model.model_group}"
+                },
+                "rig_root": {
+                    "type": "raw",
+                    "value": "${/setup/root.rig_root}"
                 }
             },
             "code": [
@@ -1253,13 +1253,9 @@
         "/tools_window/tools/skin": {
             "instance": "/panel",
             "child_order": [
+                "layout",
                 "skin_data_io"
-            ],
-            "attrs": {
-                "text": {
-                    "value": "Skin"
-                }
-            }
+            ]
         },
         "/tools_window/tools/skin/skin_data_io": {
             "instance": "/skin_data_io",
