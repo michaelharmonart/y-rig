@@ -80,7 +80,8 @@
                 "self.control_group = yrig.transform.create_transform(name=\"${control_group}\", parent=\"${control_parent}\")",
                 "cmds.setAttr(f\"{self.control_group}.overrideEnabled\", True)",
                 "cmds.setAttr(f\"{self.control_group}.drawOverride.overrideRGBColors\", True)",
-                "cmds.connectAttr(\"${control_layer}.controlColor\", f\"{self.control_group}.drawOverride.overrideColorRGB\")",
+                "if \"${control_layer}\":",
+                "    cmds.connectAttr(\"${control_layer}.controlColor\", f\"{self.control_group}.drawOverride.overrideColorRGB\")",
                 "",
                 "cmds.refresh()"
             ]
