@@ -46,7 +46,7 @@
             "/ear_component": true,
             "/eye_component": true,
             "/face_base_component": true,
-            "/hat": true,
+            "/hat_component": true,
             "/io_pair": true,
             "/look_component": true,
             "/mouth_component": true,
@@ -113,7 +113,7 @@
                 600.0,
                 0.0
             ],
-            "/hat": [
+            "/hat_component": [
                 -80.0,
                 -840.0
             ],
@@ -167,7 +167,7 @@
                 }
             }
         },
-        "/hat": {
+        "/hat_component": {
             "attrs": {
                 "build": {
                     "type": "bool",
