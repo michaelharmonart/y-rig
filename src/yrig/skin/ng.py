@@ -80,6 +80,12 @@ def require_ng_skin(func: Callable[P, R]) -> Callable[P, R]:
 
 
 @require_ng_skin
+def has_ng_layer_data(geometry: str) -> bool:
+    """Return whether ngSkinTools2 layers are initialized on the geometry."""
+    return ng.get_layers_enabled(geometry)
+
+
+@require_ng_skin
 def get_ng_layer(skin_cluster: str, layer_name: str | None) -> ng.Layer | None:
     """
     Gets an ngSkinTools2 layer with the given name on the specified shape.
