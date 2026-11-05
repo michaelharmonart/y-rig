@@ -4,6 +4,7 @@ from .core import (
     export_maya_shape_file,
     get_target_weights,
     import_maya_shape_file,
+    resolve_blendshape,
     set_target_weights,
 )
 from .mirror import mirror_all_blendshape_targets, mirror_blendshape_targets
@@ -28,5 +29,6 @@ __all__ = [
     "import_maya_shape_file",
     "mirror_all_blendshape_targets",
     "mirror_blendshape_targets",
+    "resolve_blendshape",
     "set_target_weights",
 ]

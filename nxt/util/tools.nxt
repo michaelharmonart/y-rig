@@ -146,13 +146,48 @@
             "instance": "/tab",
             "child_order": [
                 "geometry",
-                "skin"
+                "skin",
+                "blendshape"
             ],
             "attrs": {
                 "text": {
                     "value": "Tools"
                 }
             }
+        },
+        "/tools_window/tools/blendshape": {
+            "instance": "/panel",
+            "child_order": [
+                "layout"
+            ],
+            "attrs": {
+                "text": {
+                    "type": "raw",
+                    "value": "BlendShape"
+                }
+            }
+        },
+        "/tools_window/tools/blendshape/layout": {
+            "instance": "/gridLayout",
+            "child_order": [
+                "mirror_blendshapes"
+            ]
+        },
+        "/tools_window/tools/blendshape/layout/mirror_blendshapes": {
+            "instance": "/button",
+            "attrs": {
+                "text": {
+                    "value": "Mirror BlendShapes"
+                }
+            },
+            "code": [
+                "selection = yrig.select.get_selection()",
+                "",
+                "for node in selection:",
+                "    blendshape = yrig.deformer.blendshape.resolve_blendshape(node)",
+                "    if node is not None:",
+                "        yrig.deformer.blendshape.mirror_all_blendshape_targets(blendshape)"
+            ]
         },
         "/tools_window/tools/geometry": {
             "instance": "/panel",

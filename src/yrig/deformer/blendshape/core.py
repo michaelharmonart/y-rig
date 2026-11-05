@@ -30,6 +30,14 @@ def preserve_shape_editor_root_directory(
         manager.blend_shape_directory[0].child_indices.set(snapshot)
 
 
+def resolve_blendshape(node: str) -> BlendShapeNode | None:
+    if cmds.objectType(node, isAType="blendShape"):
+        return BlendShapeNode.from_existing(node)
+    history: list[str] = cmds.listHistory(node)  # type: ignore
+    blendshapes = cmds.ls(history, type="blendShape")  # type: ignore
+    return BlendShapeNode.from_existing(blendshapes[0]) if blendshapes else None
+
+
 def find_child_directory_index(
     manager: ShapeEditorManagerNode,
     parent_directory_index: int,
