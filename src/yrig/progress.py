@@ -60,7 +60,7 @@ def _maya_progress_context(
 
 @contextmanager
 def report_progress(step: ProgressStep) -> Generator[ProgressStep, None, None]:
-    """Bind a step, resporting progress to the UI when no parent or callback handles reporting."""
+    """Bind a step, reporting progress to the UI when no parent or callback handles reporting."""
     callback = step._callback
     ui_context = (
         _maya_progress_context(step.name)
