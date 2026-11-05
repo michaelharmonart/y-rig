@@ -5,7 +5,7 @@
     "mute": false,
     "solo": false,
     "references": [
-        "/users/student/g/graphite/maya-python/y-rig/nxt/component/face/mouth/mouth.nxt",
+        "component/face/mouth/mouth.nxt",
         "component/face/face_base.nxt",
         "component/face/eye.nxt",
         "component/face/eyebrow.nxt",
@@ -179,11 +179,12 @@
             "instance": "/look_component"
         },
         "/build/middle/face/mouth": {
-            "instance": "/mouth_legacy_component",
-            "child_order": [
-                "skin_surface"
-            ],
+            "instance": "/mouth_component",
             "attrs": {
+                "component_data": {
+                    "type": "raw",
+                    "value": "${rig_path}/data/face/mouth"
+                },
                 "control_size": {
                     "value": "1"
                 },
@@ -192,14 +193,6 @@
                 },
                 "parent": {
                     "value": "${/setup/root/deformation/face.def_layer_group}"
-                }
-            }
-        },
-        "/build/middle/face/mouth/skin_surface": {
-            "attrs": {
-                "mouth_surface_skin_filepath": {
-                    "type": "raw",
-                    "value": "${file::${rig_path}/data/face/mouth_surface.yskin}"
                 }
             }
         },

@@ -1,0 +1,102 @@
+{
+    "version": "1.17",
+    "alias": "mouth",
+    "color": "#1857cc",
+    "mute": false,
+    "solo": false,
+    "meta_data": {
+        "positions": {
+            "/mouth_component": [
+                -565.7497466048534,
+                -909.5755594586318
+            ]
+        }
+    },
+    "nodes": {
+        "/mouth_component": {
+            "instance": "/component",
+            "child_order": [
+                "import_guides",
+                "build",
+                "cleanup"
+            ],
+            "attrs": {
+                "component_data": {
+                    "type": "raw",
+                    "value": "component/face/mouth/data"
+                },
+                "control_parent": {
+                    "value": "face_lower_M_ctl"
+                },
+                "face_mid": {
+                    "type": "raw",
+                    "value": "face_mid_M_driven"
+                },
+                "jaw_transform": {
+                    "type": "raw",
+                    "value": "jaw_M_ctl"
+                },
+                "joint_parent": {
+                    "value": "face_lower_M_jnt"
+                },
+                "name": {
+                    "value": "mouth"
+                },
+                "parent": {
+                    "value": "face_grp"
+                },
+                "primary_skin": {
+                    "type": "raw",
+                    "value": "${file::${component_data}/skin/lip_ribbon_primary.yskin}"
+                },
+                "skin_set": {
+                    "type": "raw",
+                    "value": "${/setup/root/deformation/main/skin.skin_set}"
+                }
+            }
+        },
+        "/mouth_component/build": {
+            "code": [
+                "guides = yrig.component.mouth.MouthGuides()",
+                "yrig.component.mouth.Mouth(",
+                "    guides=guides,",
+                "    parent=\"${parent}\",",
+                "    control_parent=\"${control_parent}\",",
+                "    joint_parent=\"${joint_parent}\",",
+                "    face_mid=\"${face_mid}\",",
+                "    jaw=\"${jaw_transform}\",",
+                "    control_size=${control_size},",
+                "    primary_skin=Path(\"${primary_skin}\"),",
+                "    skin_set=\"${skin_set}\",",
+                ")"
+            ]
+        },
+        "/mouth_component/cleanup": {
+            "attrs": {
+                "cleanup_objects": {
+                    "type": "raw",
+                    "value": "${../import_guides.imported_objects}"
+                }
+            },
+            "code": [
+                "cmds.delete(${cleanup_objects})"
+            ]
+        },
+        "/mouth_component/import_guides": {
+            "attrs": {
+                "imported_objects": {
+                    "type": "list",
+                    "value": "[]"
+                },
+                "lip_ribbon_filepath": {
+                    "type": "raw",
+                    "value": "${file::${component_data}/lip_ribbon.usd}"
+                }
+            },
+            "code": [
+                "ribbon_path = Path(\"${lip_ribbon_filepath}\")",
+                "self.imported_objects = yrig.io.usd.import_rig_data_usd(ribbon_path, parent=\"${component_group}\")"
+            ]
+        }
+    }
+}
