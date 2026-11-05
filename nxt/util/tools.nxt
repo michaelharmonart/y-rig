@@ -217,12 +217,14 @@
                 "from yrig.color.bake import face_color_from_texture",
                 "",
                 "selection = cmds.ls(selection=True)",
-                "for object in selection:",
-                "    try:",
-                "        face_color_from_texture(object)",
-                "    except Exception as e:",
-                "        log = yrig.build.nxt_api.get_node_logger(\"${_nxtpath}\")",
-                "        log.warning(f\"Couldn't bake face colors for {object}, {e}\")"
+                "with yrig.progress.progress_step(\"Bake Face Colors\", total=len(selection)):",
+                "    for object in selection:",
+                "        try:",
+                "            with yrig.progress.progress_step(object):",
+                "                face_color_from_texture(object)",
+                "        except Exception as e:",
+                "            log = yrig.build.nxt_api.get_node_logger(\"${_nxtpath}\")",
+                "            log.warning(f\"Couldn't bake face colors for {object}, {e}\")"
             ]
         },
         "/tools_window/tools/skin": {
