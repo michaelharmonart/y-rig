@@ -13,7 +13,7 @@ from yrig.maya_api.enum import (
     SkinClusterSkinningMethod,
     SkinClusterWeightDistribution,
 )
-from yrig.maya_api.node import SkinCluster
+from yrig.maya_api.node import SkinClusterNode
 from yrig.name import format_item_count, natural_sort_key
 from yrig.shape import get_shape, shape_topology_hash
 from yrig.skin.core import (
@@ -75,7 +75,7 @@ def load_skin_bind_data(filepath: Path) -> SkinBindData:
 
 def export_skin_bind_data(
     filepath: Path,
-    skin_cluster: str | SkinCluster,
+    skin_cluster: str | SkinClusterNode,
     force: bool = False,
 ) -> bool:
 
@@ -89,11 +89,11 @@ def export_skin_bind_data(
     return True
 
 
-def get_skin_bind_data(skin_cluster: str | SkinCluster) -> SkinBindData:
+def get_skin_bind_data(skin_cluster: str | SkinClusterNode) -> SkinBindData:
     skin_cluster_node = (
         skin_cluster
-        if isinstance(skin_cluster, SkinCluster)
-        else SkinCluster.from_existing(skin_cluster)
+        if isinstance(skin_cluster, SkinClusterNode)
+        else SkinClusterNode.from_existing(skin_cluster)
     )
     input_geometry_attribute = next(iter(skin_cluster_node.original_geometry)).get_input()
     if input_geometry_attribute is not None:
@@ -117,11 +117,11 @@ def get_skin_bind_data(skin_cluster: str | SkinCluster) -> SkinBindData:
     )
 
 
-def apply_skin_bind_data(skin_cluster: str | SkinCluster, data: SkinBindData) -> None:
+def apply_skin_bind_data(skin_cluster: str | SkinClusterNode, data: SkinBindData) -> None:
     skin_cluster_node = (
         skin_cluster
-        if isinstance(skin_cluster, SkinCluster)
-        else SkinCluster.from_existing(skin_cluster)
+        if isinstance(skin_cluster, SkinClusterNode)
+        else SkinClusterNode.from_existing(skin_cluster)
     )
     skin_cluster_node.skinning_method.set(data.skinning_method)
     skin_cluster_node.relative_space_mode.set(data.relative_space_mode)
@@ -136,7 +136,7 @@ def skin_geometry_from_bind_data(
     geometry: str,
     data: SkinBindData,
     skip_missing_influences: bool = True,
-) -> SkinCluster:
+) -> SkinClusterNode:
     valid_influences = _validate_influences(
         data.influences, geometry, error_on_missing=not skip_missing_influences
     )

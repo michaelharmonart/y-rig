@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from yrig.build.progress import progress_step
-from yrig.maya_api.node import SkinCluster
+from yrig.maya_api.node import SkinClusterNode
 from yrig.name import format_item_count, get_short_name
 from yrig.shape import shape_topology_hash
 from yrig.skin.core import _resolve_skin_cluster, get_skin_clusters, skin_geometry
@@ -82,7 +82,7 @@ def skin_and_apply_weights(
     *,
     error_on_topology_change: bool = True,
     influence_map: Callable[[str], str] | None = None,
-) -> SkinCluster:
+) -> SkinClusterNode:
     """
     Skin geometry using influences from a ``.yskin`` file and apply weights.
     """
@@ -126,7 +126,7 @@ def apply_ng_data(filepath: Path, mesh: str) -> None:
 
 def skin_and_apply_ng_weights(
     filepath: Path, mesh: str, *, error_on_topology_change: bool = True
-) -> SkinCluster:
+) -> SkinClusterNode:
     """
     Skin geometry using influences from an ngSkinTools file and apply weights.
     """

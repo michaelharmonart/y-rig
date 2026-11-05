@@ -24,7 +24,7 @@ from yrig.maya_api.enum import (
     SkinClusterRelativeSpaceMode,
     SkinClusterWeightDistribution,
 )
-from yrig.maya_api.node import SkinCluster
+from yrig.maya_api.node import SkinClusterNode
 from yrig.maya_api.utils import get_dag_path, get_depend_node
 from yrig.name import natural_sort_key
 from yrig.shape import get_components_of_shape, get_shape
@@ -69,14 +69,14 @@ def get_skin_cluster(geometry: str) -> str | None:
     return skin_clusters[0] if skin_clusters else None
 
 
-def _resolve_skin_cluster(node: str) -> SkinCluster | None:
+def _resolve_skin_cluster(node: str) -> SkinClusterNode | None:
     if cmds.nodeType(node) == "skinCluster":
-        return SkinCluster.from_existing(node)
+        return SkinClusterNode.from_existing(node)
     skin_cluster = get_skin_cluster(node)
-    return SkinCluster.from_existing(skin_cluster) if skin_cluster is not None else None
+    return SkinClusterNode.from_existing(skin_cluster) if skin_cluster is not None else None
 
 
-def get_skin_cluster_influences(skin_cluster: str | SkinCluster) -> list[str]:
+def get_skin_cluster_influences(skin_cluster: str | SkinClusterNode) -> list[str]:
     """Return the influence joints bound to a skinCluster.
 
     Args:
@@ -102,7 +102,7 @@ def skin_geometry(
     weight_distribution: SkinClusterWeightDistribution = SkinClusterWeightDistribution.DISTANCE,
     max_influences: int = 6,
     maintain_max_influences: bool = False,
-) -> SkinCluster:
+) -> SkinClusterNode:
     """
     Create a skin cluster on the given geometry using the specified bind joints.
 
@@ -155,7 +155,7 @@ def skin_geometry(
         maximumInfluences=max_influences,
         obeyMaxInfluences=maintain_max_influences,
     )[0]
-    skin_cluster_node = SkinCluster.from_existing(skin_cluster)
+    skin_cluster_node = SkinClusterNode.from_existing(skin_cluster)
     skin_cluster_node.dqs_support_non_rigid.set(support_non_rigid)
     skin_cluster_node.relative_space_mode.set(relative_space_mode)
     return skin_cluster_node

@@ -32,7 +32,7 @@ from .quat import (
     QuatSlerpNode,
     QuatToEulerNode,
 )
-from .skincluster import SkinCluster
+from .skincluster import SkinClusterNode
 from .utility import (
     AbsoluteNode,
     AddDLNode,
@@ -101,7 +101,7 @@ __all__ = [
     "RowFromMatrixNode",
     "ShapeEditorManagerNode",
     "SinNode",
-    "SkinCluster",
+    "SkinClusterNode",
     "SubtractNode",
     "SumNode",
     "UvPinNode",
