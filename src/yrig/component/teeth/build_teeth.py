@@ -48,6 +48,47 @@ class TeethSpline:
         self.component_grp = component_grp
         self.control_size = control_size
         self.big_teeth = big_teeth
+        self.teeth_controls = []
+
+    def setup_single_tooth_proxies(self) -> None:
+        """Create one shared singleTooth attribute across all teeth controls."""
+
+        master_attr = f"{self.main_ctrl}.singleTooth"
+
+        # Create the master attribute if it doesn't exist.
+        if not cmds.attributeQuery(
+            "singleTooth",
+            node=self.main_ctrl,
+            exists=True,
+        ):
+            cmds.addAttr(
+                self.main_ctrl,
+                longName="singleTooth",
+                niceName="Single Tooth",
+                attributeType="double",
+                minValue=0,
+                maxValue=1,
+                defaultValue=0,
+                keyable=True,
+            )
+
+        # Create proxy attributes on every teeth control.
+        for control in self.teeth_controls:
+            if control == self.main_ctrl:
+                continue
+
+            if cmds.attributeQuery(
+                "singleTooth",
+                node=control,
+                exists=True,
+            ):
+                continue
+
+            cmds.addAttr(
+                control,
+                longName="singleTooth",
+                proxy=master_attr,
+            )
 
     def build_single_teeth_spline(
         self,
@@ -65,7 +106,6 @@ class TeethSpline:
 
         indices = get_teeth_locator_indices(len(cvs))
 
-        # Preserve the original upper/lower control group naming.
         group = create_transform(
             name=f"{guide_name}_ofst_grp",
             parent=self.control_grp,
@@ -77,7 +117,6 @@ class TeethSpline:
         if num == 1:
             matrix_constraint("jaw_M_ctl", group)
 
-        # Preserve the original main control.
         main_control = create_control(
             name=f"{guide_name}_main",
             parent=group,
@@ -86,6 +125,9 @@ class TeethSpline:
             control_shape="circle",
             direction="x",
         )
+
+        self.teeth_controls.append(main_control.transform)
+
         parent = main_control.transform
         joint_parent = self.joint_parent
 
@@ -103,7 +145,6 @@ class TeethSpline:
                 float(pos[2]),
             )
 
-            # Preserve the original offset transform.
             offset = create_transform(
                 name=f"{guide_name}_{i}_ofs",
                 parent=parent,
@@ -115,7 +156,6 @@ class TeethSpline:
                 translation=pos_tuple,
             )
 
-            # Preserve the original individual control.
             ctrl = create_control(
                 name=f"{guide_name}_{i}",
                 parent=parent,
@@ -125,7 +165,8 @@ class TeethSpline:
                 direction="x",
             )
 
-            # Create the joint using its original name.
+            self.teeth_controls.append(ctrl.transform)
+
             jnt = create_joint(
                 name=f"{guide_name}_{i}",
                 parent=joint_parent,
@@ -134,44 +175,71 @@ class TeethSpline:
 
             joints.append(jnt)
 
-            # Preserve the original joint parenting hierarchy.
             joint_parent = jnt
+            # parent = ctrl.transform
 
-        # Use the middle joint created by this build.
-        middle_joint = joints[len(joints) // 2]
+        # Set the main control pivot to the middle tooth joint.
+        if joints:
+            middle_joint = joints[len(joints) // 2]
 
-        # Get the joint's actual world-space position.
-        pivot = cmds.xform(
-            middle_joint,
-            query=True,
-            worldSpace=True,
-            translation=True,
-        )
+            pivot = cmds.xform(
+                middle_joint,
+                query=True,
+                worldSpace=True,
+                translation=True,
+            )
 
-        pivot = (
-            float(pivot[0]),  # ty: ignore[not-subscriptable]
-            float(pivot[1]),  # ty: ignore[not-subscriptable]
-            float(pivot[2]),  # ty: ignore[not-subscriptable]
-        )
+            pivot = (
+                float(pivot[0]),  # ty: ignore[not-subscriptable]
+                float(pivot[1]),  # ty: ignore[not-subscriptable]
+                float(pivot[2]),  # ty: ignore[not-subscriptable]
+            )
 
-        # Move only the main control's pivot, not its transform.
-        cmds.xform(
-            main_control.transform,
-            worldSpace=True,
-            rotatePivot=pivot,
-            scalePivot=pivot,
-        )
+            cmds.xform(
+                main_control.transform,
+                worldSpace=True,
+                rotatePivot=pivot,
+                scalePivot=pivot,
+            )
+
         return joints
 
     def cleanup(self) -> None:
         if cmds.objExists("teeth_M_npo"):
             cmds.hide("teeth_M_npo")
 
-    def build_big_teeth(self) -> None:
-        pass
+    def setup_teeth_visibility(self) -> None:
+        master_attr = f"{self.main_ctrl}.singleTooth"
+
+        reverse = cmds.createNode(
+            "reverse",
+            name="teeth_single_tooth_visibility_REV",
+        )
+
+        # Reverse the master attribute.
+        cmds.connectAttr(
+            master_attr,
+            f"{reverse}.inputX",
+            force=True,
+        )
+
+        # Regular teeth: visible when singleTooth = 0.
+        if cmds.objExists("teeth_geo"):
+            cmds.connectAttr(
+                f"{reverse}.outputX",
+                "teeth_geo.visibility",
+                force=True,
+            )
+
+        # Big teeth: visible when singleTooth = 1.
+        if cmds.objExists("big_tooth_geo"):
+            cmds.connectAttr(
+                master_attr,
+                "big_tooth_geo.visibility",
+                force=True,
+            )
 
     def build_teeth(self) -> tuple[list[str], list[str]]:
-
         top_joints = []
         bottom_joints = []
 
@@ -187,6 +255,10 @@ class TeethSpline:
                 1,
             )
 
+        # Add the shared attribute and proxies after all controls exist.
+        self.setup_single_tooth_proxies()
+        if self.big_teeth:
+            self.setup_teeth_visibility()
         self.cleanup()
 
         return top_joints, bottom_joints
