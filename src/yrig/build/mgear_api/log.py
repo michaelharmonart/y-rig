@@ -5,7 +5,7 @@ from io import TextIOBase
 from typing import TYPE_CHECKING
 
 from yrig.build.mgear_api.step import BuildStep
-from yrig.build.progress import ProgressStep, _current_progress
+from yrig.progress import ProgressStep, _current_progress
 
 if TYPE_CHECKING:
     from contextvars import Token

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager, nullcontext, suppress
 from contextvars import ContextVar
 from typing import TYPE_CHECKING
 
@@ -14,30 +14,83 @@ _current_progress: ContextVar[ProgressStep | None] = ContextVar("_current_progre
 def progress_step(
     name: str, weight: float = 1.0, total: float | None = None
 ) -> Generator[ProgressStep, None, None]:
-    parent = _current_progress.get()
-
-    step = ProgressStep(name, weight, total)
-    if parent:
-        parent.add_child_step(step)
-    token = _current_progress.set(step)
-    try:
+    """Set ``total`` to the expected sum of child weights for incremental progress."""
+    with report_progress(ProgressStep(name, weight, total)) as step:
         yield step
+
+
+@contextmanager
+def _maya_progress_context(
+    name: str,
+) -> Generator[Callable[[float, str], None] | None, None, None]:
+    try:
+        from maya import cmds, mel
+    except ImportError:
+        yield None
+        return
+
+    if cmds.about(batch=True):
+        yield None
+        return
+
+    bar = mel.eval("$tmp = $gMainProgressBar")
+    if cmds.progressBar(bar, query=True, visible=True):
+        yield None
+        return
+
+    cmds.progressBar(
+        bar,
+        edit=True,
+        beginProgress=True,
+        status=name,
+        progress=0,
+        minValue=0,
+        maxValue=1000,
+        isInterruptable=False,
+    )
+
+    def update(value: float, status: str) -> None:
+        cmds.progressBar(bar, edit=True, progress=round(value * 1000), status=status)
+
+    try:
+        yield update
     finally:
-        step.finish_step()
-        _current_progress.reset(token)
+        cmds.progressBar(bar, edit=True, endProgress=True)
+
+
+@contextmanager
+def report_progress(step: ProgressStep) -> Generator[ProgressStep, None, None]:
+    """Bind a step, resporting progress to the UI when no parent or callback handles reporting."""
+    callback = step._callback
+    ui_context = (
+        _maya_progress_context(step.name)
+        if _current_progress.get() is None and callback is None
+        else nullcontext(callback)
+    )
+    with ui_context as ui_callback:
+        step._callback = ui_callback
+        try:
+            with bind_progress_step(step):
+                yield step
+        finally:
+            step._callback = callback
 
 
 @contextmanager
 def bind_progress_step(step: ProgressStep) -> Generator[ProgressStep, None, None]:
+    """Attach a step to the current progress scope and finish it on exit."""
     parent = _current_progress.get()
     if parent:
         parent.add_child_step(step)
     token = _current_progress.set(step)
     try:
+        step._propogate_progress()
         yield step
     finally:
-        step.finish_step()
-        _current_progress.reset(token)
+        try:
+            step.finish_step()
+        finally:
+            _current_progress.reset(token)
 
 
 def get_current_progress_step() -> ProgressStep | None:

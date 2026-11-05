@@ -3,9 +3,9 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
-from yrig.build.progress import progress_step
 from yrig.maya_api.node import SkinClusterNode
 from yrig.name import format_item_count, get_short_name
+from yrig.progress import progress_step
 from yrig.shape import shape_topology_hash
 from yrig.skin.core import _resolve_skin_cluster, get_skin_clusters, skin_geometry
 from yrig.skin.ng import apply_ng_skin_weights, get_influences_from_ng_skin_weights

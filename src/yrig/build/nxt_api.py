@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from nxt.nxt_node import SpecNode
 
 
-from yrig.build.progress import progress_step
+from yrig.progress import progress_step
 
 log = logging.getLogger(__name__)
 

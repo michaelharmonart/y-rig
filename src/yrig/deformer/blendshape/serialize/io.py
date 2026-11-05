@@ -2,11 +2,11 @@ import logging
 from collections.abc import Callable, Collection, Iterable, Sequence
 from pathlib import Path
 
-from yrig.build.progress import progress_step
 from yrig.deformer.blendshape.core import connect_to_psd_network
 from yrig.io import confirm_overwrite
 from yrig.io.json import export_json, load_json
 from yrig.maya_api.node import BlendShapeNode
+from yrig.progress import progress_step
 from yrig.shape import get_shape
 
 from .apply import apply_blendshape_data

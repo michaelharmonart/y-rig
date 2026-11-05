@@ -4,9 +4,9 @@ from itertools import chain
 from pathlib import Path
 
 from yrig.build.nxt_api import YRIG_NXT_DIR, execute_nxt_graph, nxt_file_roots, open_nxt_editor
-from yrig.build.progress import ProgressStep, bind_progress_step
 from yrig.build.scope import BuildScope
 from yrig.build.setup import setup_rig_build_file
+from yrig.progress import ProgressStep, report_progress
 
 build_logger = logging.getLogger("yrig.build")
 
@@ -87,7 +87,7 @@ def build_rig(
     build_path = resolve_build_path(rig_path)
     resolved_scope = resolve_build_scope(build_scope)
     build_step = ProgressStep("Rig Build", callback=progress_callback)
-    with nxt_file_roots(extended_root_paths), bind_progress_step(build_step):
+    with nxt_file_roots(extended_root_paths), report_progress(build_step):
         try:
             execute_nxt_graph(
                 build_path,

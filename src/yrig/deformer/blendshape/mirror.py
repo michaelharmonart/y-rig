@@ -9,6 +9,7 @@ from yrig.deformer.blendshape.core import (
 )
 from yrig.maya_api.node import BlendShapeNode
 from yrig.name import Side, filter_side, flip_side
+from yrig.progress import progress_step
 
 
 def mirror_blendshape_targets(
@@ -29,32 +30,43 @@ def mirror_blendshape_targets(
     ]
     name_to_index_map = get_name_to_target_index_map(str(blendshape_node))
     mirrored: dict[str, str] = {}
-    for original_target, mirrored_target in zip(original_targets, mirrored_targets, strict=True):
-        original_target_index = name_to_index_map[original_target]
-        if mirrored_target not in name_to_index_map:
-            raise NotImplementedError(
-                "This should create a mirror target if it doesn't already exist. Ideally it would even put it in the right directory."
-            )
-        mirrored_target_index = name_to_index_map[mirrored_target]
-        for input_index in blendshape_node.input_target.get_indices():
-            input_target = blendshape_node.input_target[input_index]
-            existing_target_group_indices = set(input_target.input_target_group.get_indices())
-            if original_target_index not in existing_target_group_indices:
-                continue
+    input_indices = list(blendshape_node.input_target.get_indices())
+    with progress_step("Mirror Blendshapes", total=len(original_targets)):
+        for original_target, mirrored_target in zip(
+            original_targets, mirrored_targets, strict=True
+        ):
+            with progress_step(original_target, total=len(input_indices)):
+                original_target_index = name_to_index_map[original_target]
+                if mirrored_target not in name_to_index_map:
+                    raise NotImplementedError(
+                        "This should create a mirror target if it doesn't already exist. Ideally it would even put it in the right directory."
+                    )
+                mirrored_target_index = name_to_index_map[mirrored_target]
+                for input_index in input_indices:
+                    with progress_step(f"Input {input_index}"):
+                        input_target = blendshape_node.input_target[input_index]
+                        existing_target_group_indices = set(
+                            input_target.input_target_group.get_indices()
+                        )
+                        if original_target_index not in existing_target_group_indices:
+                            continue
 
-            # TODO: Switch this out for our own shape mirroring logic. This is buns slow.
-            copy_target_deltas(
-                blendshape_node, input_index, original_target_index, mirrored_target_index
-            )
-            cmds.blendShape(
-                str(blendshape_node),
-                edit=True,
-                flipTarget=(input_index, mirrored_target_index),
-                symmetryAxis="X",
-                symmetrySpace=1,  # Object space
-            )
+                        # TODO: Switch this out for our own shape mirroring logic. This is buns slow.
+                        copy_target_deltas(
+                            blendshape_node,
+                            input_index,
+                            original_target_index,
+                            mirrored_target_index,
+                        )
+                        cmds.blendShape(
+                            str(blendshape_node),
+                            edit=True,
+                            flipTarget=(input_index, mirrored_target_index),
+                            symmetryAxis="X",
+                            symmetrySpace=1,  # Object space
+                        )
 
-            mirrored[original_target] = mirrored_target
+                        mirrored[original_target] = mirrored_target
     return mirrored
 
 
