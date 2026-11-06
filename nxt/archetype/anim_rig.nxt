@@ -60,6 +60,10 @@
                 -414.87530251227207,
                 -11.02092554557493
             ],
+            "/node": [
+                372.3757491458175,
+                382.71951995542355
+            ],
             "/psd_import": [
                 120.0,
                 -300.0
@@ -151,6 +155,7 @@
         },
         "collapse": {
             "/apply/deformation": false,
+            "/apply/visibility_sets/default_hidden": true,
             "/finalize/hide_joints": true,
             "/finalize/metadata": true,
             "/finalize/metadata/build_commit": true,
@@ -274,6 +279,9 @@
             ]
         },
         "/apply/visibility_sets": {
+            "child_order": [
+                "default_hidden"
+            ],
             "attrs": {
                 "rig_set": {
                     "type": "raw",
@@ -288,6 +296,19 @@
                 "if \"${visibility_sets_filepath}\":",
                 "    filepath = Path(\"${visibility_sets_filepath}\")",
                 "    yrig.sets.import_sets(filepath, parent=\"${rig_set}\")"
+            ]
+        },
+        "/apply/visibility_sets/default_hidden": {
+            "attrs": {
+                "hidden_sets": {
+                    "type": "list",
+                    "value": "[]"
+                }
+            },
+            "code": [
+                "for set in ${hidden_sets}:",
+                "    in_set = yrig.sets.get_set_members(flatten=True)",
+                "    cmds.hide(in_set)"
             ]
         },
         "/build": {
