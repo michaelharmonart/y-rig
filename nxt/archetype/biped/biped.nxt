@@ -158,7 +158,7 @@
         "/": {
             "attrs": {
                 "rig_path": {
-                    "value": "character/biped"
+                    "value": "archetype/biped"
                 }
             }
         },
