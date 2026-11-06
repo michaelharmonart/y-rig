@@ -4,16 +4,11 @@ from maya import cmds
 
 from yrig.control import create_control
 from yrig.joint import create_joint
-from yrig.spline.matrix_spline.build import matrix_spline_from_transforms
 from yrig.transform import create_transform, matrix_constraint
 
 
 def get_teeth_locator_indices(cvs_count: int) -> list[int]:
-    """Return CV indices that should be used as tooth locator anchors.
-
-    The goal is to sample the spline curve at the start, middle, and quarter points
-    so the teeth component gets a simple, evenly spaced placement set.
-    """
+    """Return CV indices used for tooth control placement."""
 
     if cvs_count <= 1:
         return [0]
@@ -22,8 +17,10 @@ def get_teeth_locator_indices(cvs_count: int) -> list[int]:
         return [0, 1]
 
     indices = [0]
+
     for offset in (0.25, 0.5, 0.75):
         index = round((cvs_count - 1) * offset)
+
         if index not in indices:
             indices.append(index)
 
@@ -42,6 +39,7 @@ class TeethSpline:
         control_grp: str,
         component_grp: str,
         control_size: float = 1.0,
+        big_teeth: bool = True,
     ):
         self.guides = guides
         self.main_ctrl = main_ctrl
@@ -49,23 +47,73 @@ class TeethSpline:
         self.control_grp = control_grp
         self.component_grp = component_grp
         self.control_size = control_size
+        self.big_teeth = big_teeth
+        self.teeth_controls = []
 
-    def build_single_teeth_spline(self, guide_name: str, num: int) -> tuple[object, list[str]]:
+    def setup_single_tooth_proxies(self) -> None:
+        """Create one shared singleTooth attribute across all teeth controls."""
 
-        cvs = cmds.ls(f"{guide_name}.cv[*]", flatten=True)
+        master_attr = f"{self.main_ctrl}.singleTooth"
+
+        # Create the master attribute if it doesn't exist.
+        if not cmds.attributeQuery(
+            "singleTooth",
+            node=self.main_ctrl,
+            exists=True,
+        ):
+            cmds.addAttr(
+                self.main_ctrl,
+                longName="singleTooth",
+                niceName="Single Tooth",
+                attributeType="double",
+                minValue=0,
+                maxValue=1,
+                defaultValue=0,
+                keyable=True,
+            )
+
+        # Create proxy attributes on every teeth control.
+        for control in self.teeth_controls:
+            if control == self.main_ctrl:
+                continue
+
+            if cmds.attributeQuery(
+                "singleTooth",
+                node=control,
+                exists=True,
+            ):
+                continue
+
+            cmds.addAttr(
+                control,
+                longName="singleTooth",
+                proxy=master_attr,
+            )
+
+    def build_single_teeth_spline(
+        self,
+        guide_name: str,
+        num: int,
+    ) -> list[str]:
+
+        cvs = cmds.ls(
+            f"{guide_name}.cv[*]",
+            flatten=True,
+        )
+
         if not cvs:
-            return (), []
+            return []
 
         indices = get_teeth_locator_indices(len(cvs))
-
-        cv_controls = []
 
         group = create_transform(
             name=f"{guide_name}_ofst_grp",
             parent=self.control_grp,
         )
+
         if num == 0:
             matrix_constraint("face_mid_M_driven", group)
+
         if num == 1:
             matrix_constraint("jaw_M_ctl", group)
 
@@ -78,11 +126,20 @@ class TeethSpline:
             direction="x",
         )
 
-        parent = main_control
+        self.teeth_controls.append(main_control.transform)
+
+        parent = main_control.transform
+        joint_parent = self.joint_parent
+
+        joints = []
 
         for i, cv_index in enumerate(indices):
-            pos = cmds.pointPosition(cvs[cv_index], world=True)
-            pos_tuple: tuple[float, float, float] = (
+            pos = cmds.pointPosition(
+                cvs[cv_index],
+                world=True,
+            )
+
+            pos_tuple = (
                 float(pos[0]),
                 float(pos[1]),
                 float(pos[2]),
@@ -90,10 +147,14 @@ class TeethSpline:
 
             offset = create_transform(
                 name=f"{guide_name}_{i}_ofs",
-                parent=parent,  # type: ignore
+                parent=parent,
             )
 
-            cmds.xform(offset, worldSpace=True, translation=pos_tuple)
+            cmds.xform(
+                offset,
+                worldSpace=True,
+                translation=pos_tuple,
+            )
 
             ctrl = create_control(
                 name=f"{guide_name}_{i}",
@@ -104,81 +165,100 @@ class TeethSpline:
                 direction="x",
             )
 
-            cv_controls.append(ctrl.transform)
+            self.teeth_controls.append(ctrl.transform)
 
-            # parent = ctrl.transform
-
-        spline = matrix_spline_from_transforms(
-            name=f"{guide_name}_matrixSpline",
-            cv_transforms=cv_controls,
-            pinned_transforms=5,
-            primary_axis=(1, 0, 0),
-            secondary_axis=(0, 0, 1),
-            padded=False,
-            parent=self.component_grp,
-        )
-
-        joint_parent = self.joint_parent
-
-        self.joints = []
-
-        for i, pinned in enumerate(spline.pinned_transforms):
             jnt = create_joint(
                 name=f"{guide_name}_{i}",
                 parent=joint_parent,
-                transform=pinned,
+                transform=ctrl.transform,
             )
 
-            # Disconnect rotation on the end joints
-            if i == 0 or i == len(spline.pinned_transforms) - 1:
-                dest = f"{jnt}.rotate"
-                source = cmds.connectionInfo(dest, sourceFromDestination=True)
-
-                if source:
-                    cmds.disconnectAttr(source, dest)  # type: ignore
-
-            self.joints.append(jnt)
+            joints.append(jnt)
 
             joint_parent = jnt
+            # parent = ctrl.transform
 
-        return spline, self.joints
+        # Set the main control pivot to the middle tooth joint.
+        if joints:
+            middle_joint = joints[len(joints) // 2]
+
+            pivot = cmds.xform(
+                middle_joint,
+                query=True,
+                worldSpace=True,
+                translation=True,
+            )
+
+            pivot = (
+                float(pivot[0]),  # ty: ignore[not-subscriptable]
+                float(pivot[1]),  # ty: ignore[not-subscriptable]
+                float(pivot[2]),  # ty: ignore[not-subscriptable]
+            )
+
+            cmds.xform(
+                main_control.transform,
+                worldSpace=True,
+                rotatePivot=pivot,
+                scalePivot=pivot,
+            )
+
+        return joints
 
     def cleanup(self) -> None:
-        cmds.hide("teeth_M_npo")
+        if cmds.objExists("teeth_M_npo"):
+            cmds.hide("teeth_M_npo")
 
-    def twist_fix(self, guide: str, all_joints: list) -> None:
-        if "bottom" in guide:
-            twist_fix_md = cmds.createNode(
-                "multiplyDivide",
-                name="twist_fix_md",
+    def setup_teeth_visibility(self) -> None:
+        master_attr = f"{self.main_ctrl}.singleTooth"
+
+        reverse = cmds.createNode(
+            "reverse",
+            name="teeth_single_tooth_visibility_REV",
+        )
+
+        # Reverse the master attribute.
+        cmds.connectAttr(
+            master_attr,
+            f"{reverse}.inputX",
+            force=True,
+        )
+
+        # Regular teeth: visible when singleTooth = 0.
+        if cmds.objExists("teeth_geo"):
+            cmds.connectAttr(
+                f"{reverse}.outputX",
+                "teeth_geo.visibility",
+                force=True,
             )
-            cmds.setAttr(f"{twist_fix_md}.input2X", -1)  # type: ignore
-            cmds.connectAttr("jaw_M_ctl" + ".rotateX", f"{twist_fix_md}.input1X")
 
-            bottom_joints = all_joints[5:]
-            cmds.connectAttr(f"{twist_fix_md}.outputX", f"{bottom_joints[0]}.rotateZ")
+        # Big teeth: visible when singleTooth = 1.
+        if cmds.objExists("big_tooth_geo"):
+            cmds.connectAttr(
+                master_attr,
+                "big_tooth_geo.visibility",
+                force=True,
+            )
 
-        if "top" in guide:
-            twist_fix_top_md = cmds.createNode("multiplyDivide", name="twist_fix__top_md")
-            cmds.setAttr(f"{twist_fix_top_md}.input2X", 1)  # type: ignore
-            cmds.connectAttr("face_muppet_M_ctl" + ".rotateX", f"{twist_fix_top_md}.input1X")
+    def build_teeth(self) -> tuple[list[str], list[str]]:
+        top_joints = []
+        bottom_joints = []
 
-            top_joint = all_joints[:5]
-            cmds.connectAttr(f"{twist_fix_top_md}.outputX", f"{top_joint[0]}.rotateZ")
+        if cmds.objExists(self.guides["top_teeth"]):
+            top_joints = self.build_single_teeth_spline(
+                self.guides["top_teeth"],
+                0,
+            )
 
-    def build_teeth(self) -> list[str]:
-        all_joints = []
+        if cmds.objExists(self.guides["bottom_teeth"]):
+            bottom_joints = self.build_single_teeth_spline(
+                self.guides["bottom_teeth"],
+                1,
+            )
 
-        for j, guide in enumerate(("top_teeth", "bottom_teeth")):
-            if guide not in self.guides:
-                continue
-
-            if not cmds.objExists(self.guides[guide]):
-                continue
-
-            _, joints = self.build_single_teeth_spline(self.guides[guide], j)
-            all_joints.extend(joints)
-            self.twist_fix(guide, all_joints)
-
+        # Add the shared attribute and proxies after all controls exist.
+        self.setup_single_tooth_proxies()
+        if self.big_teeth:
+            self.setup_teeth_visibility()
         self.cleanup()
-        return all_joints
+
+        return top_joints, bottom_joints
