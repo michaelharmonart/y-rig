@@ -307,7 +307,7 @@
             },
             "code": [
                 "for set in ${hidden_sets}:",
-                "    in_set = yrig.sets.get_set_members(flatten=True)",
+                "    in_set = yrig.sets.get_set_members(flatten=True, set_name=set)",
                 "    cmds.hide(in_set)"
             ]
         },
