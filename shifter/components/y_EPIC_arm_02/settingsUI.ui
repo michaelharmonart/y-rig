@@ -226,7 +226,7 @@
         <item>
          <widget class="QCheckBox" name="useBlade_checkBox">
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, will use a blade to control the wrist joint orientation. This doesn't affect the controls that are align with the arm plane.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, the wrist blade orients the wrist controls and hand joint. If unchecked, the wrist controls stay aligned with the arm plane.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="statusTip">
            <string extracomment="This option set the axis of the mid CTL (elbow) and the up vector control to move in a mirror behaviour "/>
@@ -235,7 +235,7 @@
            <string/>
           </property>
           <property name="text">
-           <string>Use Wrist Blade to orient wrist joint</string>
+           <string>Use Wrist Blade to orient wrist controls and joint</string>
           </property>
          </widget>
         </item>

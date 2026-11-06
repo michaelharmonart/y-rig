@@ -29,6 +29,7 @@ class Component(component.Main):
 
         self.normal = self.getNormalFromPos(self.guide.apos)
         self.binormal = self.getBiNormalFromPos(self.guide.apos)
+        self.wrist_normal = self.blade_normal if self.settings["use_blade"] else self.normal
 
         self.length0 = vector.getDistance(self.guide.apos[0], self.guide.apos[1])
         self.length1 = vector.getDistance(self.guide.apos[1], self.guide.apos[2])
@@ -130,7 +131,7 @@ class Component(component.Main):
         t = transform.getTransformLookingAt(
             self.guide.apos[2],
             self.guide.apos[3],
-            self.normal,
+            self.wrist_normal,
             "xz",
             self.negate,
         )
@@ -263,7 +264,7 @@ class Component(component.Main):
             m = transform.getTransformLookingAt(
                 self.guide.pos["wrist"],
                 self.guide.pos["eff"],
-                self.normal,
+                self.wrist_normal,
                 "x-y",
                 True,
             )
@@ -273,7 +274,7 @@ class Component(component.Main):
             m = transform.getTransformLookingAt(
                 self.guide.pos["wrist"],
                 self.guide.pos["eff"],
-                self.normal,
+                self.wrist_normal,
                 "xy",
                 False,
             )
@@ -296,7 +297,7 @@ class Component(component.Main):
         ik_ref_t = transform.getTransformLookingAt(
             self.guide.apos[2],
             self.guide.apos[3],
-            self.normal,
+            self.wrist_normal,
             "xz",
             self.negate,
         )
@@ -324,7 +325,7 @@ class Component(component.Main):
         trnIK_ref = transform.getTransformLookingAt(
             self.guide.pos["wrist"],
             self.guide.pos["eff"],
-            self.normal,
+            self.wrist_normal,
             "xz",
             self.negate,
         )
