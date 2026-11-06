@@ -108,10 +108,19 @@ def _resolve_uv_for_pin(
     return resolved_uv
 
 
+def setup_uv_pin_node(name: str, surface: str) -> UvPinNode:
+    primary_shape, original_shape, shape_output = get_surface_shapes(surface)
+    uv_pin_node = UvPinNode.create(name)
+    uv_pin_node.original_geometry.connect_from(f"{original_shape}.{shape_output}")
+    uv_pin_node.deformed_geometry.connect_from(f"{primary_shape}.{shape_output}")
+    return uv_pin_node
+
+
 def uv_pin(
     surface: str,
     object_to_pin: str,
     uv: tuple[float, float] | None = None,
+    *,
     normalize: bool = False,
     normal_axis: Axis = Axis.Z,
     tangent_axis: Axis = Axis.X,
@@ -121,22 +130,28 @@ def uv_pin(
     drive_translate: bool = True,
 ) -> tuple[UvPinNode, int]:
     """
-    Create a uvPin node that pins an object to a given surface at specified UV coordinates.
+    Create or reuse a ``uvPin`` node to pin an object to a mesh or NURBS surface.
+
+    If ``uv`` is ``None``, the object's current position is used to find the
+    closest point on the surface.
 
     Args:
-        surface: The name of the surface (mesh or NURBS) to pin to.
-        object_to_pin: The name of the object to be pinned.
-        uv: The UV coordinate to pin at, if None it will be pinned to the closest point.
-        When false, the pinned object has inheritsTransform disabled to prevent double transforms.
-        normalize: Enable Isoparm normalization (NURBS UV will be remapped between 0-1).
-        normal_axis: Normal axis of the generated uvPin, can be x y z -x -y -z.
-        tangent_axis: Tangent axis of the generated uvPin, can be x y z -x -y -z.
-        uv_pin_node: When specified the object will be pinned as an additional slot in the given uvPin node.
-        keep_offset: When True, the pinned object will be offset to be in
-            the same world space placement as before being pinned.
-        drive: When True the pinned objects transforms will be driven by the uvPin.
+        surface: Mesh or NURBS surface to pin to.
+        object_to_pin: Object to pin.
+        uv: Surface UV coordinates for the pin. If ``None``, use the closest point.
+        normalize: Normalize NURBS isoparm parameters to the 0–1 range.
+        normal_axis: Local axis to align with the surface normal.
+        tangent_axis: Local axis to align with the surface tangent.
+        uv_pin_node: Existing ``uvPin`` node to add the pin to. If ``None``, create
+            a new node.
+        keep_offset: Preserve the object's current world-space placement when
+            creating the pin.
+        drive_rotate: Connect the pin's rotation to the object.
+        drive_translate: Connect the pin's translation to the object.
+
     Returns:
-        The created UVPin node.
+        A tuple containing the ``uvPin`` node and the index of the pin's output
+        slot.
     """
 
     primary_shape, original_shape, shape_output = get_surface_shapes(surface)
@@ -193,10 +208,13 @@ def uv_pin_multi(
     surface: str,
     objects_to_pin: Iterable[str],
     uv_coords: Iterable[tuple[float, float]] | None = None,
+    *,
     normalize: bool = False,
     normal_axis: Axis = Axis.Z,
     tangent_axis: Axis = Axis.X,
     keep_offset: bool = False,
+    drive_rotate: bool = True,
+    drive_translate: bool = True,
 ) -> UvPinNode:
     """
     Pin multiple objects to a surface using a single shared uvPin node.
@@ -218,6 +236,8 @@ def uv_pin_multi(
         tangent_axis: Tangent axis of the uvPin node, can be x y z -x -y -z.
         keep_offset: When True, the pinned objects will be offset to be in
             the same world space placements as before being pinned.
+        drive_rotate: Connect the pins' rotations.
+        drive_translate: Connect the pins' translations.
 
     Returns:
         The shared UvPinNode with all objects registered as pin slots.
@@ -240,6 +260,8 @@ def uv_pin_multi(
             tangent_axis=tangent_axis,
             uv_pin_node=uv_pin_node,
             keep_offset=keep_offset,
+            drive_rotate=drive_rotate,
+            drive_translate=drive_translate,
         )
 
     return uv_pin_node

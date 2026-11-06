@@ -8,15 +8,15 @@ from maya import cmds
 from yrig.control import Control, ControlShape, create_control
 from yrig.deformer.blendshape import create_blendshape
 from yrig.deformer.blendshape.core import add_blendshape_target_from_geometry
-from yrig.joint import create_joint
 from yrig.name import Side
 from yrig.sets import add_to_set
 from yrig.skin import skin_and_apply_weights
-from yrig.surface import surface_slide_constraint
+from yrig.surface import setup_uv_pin_node, surface_slide_constraint
 from yrig.transform import create_transform, matrix_constraint
 from yrig.transform.constraint import local_constraint
 from yrig.transform.utils import connect_transform
 
+from .corner import MouthCorner
 from .lip import Lip, LipGuides, _default_lip_guides
 
 
@@ -29,76 +29,6 @@ class MouthGuides:
     right_corner: str = "mouth_corner_R"
     upper_lip: LipGuides = field(default_factory=lambda: _default_lip_guides(side="upper"))
     lower_lip: LipGuides = field(default_factory=lambda: _default_lip_guides(side="lower"))
-
-
-class MouthCorner:
-    def __init__(
-        self,
-        *,
-        side: Side,
-        guide: str,
-        mouth_surface: str,
-        mouth_surface_local: str,
-        control_parent: Control | str,
-        joint_parent: str,
-        parent: str,
-        control_size: float = 1,
-    ):
-        self.main_control = create_control(
-            f"mouth_{side}",
-            transform=guide,
-            parent=control_parent,
-            size=control_size,
-            direction="z",
-        )
-        self.main_local_npo = create_transform(
-            f"mouth_{side}_local_npo", transform=self.main_control.transform, parent=parent
-        )
-        self.main_local = create_transform(f"mouth_{side}_local", parent=self.main_local_npo)
-        connect_transform(self.main_control.transform, self.main_local)
-
-        self.sub_control = create_control(
-            f"mouth_{side}_sub",
-            transform=guide,
-            parent=self.main_control,
-            size=control_size * 0.5,
-            direction="z",
-        )
-        surface_slide_constraint(
-            mouth_surface,
-            driver_transform=self.main_control.transform,
-            slider_transform=self.sub_control.offset,
-        )
-
-        self.sub_local_npo = create_transform(
-            f"mouth_{side}_sub_local_npo",
-            transform=guide,
-            parent=self.main_local,
-        )
-        self.sub_local = create_transform(
-            f"mouth_{side}_sub_local",
-            parent=self.sub_local_npo,
-        )
-        connect_transform(self.sub_control.transform, self.sub_local)
-
-        surface_slide_constraint(
-            mouth_surface_local,
-            driver_transform=self.main_local,
-            slider_transform=self.sub_local_npo,
-        )
-
-        self.main_joint = create_joint(
-            name=f"mouth_{side}", transform=self.sub_local, parent=joint_parent, connect=False
-        )
-        matrix_constraint(
-            self.sub_local,
-            self.main_joint,
-            False,
-            use_joint_orient=True,
-            rotate=False,
-            scale=False,
-            shear=False,
-        )
 
 
 class Mouth:
@@ -116,6 +46,8 @@ class Mouth:
         blendshape_directory: str = "/rig/logic/face/mouth",
         skin_set: str = "main_skin_grp",
     ):
+        self.def_group = create_transform("mouth_def", parent=joint_parent)
+
         self.guides = guides
         duplicated_mouth_surface: str = cmds.duplicate(self.guides.mouth_surface)[0]
         cmds.parent(duplicated_mouth_surface, parent)
@@ -184,15 +116,25 @@ class Mouth:
             maintainOffset=True,
         )
 
+        lip_ribbon_def: str = cmds.duplicate(guides.lip_ribbon)[0]
+        cmds.parent(lip_ribbon_def, parent)
+        self.lip_ribbon_def = cmds.rename(lip_ribbon_def, "lip_ribbon_def")
+        self.lip_ribbon_def_uv_pin = setup_uv_pin_node("lip_def_uvPin", self.lip_ribbon_def)
+        self.lip_ribbon_def_blendshape = create_blendshape(
+            self.lip_ribbon_def, parent_directory=blendshape_directory
+        )
+
         self.left_corner = MouthCorner(
             side=Side.LEFT,
             guide=guides.left_corner,
             mouth_surface=self.mouth_surface,
             mouth_surface_local=self.mouth_surface_local,
             control_parent=self.mouth_slide,
-            joint_parent=joint_parent,
+            joint_parent=self.def_group,
             parent=self.mouth_slide_local,
             control_size=control_size,
+            def_ribbon=self.lip_ribbon_def,
+            def_ribbon_uv_pin=self.lip_ribbon_def_uv_pin,
         )
         self.right_corner = MouthCorner(
             side=Side.RIGHT,
@@ -200,9 +142,11 @@ class Mouth:
             mouth_surface=self.mouth_surface,
             mouth_surface_local=self.mouth_surface_local,
             control_parent=self.mouth_slide,
-            joint_parent=joint_parent,
+            joint_parent=self.def_group,
             parent=self.mouth_slide_local,
             control_size=control_size,
+            def_ribbon=self.lip_ribbon_def,
+            def_ribbon_uv_pin=self.lip_ribbon_def_uv_pin,
         )
 
         self.upper_lip = Lip(
@@ -211,12 +155,17 @@ class Mouth:
             mouth_surface=self.mouth_surface,
             mouth_surface_local=self.mouth_surface_local,
             parent=self.mouth_slide_local,
-            joint_parent=joint_parent,
+            joint_parent=self.def_group,
             control_parent=self.mouth_slide,
             control_follow=face_mid,
+            left_corner=self.left_corner,
+            right_corner=self.right_corner,
             mouth_slide=self.mouth_slide,
             mouth_slide_ref=self.mouth_slide_reference,
-            control_size=control_size,
+            control_size=control_size * 0.5,
+            def_ribbon=self.lip_ribbon_def,
+            def_ribbon_uv_pin=self.lip_ribbon_def_uv_pin,
+            uv_range=(-0.25, 0.25),
         )
 
         self.lower_lip = Lip(
@@ -225,19 +174,17 @@ class Mouth:
             mouth_surface=self.mouth_surface,
             mouth_surface_local=self.mouth_surface_local,
             parent=self.mouth_slide_local,
-            joint_parent=joint_parent,
+            joint_parent=self.def_group,
             control_parent=self.mouth_slide,
             control_follow=jaw,
+            left_corner=self.left_corner,
+            right_corner=self.right_corner,
             mouth_slide=self.mouth_slide,
             mouth_slide_ref=self.mouth_slide_reference,
-            control_size=control_size,
-        )
-
-        lip_ribbon_def: str = cmds.duplicate(guides.lip_ribbon)[0]
-        cmds.parent(lip_ribbon_def, parent)
-        self.lip_ribbon_def = cmds.rename(lip_ribbon_def, "lip_ribbon_def")
-        self.lip_ribbon_def_blendshape = create_blendshape(
-            self.lip_ribbon_def, parent_directory=blendshape_directory
+            control_size=control_size * 0.5,
+            def_ribbon=self.lip_ribbon_def,
+            def_ribbon_uv_pin=self.lip_ribbon_def_uv_pin,
+            uv_range=(0.75, 0.25),
         )
 
         lip_ribbon_primary: str = cmds.duplicate(guides.lip_ribbon)[0]
