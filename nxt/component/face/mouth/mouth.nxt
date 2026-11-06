@@ -60,7 +60,7 @@
                 "guides = yrig.component.mouth.MouthGuides()",
                 "yrig.component.mouth.Mouth(",
                 "    guides=guides,",
-                "    parent=\"${parent}\",",
+                "    parent=\"${component_group}\",",
                 "    control_parent=\"${control_parent}\",",
                 "    joint_parent=\"${joint_parent}\",",
                 "    face_mid=\"${face_mid}\",",
