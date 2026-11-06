@@ -241,7 +241,20 @@
         "/tools_window/tools/skin/layout": {
             "instance": "/gridLayout",
             "child_order": [
+                "split_skin_weights",
                 "transfer_skin"
+            ]
+        },
+        "/tools_window/tools/skin/layout/split_skin_weights": {
+            "instance": "/button",
+            "attrs": {
+                "text": {
+                    "value": "Split Skin Weights"
+                }
+            },
+            "code": [
+                "selection = yrig.select.get_selection()",
+                "yrig.skin.split.auto_split_weights(selection)"
             ]
         },
         "/tools_window/tools/skin/layout/transfer_skin": {
