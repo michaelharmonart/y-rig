@@ -37,6 +37,8 @@
                 "group_model",
                 "rename_transforms",
                 "merge_groups",
+                "freeze_transforms",
+                "bake_tweaks",
                 "bake_face_colors"
             ],
             "attrs": {
@@ -76,6 +78,56 @@
                 "        except Exception as e:",
                 "            log = yrig.build.nxt_api.get_node_logger(\"${_nxtpath}\")",
                 "            log.warning(f\"Couldn't bake face colors for {object}, {e}\")"
+            ]
+        },
+        "/tools_window/tools/pipe/ingest_model/bake_tweaks": {
+            "code": [
+                "model_group = \"${model_group}\"",
+                "",
+                "meshes = cmds.listRelatives(",
+                "    model_group,",
+                "    allDescendents=True,",
+                "    type=\"mesh\",",
+                "    fullPath=True,",
+                ") or []",
+                "",
+                "for shape in meshes:",
+                "    if cmds.polyCollapseTweaks(",
+                "        shape,",
+                "        query=True,",
+                "        hasVertexTweaks=True,",
+                "    ):",
+                "        cmds.polyCollapseTweaks(shape)",
+                "        ",
+                "cmds.select(\"${model_group}\", replace=True)"
+            ]
+        },
+        "/tools_window/tools/pipe/ingest_model/freeze_transforms": {
+            "attrs": {
+                "freeze_rotate": {
+                    "type": "bool",
+                    "value": "True"
+                },
+                "freeze_scale": {
+                    "type": "bool",
+                    "value": "True"
+                },
+                "freeze_translate": {
+                    "type": "bool",
+                    "value": "True"
+                }
+            },
+            "code": [
+                "model_group = \"${model_group}\"",
+                "",
+                "cmds.makeIdentity(    ",
+                "    model_group,",
+                "    apply=True,",
+                "    translate=${freeze_translate},",
+                "    rotate=${freeze_rotate},",
+                "    scale=${freeze_scale},",
+                ")",
+                ""
             ]
         },
         "/tools_window/tools/pipe/ingest_model/group_model": {
