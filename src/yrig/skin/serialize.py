@@ -52,7 +52,15 @@ def _validate_influences(
     influence_names: Iterable[str],
     geometry: str,
     error_on_missing: bool = False,
+    *,
+    influence_map: Callable[[str], str] | None = None,
 ) -> list[str]:
+    """Validate destination influence names after optional remapping."""
+    influence_names = list(
+        dict.fromkeys(
+            influence_map(name) if influence_map is not None else name for name in influence_names
+        )
+    )
     valid = [name for name in influence_names if cmds.objExists(name)]
     missing = set(influence_names) - set(valid)
     if missing:
@@ -136,9 +144,14 @@ def skin_geometry_from_bind_data(
     geometry: str,
     data: SkinBindData,
     skip_missing_influences: bool = True,
+    *,
+    influence_map: Callable[[str], str] | None = None,
 ) -> SkinClusterNode:
     valid_influences = _validate_influences(
-        data.influences, geometry, error_on_missing=not skip_missing_influences
+        data.influences,
+        geometry,
+        error_on_missing=not skip_missing_influences,
+        influence_map=influence_map,
     )
     return skin_geometry(
         bind_joints=valid_influences,

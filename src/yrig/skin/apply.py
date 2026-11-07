@@ -69,9 +69,10 @@ def apply_weights(
     influences exist in the scene.
     """
     skin_weight_data = load_skin_weight_data(filepath)
-    valid_influences = _validate_influences(
+    _validate_influences(
         skin_weight_data.influences,
         geometry,
+        influence_map=influence_map,
     )
     apply_skin_weight_data(skin_weight_data, geometry, influence_map=influence_map)
 
@@ -91,11 +92,14 @@ def skin_and_apply_weights(
     skin_weight_data = load_skin_weight_data(filepath)
 
     if skin_bind_data is not None:
-        skin_cluster = skin_geometry_from_bind_data(geometry, skin_bind_data)
+        skin_cluster = skin_geometry_from_bind_data(
+            geometry, skin_bind_data, influence_map=influence_map
+        )
     else:
         valid_influences = _validate_influences(
             skin_weight_data.influences,
             geometry,
+            influence_map=influence_map,
         )
         skin_cluster = skin_geometry(valid_influences, geometry)
     apply_skin_weight_data(skin_weight_data, geometry, influence_map=influence_map)
