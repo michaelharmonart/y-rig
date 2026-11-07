@@ -71,7 +71,7 @@
                 "socket": {
                     "comment": "The transform to physically attach this component to",
                     "type": "raw",
-                    "value": "${pareent}"
+                    "value": "${parent}"
                 }
             },
             "code": [
