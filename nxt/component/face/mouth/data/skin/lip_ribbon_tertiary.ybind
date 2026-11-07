@@ -1,0 +1,19 @@
+{
+  "name": "lip_ribbon_tertiary_SC",
+  "influences": [
+    "up_lip_round_L_jnt",
+    "up_lip_round_R_jnt",
+    "lo_lip_round_L_jnt",
+    "lo_lip_round_R_jnt",
+    "static_jnt"
+  ],
+  "skinning_method": 0,
+  "relative_space_mode": 0,
+  "support_non_rigid": false,
+  "normalize_weights": 1,
+  "weight_distribution": 0,
+  "max_influences": 5,
+  "maintain_max_influences": true,
+  "input_geometry": "lip_ribbon_tertiaryShapeOrig",
+  "topology_hash": "25cfc65a582d63b438d21560edb993f4ab50e788b419df0f0dc796542d699e22"
+}

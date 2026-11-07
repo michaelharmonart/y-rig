@@ -9,7 +9,6 @@ from yrig.control import Control, ControlShape, create_control
 from yrig.deformer.blendshape import create_blendshape
 from yrig.deformer.blendshape.core import add_blendshape_target_from_geometry
 from yrig.name import Side
-from yrig.sets import add_to_set
 from yrig.skin import skin_and_apply_weights
 from yrig.surface import setup_uv_pin_node, surface_slide_constraint
 from yrig.transform import create_transform, matrix_constraint
@@ -21,12 +20,18 @@ from .lip import Lip, LipGuides, _default_lip_guides
 
 
 @dataclass
+class RibbonLayer:
+    name: str
+    skin: Path | None
+
+
+@dataclass
 class MouthGuides:
     mouth: str = "mouth_M"
     mouth_surface: str = "face_surface"
     lip_ribbon: str = "lip_ribbon"
-    left_corner: str = "mouth_corner_L"
-    right_corner: str = "mouth_corner_R"
+    left_corner: str = "mouth_L"
+    right_corner: str = "mouth_R"
     upper_lip: LipGuides = field(default_factory=lambda: _default_lip_guides(side="upper"))
     lower_lip: LipGuides = field(default_factory=lambda: _default_lip_guides(side="lower"))
 
@@ -44,6 +49,7 @@ class Mouth:
         control_size: float = 1,
         primary_skin: Path,
         secondary_skin: Path,
+        tertiary_skin: Path,
         body_skin: Path,
         blendshape_directory: str = "/rig/logic/face/mouth",
         skin_set: str = "main_skin_grp",
@@ -133,15 +139,22 @@ class Mouth:
 
         self.lip_ribbon_primary = _dup_ribbon("lip_ribbon_primary")
         self.lip_ribbon_secondary = _dup_ribbon("lip_ribbon_secondary")
+        self.lip_ribbon_tertiary = _dup_ribbon("lip_ribbon_tertiary")
+
+        self.lip_ribbon_primary_only = _dup_ribbon("lip_ribbon_primary_only")
 
         self.lip_ribbon_def = _dup_ribbon("lip_ribbon_def")
         self.lip_ribbon_def_uv_pin = setup_uv_pin_node("lip_def_uvPin", self.lip_ribbon_def)
 
-        self.lip_ribbon_ctl_attach = _dup_ribbon("lip_ribbon_ctl_attach")
-        self.lip_ribbon_ctl_attach_uv_pin = setup_uv_pin_node(
-            "lip_ctl_attach_uvPin", self.lip_ribbon_ctl_attach
+        self.lip_ribbon_primary_attach = _dup_ribbon("lip_ribbon_primary_attach")
+        self.lip_ribbon_primary_attach_uv_pin = setup_uv_pin_node(
+            "lip_primary_attach_uvPin", self.lip_ribbon_primary_attach
         )
-        add_to_set(self.lip_ribbon_ctl_attach, skin_set)
+
+        self.lip_ribbon_secondary_attach = _dup_ribbon("lip_ribbon_secondary_attach")
+        self.lip_ribbon_secondary_attach_uv_pin = setup_uv_pin_node(
+            "lip_secondary_attach_uvPin", self.lip_ribbon_primary_attach
+        )
 
         self.left_corner = MouthCorner(
             side=Side.LEFT,
@@ -187,8 +200,10 @@ class Mouth:
             control_size=control_size * 0.5,
             def_ribbon=self.lip_ribbon_def,
             def_ribbon_uv_pin=self.lip_ribbon_def_uv_pin,
-            follow_ribbon=self.lip_ribbon_ctl_attach,
-            follow_ribbon_uv_pin=self.lip_ribbon_ctl_attach_uv_pin,
+            primary_follow_ribbon=self.lip_ribbon_primary_attach,
+            primary_follow_ribbon_uv_pin=self.lip_ribbon_primary_attach_uv_pin,
+            secondary_follow_ribbon=self.lip_ribbon_secondary_attach,
+            secondary_follow_ribbon_uv_pin=self.lip_ribbon_secondary_attach_uv_pin,
             uv_range=(-0.25, 0.25),
         )
 
@@ -209,14 +224,25 @@ class Mouth:
             control_size=control_size * 0.5,
             def_ribbon=self.lip_ribbon_def,
             def_ribbon_uv_pin=self.lip_ribbon_def_uv_pin,
-            follow_ribbon=self.lip_ribbon_ctl_attach,
-            follow_ribbon_uv_pin=self.lip_ribbon_ctl_attach_uv_pin,
+            primary_follow_ribbon=self.lip_ribbon_primary_attach,
+            primary_follow_ribbon_uv_pin=self.lip_ribbon_primary_attach_uv_pin,
+            secondary_follow_ribbon=self.lip_ribbon_secondary_attach,
+            secondary_follow_ribbon_uv_pin=self.lip_ribbon_secondary_attach_uv_pin,
             uv_range=(0.75, 0.25),
         )
 
-        _build_layer(self.lip_ribbon_secondary, skin=secondary_skin)
+        _build_layer(self.lip_ribbon_tertiary, skin=tertiary_skin)
+        _build_layer(self.lip_ribbon_secondary, skin=secondary_skin, below=self.lip_ribbon_tertiary)
         _build_layer(self.lip_ribbon_primary, skin=primary_skin, below=self.lip_ribbon_secondary)
         _build_layer(self.lip_ribbon_def, below=self.lip_ribbon_primary)
 
-        _build_layer(self.lip_ribbon_ctl_attach, skin=primary_skin)
-        skin_and_apply_weights(body_skin, self.lip_ribbon_ctl_attach)
+        _build_layer(self.lip_ribbon_primary_only, skin=primary_skin)
+
+        _build_layer(self.lip_ribbon_primary_attach, skin=primary_skin)
+        skin_and_apply_weights(body_skin, self.lip_ribbon_primary_attach)
+
+        _build_layer(
+            self.lip_ribbon_secondary_attach,
+            skin=secondary_skin,
+            below=self.lip_ribbon_primary_only,
+        )

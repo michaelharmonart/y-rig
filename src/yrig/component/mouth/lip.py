@@ -19,20 +19,65 @@ from .corner import MouthCorner
 
 def _default_lip_guides(side: str) -> LipGuides:
     return LipGuides(
-        lip_mid_left=f"{side}_lip_mid_L",
-        lip_mid=f"{side}_lip_mid_M",
-        lip_mid_right=f"{side}_lip_mid_R",
+        lip_mid=f"{side}_lip_M",
+        lip_mid_left=f"{side}_lip_L",
+        lip_mid_right=f"{side}_lip_R",
+        lip_round_left=f"{side}_lip_round_L",
+        lip_round_right=f"{side}_lip_round_R",
     )
 
 
 @dataclass
 class LipGuides:
-    lip_mid_left: str
     lip_mid: str
+    lip_mid_left: str
     lip_mid_right: str
+    lip_round_left: str
+    lip_round_right: str
 
 
 class LipQuad:
+    def __init__(
+        self,
+        *,
+        name: str,
+        guide: str,
+        parent: str,
+        joint_parent: str,
+        control_parent: Control | str,
+        follow_ribbon: str,
+        follow_ribbon_uv_pin: UvPinNode,
+        control_size: float = 1,
+    ):
+        self.control = create_control(
+            name,
+            transform=guide,
+            parent=control_parent,
+            size=control_size,
+            direction="z",
+            control_shape=ControlShape.CIRCLE,
+        )
+        uv_pin(
+            follow_ribbon,
+            self.control.offset,
+            uv_pin_node=follow_ribbon_uv_pin,
+            keep_offset=True,
+            drive_rotate=False,
+        )
+        self.local_npo = create_transform(
+            f"{name}_local_npo",
+            transform=guide,
+            parent=parent,
+        )
+        self.local = create_transform(
+            f"{name}_local",
+            parent=self.local_npo,
+        )
+        connect_transform(self.control.transform, self.local)
+        self.joint = create_joint(name, self.local, parent=joint_parent)
+
+
+class LipRound:
     def __init__(
         self,
         *,
@@ -93,8 +138,10 @@ class Lip:
         control_size: float = 1,
         def_ribbon: str,
         def_ribbon_uv_pin: UvPinNode,
-        follow_ribbon: str,
-        follow_ribbon_uv_pin: UvPinNode,
+        primary_follow_ribbon: str,
+        primary_follow_ribbon_uv_pin: UvPinNode,
+        secondary_follow_ribbon: str,
+        secondary_follow_ribbon_uv_pin: UvPinNode,
         uv_range: tuple[float, float] = (-0.25, 0.25),
     ):
         self.guides = guides
@@ -172,8 +219,8 @@ class Lip:
             parent=parent,
             joint_parent=joint_parent,
             control_parent=self.mid_control,
-            follow_ribbon=follow_ribbon,
-            follow_ribbon_uv_pin=follow_ribbon_uv_pin,
+            follow_ribbon=primary_follow_ribbon,
+            follow_ribbon_uv_pin=primary_follow_ribbon_uv_pin,
         )
 
         self.right_quad = LipQuad(
@@ -182,8 +229,28 @@ class Lip:
             parent=parent,
             joint_parent=joint_parent,
             control_parent=self.mid_control,
-            follow_ribbon=follow_ribbon,
-            follow_ribbon_uv_pin=follow_ribbon_uv_pin,
+            follow_ribbon=primary_follow_ribbon,
+            follow_ribbon_uv_pin=primary_follow_ribbon_uv_pin,
+        )
+
+        self.left_round = LipRound(
+            name=f"{self.name}_round_{Side.LEFT}",
+            guide=guides.lip_round_left,
+            parent=parent,
+            joint_parent=joint_parent,
+            control_parent=self.mid_control,
+            follow_ribbon=secondary_follow_ribbon,
+            follow_ribbon_uv_pin=secondary_follow_ribbon_uv_pin,
+        )
+
+        self.right_round = LipRound(
+            name=f"{self.name}_round_{Side.RIGHT}",
+            guide=guides.lip_round_right,
+            parent=parent,
+            joint_parent=joint_parent,
+            control_parent=self.mid_control,
+            follow_ribbon=secondary_follow_ribbon,
+            follow_ribbon_uv_pin=secondary_follow_ribbon_uv_pin,
         )
 
         joints = []
