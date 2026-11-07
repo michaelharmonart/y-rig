@@ -21,8 +21,8 @@ def setup_rig_build_file(filepath: Path, rig_path: Path) -> bool:
     if config is None:
         return False
     setup_rig_build_nxt_layer(
-        filepath,
-        rig_path=Path(config.rig_path),
+        config.filepath,
+        rig_path=config.rig_path,
         inherits=config.inherits,
         asset_name=config.asset_name,
         color=config.color,
