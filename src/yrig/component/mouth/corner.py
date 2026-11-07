@@ -21,6 +21,7 @@ class MouthCorner:
         control_size: float = 1,
         def_ribbon: str,
         def_ribbon_uv_pin: UvPinNode,
+        mouth_slide_local: str,
     ):
         self.main_control = create_control(
             f"mouth_{side}",
@@ -33,6 +34,7 @@ class MouthCorner:
         self.main_local_npo = create_transform(
             f"mouth_{side}_local_npo", transform=self.main_control.transform, parent=parent
         )
+        matrix_constraint(mouth_slide_local, self.main_local_npo)
         self.main_local = create_transform(f"mouth_{side}_local", parent=self.main_local_npo)
         connect_transform(self.main_control.transform, self.main_local)
 
