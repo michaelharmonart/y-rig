@@ -21,6 +21,10 @@
                 "cleanup"
             ],
             "attrs": {
+                "body_skin": {
+                    "type": "raw",
+                    "value": "${file::${rig_path}/data/skin/lip_ribbon_ctl_attach.yskin}"
+                },
                 "component_data": {
                     "type": "raw",
                     "value": "component/face/mouth/data"
@@ -72,6 +76,7 @@
                 "    control_size=${control_size},",
                 "    primary_skin=Path(\"${primary_skin}\"),",
                 "    secondary_skin=Path(\"${secondary_skin}\"),",
+                "    body_skin=Path(\"${body_skin}\"),",
                 "    skin_set=\"${skin_set}\",",
                 ")"
             ]
