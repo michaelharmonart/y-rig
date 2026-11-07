@@ -106,6 +106,7 @@ def skin_geometry(
     weight_distribution: SkinClusterWeightDistribution = SkinClusterWeightDistribution.DISTANCE,
     max_influences: int = 6,
     maintain_max_influences: bool = False,
+    multi: bool = True,
 ) -> SkinClusterNode:
     """
     Create a skin cluster on the given geometry using the specified bind joints.
@@ -129,6 +130,7 @@ def skin_geometry(
         weight_distribution: Method used to distribute weights when binding.
         max_influences: Maximum number of influences allowed per vertex.
         maintain_max_influences: Whether to enforce the maximum influence count.
+        multi: If True, multiple skin clusters can be added to one mesh without error.
 
     Returns:
         The created skin cluster.
@@ -162,6 +164,7 @@ def skin_geometry(
         weightDistribution=weight_distribution,
         maximumInfluences=max_influences,
         obeyMaxInfluences=maintain_max_influences,
+        multi=multi,
     )[0]
     skin_cluster_node = SkinClusterNode.from_existing(skin_cluster)
     skin_cluster_node.dqs_support_non_rigid.set(support_non_rigid)

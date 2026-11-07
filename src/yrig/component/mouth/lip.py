@@ -45,23 +45,20 @@ class LipQuad:
         follow_ribbon_uv_pin: UvPinNode,
         control_size: float = 1,
     ):
-        self.control_npo = create_transform(
-            f"{name}_npo", transform=guide, parent=str(control_parent)
-        )
-        uv_pin(
-            follow_ribbon,
-            self.control_npo,
-            uv_pin_node=follow_ribbon_uv_pin,
-            keep_offset=True,
-            drive_rotate=False,
-        )
         self.control = create_control(
             name,
             transform=guide,
-            parent=self.control_npo,
+            parent=control_parent,
             size=control_size,
             direction="z",
             control_shape=ControlShape.CIRCLE,
+        )
+        uv_pin(
+            follow_ribbon,
+            self.control.offset,
+            uv_pin_node=follow_ribbon_uv_pin,
+            keep_offset=True,
+            drive_rotate=False,
         )
         self.local_npo = create_transform(
             f"{name}_local_npo",
