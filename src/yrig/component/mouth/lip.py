@@ -7,6 +7,7 @@ from yrig.control import Control, ControlShape, create_control
 from yrig.joint import create_joint
 from yrig.math import remap
 from yrig.maya_api.node import UvPinNode
+from yrig.name import Side
 from yrig.skin.split import tag_for_weight_split
 from yrig.surface import surface_slide_constraint, uv_pin
 from yrig.transform import create_transform, matrix_constraint
@@ -31,6 +32,50 @@ class LipGuides:
     lip_mid_right: str
 
 
+class LipQuad:
+    def __init__(
+        self,
+        *,
+        name: str,
+        guide: str,
+        parent: str,
+        joint_parent: str,
+        control_parent: Control | str,
+        follow_ribbon: str,
+        follow_ribbon_uv_pin: UvPinNode,
+        control_size: float = 1,
+    ):
+        self.control_npo = create_transform(
+            f"{name}_npo", transform=guide, parent=str(control_parent)
+        )
+        uv_pin(
+            follow_ribbon,
+            self.control_npo,
+            uv_pin_node=follow_ribbon_uv_pin,
+            keep_offset=True,
+            drive_rotate=False,
+        )
+        self.control = create_control(
+            name,
+            transform=guide,
+            parent=self.control_npo,
+            size=control_size,
+            direction="z",
+            control_shape=ControlShape.CIRCLE,
+        )
+        self.local_npo = create_transform(
+            f"{name}_local_npo",
+            transform=guide,
+            parent=parent,
+        )
+        self.local = create_transform(
+            f"{name}_local",
+            parent=self.local_npo,
+        )
+        connect_transform(self.control.transform, self.local)
+        self.joint = create_joint(name, self.local, parent=joint_parent)
+
+
 class Lip:
     def __init__(
         self,
@@ -46,11 +91,14 @@ class Lip:
         left_corner: MouthCorner,
         right_corner: MouthCorner,
         mouth_slide: str,
+        mouth_slide_local: str,
         mouth_slide_ref: str,
         control_size: float = 1,
         def_ribbon: str,
-        uv_range: tuple[float, float] = (-0.25, 0.25),
         def_ribbon_uv_pin: UvPinNode,
+        follow_ribbon: str,
+        follow_ribbon_uv_pin: UvPinNode,
+        uv_range: tuple[float, float] = (-0.25, 0.25),
     ):
         self.guides = guides
         side_string = "up" if upper else "lo"
@@ -72,6 +120,7 @@ class Lip:
         self.lip_move_local_npo = create_transform(
             f"{self.name}_move_local_npo", transform=self.lip_move, parent=parent
         )
+        matrix_constraint(mouth_slide_local, self.lip_move_local_npo)
         self.lip_move_local = create_transform(
             f"{self.name}_move_local", parent=self.lip_move_local_npo
         )
@@ -118,6 +167,26 @@ class Lip:
         self.mid_joint = create_joint(f"{self.name}_M", self.mid_local, parent=joint_parent)
         self.def_joint = create_joint(
             f"{self.name}_def", self.mid_local, parent=joint_parent, connect=False
+        )
+
+        self.left_quad = LipQuad(
+            name=f"{self.name}_{Side.LEFT}",
+            guide=guides.lip_mid_left,
+            parent=parent,
+            joint_parent=joint_parent,
+            control_parent=self.mid_control,
+            follow_ribbon=follow_ribbon,
+            follow_ribbon_uv_pin=follow_ribbon_uv_pin,
+        )
+
+        self.right_quad = LipQuad(
+            name=f"{self.name}_{Side.RIGHT}",
+            guide=guides.lip_mid_right,
+            parent=parent,
+            joint_parent=joint_parent,
+            control_parent=self.mid_control,
+            follow_ribbon=follow_ribbon,
+            follow_ribbon_uv_pin=follow_ribbon_uv_pin,
         )
 
         joints = []
