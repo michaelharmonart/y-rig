@@ -159,6 +159,7 @@
             "/finalize/hide_joints": true,
             "/finalize/metadata": true,
             "/finalize/metadata/build_commit": true,
+            "/finalize/prune/blendshapes": true,
             "/io_pair": true,
             "/psd_import": true,
             "/psd_import/pose_intepolators": true,
@@ -361,7 +362,7 @@
                 "delete_guides",
                 "hide_joints",
                 "model_override",
-                "skin_tools_data",
+                "prune",
                 "metadata",
                 "lock_attrs"
             ]
@@ -558,7 +559,29 @@
                 ")"
             ]
         },
-        "/finalize/skin_tools_data": {
+        "/finalize/prune": {
+            "child_order": [
+                "skin_tools_data",
+                "blendshapes"
+            ]
+        },
+        "/finalize/prune/blendshapes": {
+            "code": [
+                "log = yrig.build.nxt_api.get_node_logger(\"${_nxtpath}\")",
+                "",
+                "if not ${dev_build}:",
+                "    empty_blendshapes = []",
+                "    for node in cmds.ls(type=\"blendShape\") or []:",
+                "        target_indices = cmds.getAttr(f\"{node}.weight\", multiIndices=True) or []",
+                "        if not target_indices:",
+                "            empty_blendshapes.append(node)",
+                "    ",
+                "    if empty_blendshapes:",
+                "        cmds.delete(empty_blendshapes)",
+                "        log.info(f\"Deleted {len(empty_blendshapes)} blendShape node(s) that had no targets: {empty_blendshapes}\")"
+            ]
+        },
+        "/finalize/prune/skin_tools_data": {
             "code": [
                 "if not ${dev_build}:",
                 "    yrig.skin.ng.cleanup_ng_data_nodes()"
