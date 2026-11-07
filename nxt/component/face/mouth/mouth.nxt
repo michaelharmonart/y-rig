@@ -49,6 +49,10 @@
                     "type": "raw",
                     "value": "${file::${component_data}/skin/lip_ribbon_primary.yskin}"
                 },
+                "secondary_skin": {
+                    "type": "raw",
+                    "value": "${file::${component_data}/skin/lip_ribbon_secondary.yskin}"
+                },
                 "skin_set": {
                     "type": "raw",
                     "value": "${/setup/root/deformation/main/skin.skin_set}"
@@ -67,6 +71,7 @@
                 "    jaw=\"${jaw_transform}\",",
                 "    control_size=${control_size},",
                 "    primary_skin=Path(\"${primary_skin}\"),",
+                "    secondary_skin=Path(\"${secondary_skin}\"),",
                 "    skin_set=\"${skin_set}\",",
                 ")"
             ]
