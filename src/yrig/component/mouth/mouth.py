@@ -44,6 +44,7 @@ class Mouth:
         control_size: float = 1,
         primary_skin: Path,
         secondary_skin: Path,
+        body_skin: Path,
         blendshape_directory: str = "/rig/logic/face/mouth",
         skin_set: str = "main_skin_grp",
     ):
@@ -117,14 +118,26 @@ class Mouth:
             maintainOffset=True,
         )
 
-        lip_ribbon_def: str = cmds.duplicate(guides.lip_ribbon)[0]
-        cmds.parent(lip_ribbon_def, parent)
-        self.lip_ribbon_def = cmds.rename(lip_ribbon_def, "lip_ribbon_def")
+        def _dup_ribbon(name: str) -> str:
+            ribbon = cmds.duplicate(guides.lip_ribbon, name=name)[0]
+            cmds.parent(ribbon, parent)
+            return ribbon
+
+        def _build_layer(mesh: str, *, skin: Path | None = None, below: str | None = None) -> None:
+            """Blendshape from the layer below (if any), then skin on top."""
+            if below is not None:
+                bs = create_blendshape(mesh, parent_directory=blendshape_directory)
+                add_blendshape_target_from_geometry(bs, below, below)
+            if skin is not None:
+                skin_and_apply_weights(skin, mesh)
+
+        self.lip_ribbon_primary = _dup_ribbon("lip_ribbon_primary")
+        self.lip_ribbon_secondary = _dup_ribbon("lip_ribbon_secondary")
+
+        self.lip_ribbon_def = _dup_ribbon("lip_ribbon_def")
         self.lip_ribbon_def_uv_pin = setup_uv_pin_node("lip_def_uvPin", self.lip_ribbon_def)
 
-        lip_ribbon_ctl_attach: str = cmds.duplicate(guides.lip_ribbon)[0]
-        cmds.parent(lip_ribbon_ctl_attach, parent)
-        self.lip_ribbon_ctl_attach = cmds.rename(lip_ribbon_ctl_attach, "lip_ribbon_ctl_attach")
+        self.lip_ribbon_ctl_attach = _dup_ribbon("lip_ribbon_ctl_attach")
         self.lip_ribbon_ctl_attach_uv_pin = setup_uv_pin_node(
             "lip_ctl_attach_uvPin", self.lip_ribbon_ctl_attach
         )
@@ -201,27 +214,9 @@ class Mouth:
             uv_range=(0.75, 0.25),
         )
 
-        lip_ribbon_secondary: str = cmds.duplicate(guides.lip_ribbon)[0]
-        cmds.parent(lip_ribbon_secondary, parent)
-        self.lip_ribbon_secondary = cmds.rename(lip_ribbon_secondary, "lip_ribbon_secondary")
-        skin_and_apply_weights(secondary_skin, self.lip_ribbon_secondary)
+        _build_layer(self.lip_ribbon_secondary, skin=secondary_skin)
+        _build_layer(self.lip_ribbon_primary, skin=primary_skin, below=self.lip_ribbon_secondary)
+        _build_layer(self.lip_ribbon_def, below=self.lip_ribbon_primary)
 
-        lip_ribbon_primary: str = cmds.duplicate(guides.lip_ribbon)[0]
-        cmds.parent(lip_ribbon_primary, parent)
-        self.lip_ribbon_primary = cmds.rename(lip_ribbon_primary, "lip_ribbon_primary")
-        self.lip_ribbon_primary_blendshape = create_blendshape(
-            self.lip_ribbon_primary, parent_directory=blendshape_directory
-        )
-        add_blendshape_target_from_geometry(
-            self.lip_ribbon_primary_blendshape, self.lip_ribbon_secondary, "lip_ribbon_secondary"
-        )
-        skin_and_apply_weights(primary_skin, self.lip_ribbon_primary)
-
-        skin_and_apply_weights(primary_skin, self.lip_ribbon_ctl_attach)
-
-        self.lip_ribbon_def_blendshape = create_blendshape(
-            self.lip_ribbon_def, parent_directory=blendshape_directory
-        )
-        add_blendshape_target_from_geometry(
-            self.lip_ribbon_def_blendshape, self.lip_ribbon_primary, "lip_ribbon_primary"
-        )
+        _build_layer(self.lip_ribbon_ctl_attach, skin=primary_skin)
+        skin_and_apply_weights(body_skin, self.lip_ribbon_ctl_attach)
