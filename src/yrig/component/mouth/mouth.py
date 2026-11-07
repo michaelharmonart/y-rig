@@ -43,6 +43,7 @@ class Mouth:
         jaw: str,
         control_size: float = 1,
         primary_skin: Path,
+        secondary_skin: Path,
         blendshape_directory: str = "/rig/logic/face/mouth",
         skin_set: str = "main_skin_grp",
     ):
@@ -120,9 +121,14 @@ class Mouth:
         cmds.parent(lip_ribbon_def, parent)
         self.lip_ribbon_def = cmds.rename(lip_ribbon_def, "lip_ribbon_def")
         self.lip_ribbon_def_uv_pin = setup_uv_pin_node("lip_def_uvPin", self.lip_ribbon_def)
-        self.lip_ribbon_def_blendshape = create_blendshape(
-            self.lip_ribbon_def, parent_directory=blendshape_directory
+
+        lip_ribbon_ctl_attach: str = cmds.duplicate(guides.lip_ribbon)[0]
+        cmds.parent(lip_ribbon_ctl_attach, parent)
+        self.lip_ribbon_ctl_attach = cmds.rename(lip_ribbon_ctl_attach, "lip_ribbon_ctl_attach")
+        self.lip_ribbon_ctl_attach_uv_pin = setup_uv_pin_node(
+            "lip_ctl_attach_uvPin", self.lip_ribbon_ctl_attach
         )
+        add_to_set(self.lip_ribbon_ctl_attach, skin_set)
 
         self.left_corner = MouthCorner(
             side=Side.LEFT,
@@ -131,10 +137,11 @@ class Mouth:
             mouth_surface_local=self.mouth_surface_local,
             control_parent=self.mouth_slide,
             joint_parent=self.def_group,
-            parent=self.mouth_slide_local,
+            parent=parent,
             control_size=control_size,
             def_ribbon=self.lip_ribbon_def,
             def_ribbon_uv_pin=self.lip_ribbon_def_uv_pin,
+            mouth_slide_local=self.mouth_slide_local,
         )
         self.right_corner = MouthCorner(
             side=Side.RIGHT,
@@ -143,10 +150,11 @@ class Mouth:
             mouth_surface_local=self.mouth_surface_local,
             control_parent=self.mouth_slide,
             joint_parent=self.def_group,
-            parent=self.mouth_slide_local,
+            parent=parent,
             control_size=control_size,
             def_ribbon=self.lip_ribbon_def,
             def_ribbon_uv_pin=self.lip_ribbon_def_uv_pin,
+            mouth_slide_local=self.mouth_slide_local,
         )
 
         self.upper_lip = Lip(
@@ -154,17 +162,20 @@ class Mouth:
             guides=guides.upper_lip,
             mouth_surface=self.mouth_surface,
             mouth_surface_local=self.mouth_surface_local,
-            parent=self.mouth_slide_local,
+            parent=parent,
             joint_parent=self.def_group,
             control_parent=self.mouth_slide,
             control_follow=face_mid,
             left_corner=self.left_corner,
             right_corner=self.right_corner,
             mouth_slide=self.mouth_slide,
+            mouth_slide_local=self.mouth_slide_local,
             mouth_slide_ref=self.mouth_slide_reference,
             control_size=control_size * 0.5,
             def_ribbon=self.lip_ribbon_def,
             def_ribbon_uv_pin=self.lip_ribbon_def_uv_pin,
+            follow_ribbon=self.lip_ribbon_ctl_attach,
+            follow_ribbon_uv_pin=self.lip_ribbon_ctl_attach_uv_pin,
             uv_range=(-0.25, 0.25),
         )
 
@@ -173,35 +184,44 @@ class Mouth:
             guides=guides.lower_lip,
             mouth_surface=self.mouth_surface,
             mouth_surface_local=self.mouth_surface_local,
-            parent=self.mouth_slide_local,
+            parent=parent,
             joint_parent=self.def_group,
             control_parent=self.mouth_slide,
             control_follow=jaw,
             left_corner=self.left_corner,
             right_corner=self.right_corner,
             mouth_slide=self.mouth_slide,
+            mouth_slide_local=self.mouth_slide_local,
             mouth_slide_ref=self.mouth_slide_reference,
             control_size=control_size * 0.5,
             def_ribbon=self.lip_ribbon_def,
             def_ribbon_uv_pin=self.lip_ribbon_def_uv_pin,
+            follow_ribbon=self.lip_ribbon_ctl_attach,
+            follow_ribbon_uv_pin=self.lip_ribbon_ctl_attach_uv_pin,
             uv_range=(0.75, 0.25),
         )
+
+        lip_ribbon_secondary: str = cmds.duplicate(guides.lip_ribbon)[0]
+        cmds.parent(lip_ribbon_secondary, parent)
+        self.lip_ribbon_secondary = cmds.rename(lip_ribbon_secondary, "lip_ribbon_secondary")
+        skin_and_apply_weights(secondary_skin, self.lip_ribbon_secondary)
 
         lip_ribbon_primary: str = cmds.duplicate(guides.lip_ribbon)[0]
         cmds.parent(lip_ribbon_primary, parent)
         self.lip_ribbon_primary = cmds.rename(lip_ribbon_primary, "lip_ribbon_primary")
+        self.lip_ribbon_primary_blendshape = create_blendshape(
+            self.lip_ribbon_primary, parent_directory=blendshape_directory
+        )
+        add_blendshape_target_from_geometry(
+            self.lip_ribbon_primary_blendshape, self.lip_ribbon_secondary, "lip_ribbon_secondary"
+        )
         skin_and_apply_weights(primary_skin, self.lip_ribbon_primary)
+
+        skin_and_apply_weights(primary_skin, self.lip_ribbon_ctl_attach)
+
+        self.lip_ribbon_def_blendshape = create_blendshape(
+            self.lip_ribbon_def, parent_directory=blendshape_directory
+        )
         add_blendshape_target_from_geometry(
             self.lip_ribbon_def_blendshape, self.lip_ribbon_primary, "lip_ribbon_primary"
-        )
-
-        lip_ribbon_primary: str = cmds.duplicate(guides.lip_ribbon)[0]
-        cmds.parent(lip_ribbon_primary, parent)
-        self.lip_ribbon_ctl_attach = cmds.rename(lip_ribbon_primary, "lip_ribbon_ctl_attach")
-        add_to_set(self.lip_ribbon_ctl_attach, skin_set)
-        self.lip_ribbon_ctl_attach_blendshape = create_blendshape(
-            self.lip_ribbon_ctl_attach, parent_directory=blendshape_directory
-        )
-        add_blendshape_target_from_geometry(
-            self.lip_ribbon_ctl_attach_blendshape, self.lip_ribbon_primary, "lip_ribbon_primary"
         )
