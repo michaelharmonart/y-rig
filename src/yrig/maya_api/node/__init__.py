@@ -1,3 +1,13 @@
+from .anim_curve import (
+    AnimCurveTA,
+    AnimCurveTL,
+    AnimCurveTT,
+    AnimCurveTU,
+    AnimCurveUA,
+    AnimCurveUL,
+    AnimCurveUT,
+    AnimCurveUU,
+)
 from .blendshape import BlendShapeNode, ShapeEditorManagerNode
 from .core import Node
 from .geometry import (
@@ -59,6 +69,14 @@ __all__ = [
     "AbsoluteNode",
     "AddDLNode",
     "AimMatrixNode",
+    "AnimCurveTA",
+    "AnimCurveTL",
+    "AnimCurveTT",
+    "AnimCurveTU",
+    "AnimCurveUA",
+    "AnimCurveUL",
+    "AnimCurveUT",
+    "AnimCurveUU",
     "AxisFromMatrixNode",
     "BlendColorsNode",
     "BlendMatrixNode",

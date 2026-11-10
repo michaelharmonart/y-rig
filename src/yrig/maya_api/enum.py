@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from enum import IntEnum, StrEnum
+from enum import IntEnum
 
 from maya.api.OpenMayaAnim import MFnAnimCurve
 
@@ -9,6 +9,16 @@ class AimMatrixAxisMode(IntEnum):
     LOCK_AXIS = 0
     AIM = 1
     ALIGN = 2
+
+
+class AnimCurveStipplePattern(IntEnum):
+    SOLID = 0
+    DOTTED = 1
+    LONG_DOTTED = 2
+    SHORT_DOTTED = 3
+    DASHED = 4
+    LONG_DASHED = 5
+    SHORT_DASHED = 6
 
 
 class Axis(IntEnum):
@@ -177,12 +187,12 @@ class SkinClusterWeightDistribution(IntEnum):
     NEIGHBORS = 1
 
 
-class KeyframeInfinityType(StrEnum):
-    CONSTANT = "constant"
-    LINEAR = "linear"
-    CYCLE = "cycle"
-    CYCLE_RELATIVE = "cycleRelative"
-    OSCILLATE = "oscillate"
+class KeyframeInfinityType(IntEnum):
+    CONSTANT = 0
+    LINEAR = 1
+    CYCLE = 3
+    CYCLE_WITH_OFFSET = 4
+    OSCILLATE = 5
 
     @property
     def ktype(self) -> int:
@@ -193,26 +203,27 @@ class KeyframeInfinityType(StrEnum):
                 return MFnAnimCurve.kLinear
             case self.CYCLE:
                 return MFnAnimCurve.kCycle
-            case self.CYCLE_RELATIVE:
+            case self.CYCLE_WITH_OFFSET:
                 return MFnAnimCurve.kCycleRelative
             case self.OSCILLATE:
                 return MFnAnimCurve.kOscillate
 
 
-class KeyframeTangentType(StrEnum):
-    AUTO = "auto"
-    AUTO_CUSTOM = "autocustom"
-    AUTO_EASE = "autoease"
-    AUTO_MIX = "automix"
-    CLAMPED = "clamped"
-    FAST = "fast"
-    FLAT = "flat"
-    LINEAR = "linear"
-    PLATEAU = "plateau"
-    SLOW = "slow"
-    SPLINE = "spline"
-    STEP = "step"
-    STEP_NEXT = "stepnext"
+class KeyframeTangentType(IntEnum):
+    FIXED = 1
+    LINEAR = 2
+    FLAT = 3
+    STEPPED = 5
+    SLOW = 6
+    FAST = 7
+    SPLINE = 9
+    CLAMPED = 10
+    PLATEAU = 10
+    STEP_NEXT = 17
+    AUTO = 18
+    AUTO_MIX = 27
+    AUTO_EASE = 28
+    AUTO_CUSTOM = 29
 
     @property
     def ktype(self) -> int:
@@ -229,6 +240,8 @@ class KeyframeTangentType(StrEnum):
                 return MFnAnimCurve.kTangentClamped
             case KeyframeTangentType.FAST:
                 return MFnAnimCurve.kTangentFast
+            case KeyframeTangentType.FIXED:
+                return MFnAnimCurve.kTangentFixed
             case KeyframeTangentType.FLAT:
                 return MFnAnimCurve.kTangentFlat
             case KeyframeTangentType.LINEAR:
@@ -239,10 +252,18 @@ class KeyframeTangentType(StrEnum):
                 return MFnAnimCurve.kTangentSlow
             case KeyframeTangentType.SPLINE:
                 return MFnAnimCurve.kTangentSmooth
-            case KeyframeTangentType.STEP:
+            case KeyframeTangentType.STEPPED:
                 return MFnAnimCurve.kTangentStep
             case KeyframeTangentType.STEP_NEXT:
                 return MFnAnimCurve.kTangentStepNext
+
+
+class KeyframeRotationInterpolation(IntEnum):
+    NONE = 1
+    EULER = 2
+    QUAT_TAN = 3
+    QUAT_SLERP = 4
+    QUAT_SQUAD = 5
 
 
 class UnsignedAxis(IntEnum):

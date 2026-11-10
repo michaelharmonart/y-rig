@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from enum import IntEnum
 from typing import (
     TYPE_CHECKING,
@@ -164,7 +164,7 @@ class ArrayAttribute(Attribute, Iterable[AttributeType], Generic[AttributeType])
     def __init__(
         self,
         attr_path: str,
-        attribute_type: type[AttributeType],
+        attribute_type: Callable[[str], AttributeType],
     ) -> None:
         super().__init__(attr_path)
         self.attribute_type = attribute_type
@@ -380,6 +380,14 @@ class DoubleAngleAttribute(DoubleAttribute):
     """Single scalar (doubleAngle) Maya attribute."""
 
 
+class DoubleLinearAttribute(ScalarAttribute):
+    """Single scalar (doubleLinear) Maya attribute."""
+
+
+class TimeAttribute(ScalarAttribute):
+    """Single scalar (time) Maya attribute."""
+
+
 class IntegerAttribute(NumericAttribute[int]):
     """Single integer Maya attribute."""
 
@@ -547,6 +555,9 @@ class EulerRotationAttribute(Attribute[tuple[float, float, float]]):
     def set(self, value: tuple[float, float, float]) -> None:
         """Set the value of this attribute."""
         cmds.setAttr(self.attr_path, *value)  # type: ignore
+
+
+class FunctionAttribute(Attribute): ...
 
 
 class GenericAttribute(Attribute): ...
