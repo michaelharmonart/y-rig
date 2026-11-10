@@ -80,12 +80,12 @@
                 "",
                 "log = yrig.build.nxt_api.get_node_logger(\"${_nxtpath}\")",
                 "",
-                "def_in_set = cmds.sets(\"${def_set}\", query=True, flatten=True)",
+                "def_in_set = yrig.sets.get_set_members(\"${def_set}\", flatten=True)",
                 "def_joints = sorted(cmds.ls(def_in_set, type=\"joint\"), key=natural_sort_key)",
                 "      ",
                 "",
                 "geo_list = ${geo_list}",
-                "geo_to_skin = geo_list if geo_list else cmds.sets(\"${geo_set}\", query=True, flatten=True)",
+                "geo_to_skin = geo_list if geo_list else  yrig.sets.get_set_members(\"${geo_set}\", flatten=True)",
                 "",
                 "def _fallback_skin(geometry: str):",
                 "    skin_geometry(def_joints, geometry, dual_quaternion=${dual_quaternion})",
@@ -103,8 +103,7 @@
                 "    fallback_skinning=_fallback_skin if ${fallback_skinning} else None, ",
                 "    geo_to_filename=_geo_to_filename if strip_suffix else None,",
                 "    error_on_topology_change=not ${allow_topology_change},",
-                "    )",
-                ""
+                "    )"
             ]
         },
         "/split_skin_weights": {

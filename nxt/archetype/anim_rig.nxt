@@ -1192,40 +1192,7 @@
                 "error_on_topology_change": {
                     "value": "not ${dev_build}"
                 }
-            },
-            "code": [
-                "from yrig.skin import skin_and_apply_weights_from_directories",
-                "from yrig.skin.core import skin_geometry",
-                "from yrig.name import natural_sort_key",
-                "",
-                "log = yrig.build.nxt_api.get_node_logger(\"${_nxtpath}\")",
-                "",
-                "def_in_set = yrig.sets.get_set_members(\"${def_set}\", flatten=True)",
-                "def_joints = sorted(cmds.ls(def_in_set, type=\"joint\"), key=natural_sort_key)",
-                "      ",
-                "",
-                "geo_list = ${geo_list}",
-                "geo_to_skin = geo_list if geo_list else  yrig.sets.get_set_members(\"${geo_set}\", flatten=True)",
-                "",
-                "def _fallback_skin(geometry: str):",
-                "    skin_geometry(def_joints, geometry, dual_quaternion=${dual_quaternion})",
-                "    log.info(f\"Default skinned {geometry}\")",
-                "",
-                "strip_suffix = \"${strip_suffix}\"",
-                "def _geo_to_filename(geometry: str):",
-                "    return geometry.removesuffix(strip_suffix)",
-                "",
-                "",
-                "skin_directories = [Path(dir) for dir in ${resolved_skin_directories}]",
-                "skin_and_apply_weights_from_directories(",
-                "    skin_directories, ",
-                "    geo_to_skin, ",
-                "    fallback_skinning=_fallback_skin if ${fallback_skinning} else None, ",
-                "    geo_to_filename=_geo_to_filename if strip_suffix else None,",
-                "    error_on_topology_change=not ${allow_topology_change},",
-                "    )",
-                ""
-            ]
+            }
         },
         "/tools_window/tools/control_shapes": {
             "instance": "/panel",
