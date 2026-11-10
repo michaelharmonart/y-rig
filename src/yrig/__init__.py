@@ -24,6 +24,7 @@ from . import (
     surface,
     transform,
     ui,
+    usd,
 )
 
 __all__ = [
@@ -52,4 +53,5 @@ __all__ = [
     "surface",
     "transform",
     "ui",
+    "usd",
 ]
