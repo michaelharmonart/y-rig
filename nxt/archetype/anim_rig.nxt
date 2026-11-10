@@ -175,7 +175,8 @@
             "/tools_window/tools/control_shapes/control_shapes_io/export": true,
             "/tools_window/tools/control_shapes/control_shapes_io/import": true,
             "/tools_window/tools/geometry/geometry_io": true,
-            "/tools_window/tools/pipe": true,
+            "/tools_window/tools/pipe": false,
+            "/tools_window/tools/pipe/ingest_model": true,
             "/tools_window/tools/skin/skin_data_io": true,
             "/tools_window/tools/visibility_sets_io": true
         },
