@@ -1,0 +1,54 @@
+#usda 1.0
+(
+    subLayers = [
+        @usd/schema.usda@
+    ]
+)
+
+over "GLOBAL" (
+    customData = {
+        string libraryName = "yrigSchema"
+        bool skipCodeGeneration = 1
+    }
+)
+{
+}
+
+class AnimCurve "AnimCurve" (
+    doc = "y-rig representation of a Maya AnimCurve node."
+    inherits = </Typed>
+)
+{
+    uniform string input (
+        doc = "The input attribute for the AnimCurve"
+    )
+    uniform token[] keyOutInType (
+        allowedTokens = ["fixed", "linear", "flat", "stepped", "slow", "fast", "spline", "clamped", "plateau", "stepNext", "auto", "autoMix", "autoEase", "autoCustom"]
+    )
+    uniform double2[] keyTanIn
+    uniform token[] keyTanInType (
+        allowedTokens = ["fixed", "linear", "flat", "stepped", "slow", "fast", "spline", "clamped", "plateau", "stepNext", "auto", "autoMix", "autoEase", "autoCustom"]
+    )
+    uniform bool[] keyTanLocked
+    uniform double2[] keyTanOut
+    uniform double[] keyTime
+    uniform double[] keyValue
+    uniform bool[] keyWeightLocked
+    uniform string output (
+        doc = "The output attribute for the AnimCurve"
+    )
+    uniform token postInfinity = "constant" (
+        allowedTokens = ["constant", "linear", "cycle", "cycleRelative", "Oscillate"]
+    )
+    uniform token preInfinity = "constant" (
+        allowedTokens = ["constant", "linear", "cycle", "cycleRelative", "Oscillate"]
+    )
+    uniform token rotationInterpolation = "euler" (
+        allowedTokens = ["none", "euler", "quatTan", "quatSlerp", "quatSquad"]
+    )
+    uniform token tangentType = "linear" (
+        allowedTokens = ["fixed", "linear", "flat", "stepped", "slow", "fast", "spline", "clamped", "plateau", "stepNext", "auto", "autoMix", "autoEase", "autoCustom"]
+    )
+    uniform bool weightedTangents = 0
+}
+
