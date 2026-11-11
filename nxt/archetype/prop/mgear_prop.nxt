@@ -16,6 +16,7 @@
             ]
         },
         "collapse": {
+            "/build/base_controls": true,
             "/tools_window/tools/mgear": false,
             "/tools_window/tools/mgear/shifter_guides_io": true
         }
@@ -28,6 +29,17 @@
                     "value": "prop/mgear_prop"
                 }
             }
+        },
+        "/build/base_controls/local": {
+            "enabled": true,
+            "attrs": {
+                "control_parent": {
+                    "value": "${../global.control}"
+                }
+            }
+        },
+        "/build/base_controls/shot": {
+            "enabled": false
         },
         "/setup": {
             "child_order": [

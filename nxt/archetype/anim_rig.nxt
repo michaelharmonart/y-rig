@@ -156,6 +156,8 @@
         "collapse": {
             "/apply/deformation": false,
             "/apply/visibility_sets/default_hidden": true,
+            "/build/base_controls": true,
+            "/build/base_controls/local": false,
             "/finalize/hide_joints": true,
             "/finalize/metadata": true,
             "/finalize/metadata/build_commit": true,
@@ -316,10 +318,123 @@
         "/build": {
             "execute_in": "/setup",
             "child_order": [
+                "base_controls",
                 "middle",
                 "left",
                 "right"
             ]
+        },
+        "/build/base_controls": {
+            "child_order": [
+                "global",
+                "shot",
+                "local"
+            ],
+            "attrs": {
+                "control_parent": {
+                    "type": "raw",
+                    "value": "${/setup/root.rig_root}"
+                },
+                "control_size": {
+                    "type": "int",
+                    "value": "24"
+                }
+            }
+        },
+        "/build/base_controls/global": {
+            "attrs": {
+                "control": {
+                    "type": "raw",
+                    "value": "${control_name}_ctl"
+                },
+                "control_color": {
+                    "type": "raw",
+                    "value": "#34a1eb"
+                },
+                "control_name": {
+                    "type": "raw",
+                    "value": "global"
+                },
+                "control_shape": {
+                    "type": "raw",
+                    "value": "hexagon"
+                },
+                "skip_if_exists": {
+                    "type": "raw",
+                    "value": "world_ctl"
+                }
+            },
+            "code": [
+                "if not cmds.objExists(\"${skip_if_exists}\"):",
+                "    control = yrig.control.create_control(",
+                "        \"${control_name}\", ",
+                "        parent=\"${control_parent}\", ",
+                "        size = ${control_size},",
+                "        control_shape = \"${control_shape}\"",
+                "    )",
+                "    self.control = control.transform",
+                "    yrig.control.set_override_color(control, color=\"${control_color}\", override_shapes=True)",
+                "else:",
+                "    self.control = \"${skip_if_exists}\""
+            ]
+        },
+        "/build/base_controls/local": {
+            "instance": "../shot",
+            "child_order": [
+                "constrain_trs"
+            ],
+            "attrs": {
+                "control_name": {
+                    "value": "local"
+                },
+                "control_parent": {
+                    "value": "${../shot.control}"
+                },
+                "control_size": {
+                    "type": "raw",
+                    "value": "${../.control_size} * 0.5"
+                },
+                "skip_if_exists": {
+                    "value": "local_M0_ctl"
+                }
+            }
+        },
+        "/build/base_controls/local/constrain_trs": {
+            "attrs": {
+                "trs_group": {
+                    "type": "raw",
+                    "value": "${/setup/root/trs.trs_group}"
+                }
+            },
+            "code": [
+                "yrig.transform.matrix_constraint(\"${control}\", \"${trs_group}\", shear=False, keep_offset=False)"
+            ]
+        },
+        "/build/base_controls/shot": {
+            "instance": "../global",
+            "attrs": {
+                "control_color": {
+                    "value": "#ebcf34"
+                },
+                "control_name": {
+                    "type": "raw",
+                    "value": "shot"
+                },
+                "control_parent": {
+                    "value": "${../global.control}"
+                },
+                "control_shape": {
+                    "type": "raw",
+                    "value": "round_square"
+                },
+                "control_size": {
+                    "type": "raw",
+                    "value": "${../.control_size} * 0.6"
+                },
+                "skip_if_exists": {
+                    "value": "global_M0_ctl"
+                }
+            }
         },
         "/build/left": {
             "instance": "/side",
@@ -820,6 +935,7 @@
         "/setup/root": {
             "start_point": false,
             "child_order": [
+                "trs",
                 "model",
                 "guides",
                 "controls",
@@ -827,6 +943,10 @@
                 "logic"
             ],
             "attrs": {
+                "anim_publish_set": {
+                    "type": "raw",
+                    "value": "anim_publish_set"
+                },
                 "rig_root": {
                     "comment": "Name for the root node that houses the entire rig.",
                     "type": "raw",
@@ -1042,6 +1162,7 @@
                 "mesh_transforms: list[str] = list(set(mesh_transforms))",
                 "# Put the geo in the set.",
                 "yrig.sets.add_to_set(mesh_transforms, \"${model_set}\", parent=\"${rig_set}\")",
+                "yrig.sets.add_to_set(mesh_transforms, \"${anim_publish_set}\", parent=\"${rig_set}\")",
                 "cmds.viewFit()",
                 ""
             ]
@@ -1057,6 +1178,18 @@
             "code": [
                 "for geo in ${smooth_geo}:",
                 "    yrig.shape.set_smooth_preview(geo)"
+            ]
+        },
+        "/setup/root/trs": {
+            "attrs": {
+                "trs_group": {
+                    "type": "raw",
+                    "value": "trs"
+                }
+            },
+            "code": [
+                "self.trs_group = yrig.transform.create_transform(\"${trs_group}\", parent=\"${rig_root}\")",
+                "yrig.sets.add_to_set(self.trs_group, \"${anim_publish_set}\", parent=\"${rig_set}\")"
             ]
         },
         "/shape_io": {
