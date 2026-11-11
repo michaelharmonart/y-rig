@@ -59,8 +59,8 @@ def get_pose_interpolator_data(
             controller = pose.pose_controller_data[controller_index]
 
             items = {}
-            for item_index in controller.pose_controller_data.get_indices():
-                item = controller.pose_controller_data[item_index]
+            for item_index in controller.pose_controller_data_item.get_indices():
+                item = controller.pose_controller_data_item[item_index]
                 items[item_index] = PoseInterpolatorControllerDataItem(
                     name=item.pose_controller_data_item_name.get(),
                     type=item.pose_controller_data_item_type.get(),

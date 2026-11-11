@@ -71,8 +71,8 @@ class PoseInterpolatorPoseControllerDataAttribute(Attribute):
     def __init__(self, attr_path: str) -> None:
         super().__init__(attr_path)
 
-        self.pose_controller_data = ArrayAttribute(
-            f"{attr_path}.poseControllerData", PoseInterpolatorPoseControllerDataItemAttribute
+        self.pose_controller_data_item = ArrayAttribute(
+            f"{attr_path}.poseControllerDataItem", PoseInterpolatorPoseControllerDataItemAttribute
         )
 
 

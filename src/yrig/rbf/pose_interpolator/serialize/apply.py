@@ -119,7 +119,7 @@ def apply_pose_interpolator_data(
             controller = pose.pose_controller_data[controller_index]
 
             for item_index, item_data in controller_data.items.items():
-                item = controller.pose_controller_data[item_index]
+                item = controller.pose_controller_data_item[item_index]
                 item.pose_controller_data_item_name.set(item_data.name)
                 item.pose_controller_data_item_type.set(item_data.type)
                 item.pose_controller_data_item_value.set(item_data.value)
