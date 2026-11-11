@@ -89,7 +89,16 @@ def apply_pose_interpolator_data(
         driver.driver_euler_twist.set(driver_data.euler_twist)
 
         for controller_index, value in driver_data.controllers.items():
-            driver.driver_controller[controller_index].set(value)
+            driver_controller = driver.driver_controller[controller_index]
+            try:
+                driver_controller.connect_from(value)
+            except Exception:
+                log.warning(
+                    "Couldn't connect %s from the source attribute specified in the data: %s",
+                    driver_controller,
+                    value,
+                )
+            driver.driver_controller[controller_index].connect_from(source_attr=value)
 
     node.pose.clear()
     for index, pose_data in enumerate(data.poses):
