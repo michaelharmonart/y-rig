@@ -38,6 +38,11 @@ class MouthCorner:
         self.main_local = create_transform(f"mouth_{side}_local", parent=self.main_local_npo)
         connect_transform(self.main_control.transform, self.main_local)
 
+        self.driver = create_joint(
+            f"mouth_{side}_driver", guide, self.main_local_npo, add_to_set=False, connect=False
+        )
+        connect_transform(self.main_control.transform, self.driver)
+
         self.sub_control = create_control(
             f"mouth_{side}_sub",
             transform=guide,
