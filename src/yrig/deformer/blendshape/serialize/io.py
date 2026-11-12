@@ -23,6 +23,7 @@ def import_blendshape(
     directories: Collection[str] | None = None,
     targets: Collection[str] | None = None,
     parent_directory: str | None = None,
+    psd_network: str | None = None,
 ) -> None:
     """
     Import blendShape target data from a `.yshape` file.
@@ -42,6 +43,8 @@ def import_blendshape(
         parent_directory=parent_directory,
     )
     log.info(f"Imported shapes from {filepath}")
+    if psd_network:
+        connect_to_psd_network(blendshape, psd_network)
 
 
 def export_blendshape(
@@ -95,11 +98,9 @@ def import_blendshapes_from_directories(
                 for directory in directories:
                     yshape_filepath: Path = directory / f"{geo_mapped_file}.yshape"
                     if yshape_filepath.exists():
-                        import_blendshape(yshape_filepath, blendshape)
+                        import_blendshape(yshape_filepath, blendshape, psd_network=psd_network)
                         geo_applied_files[geo] = yshape_filepath
                         applied = True
-                        if psd_network:
-                            connect_to_psd_network(blendshape, psd_network)
                         break
                 if not applied:
                     log.warning(
