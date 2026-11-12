@@ -321,12 +321,22 @@ def drive_transform_with_matrix(
                 cmds.setAttr(f"{transform}.jointOrient", 0, 0, 0, type="float3")  # type: ignore
             if lock_joint_orient:
                 cmds.setAttr(f"{transform}.jointOrient", lock=True)
-    if rotate:
-        rotate_attr.connect_to(f"{transform}.rotate")
-        cmds.setAttr(f"{transform}.rotateAxis", 0, 0, 0, type="float3")  # type: ignore
+    # Connect each channel individually as if they are connected from the parent compound attr certain things break,
+    # such as pose interpolator goToPose command. Native Maya constraints also connect this way.
     if translate:
-        decompose_matrix.output_translate.connect_to(f"{transform}.translate")
+        decompose_matrix.output_translate.x.connect_to(f"{transform}.translateX")
+        decompose_matrix.output_translate.y.connect_to(f"{transform}.translateY")
+        decompose_matrix.output_translate.z.connect_to(f"{transform}.translateZ")
+    if rotate:
+        rotate_attr.x.connect_to(f"{transform}.rotateX")
+        rotate_attr.y.connect_to(f"{transform}.rotateY")
+        rotate_attr.z.connect_to(f"{transform}.rotateZ")
+        cmds.setAttr(f"{transform}.rotateAxis", 0, 0, 0, type="float3")  # type: ignore
     if scale:
-        decompose_matrix.output_scale.connect_to(f"{transform}.scale")
+        decompose_matrix.output_scale.x.connect_to(f"{transform}.scaleX")
+        decompose_matrix.output_scale.y.connect_to(f"{transform}.scaleY")
+        decompose_matrix.output_scale.z.connect_to(f"{transform}.scaleZ")
     if shear:
-        decompose_matrix.output_shear.connect_to(f"{transform}.shear")
+        decompose_matrix.output_shear.x.connect_to(f"{transform}.shearXY")
+        decompose_matrix.output_shear.y.connect_to(f"{transform}.shearXZ")
+        decompose_matrix.output_shear.z.connect_to(f"{transform}.shearYZ")
