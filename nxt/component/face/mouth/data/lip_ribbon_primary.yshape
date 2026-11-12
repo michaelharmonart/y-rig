@@ -1,0 +1,222 @@
+{
+  "name": "lip_ribbon_primary_main_psd",
+  "inputs": {
+    "0": {
+      "geometry": "lip_ribbon_primaryShapeOrig.worldSpace",
+      "original_geometry": "lip_ribbon_primaryShapeOrig.local",
+      "group_id": 0,
+      "component_tag_expression": "*"
+    }
+  },
+  "directory": {
+    "0": {
+      "name": "Group",
+      "parent_index": 0,
+      "child_indices": [
+        -3
+      ]
+    },
+    "1": {
+      "name": "mouth_L",
+      "parent_index": 3,
+      "child_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    "2": {
+      "name": "mouth_R",
+      "parent_index": 3,
+      "child_indices": [
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ]
+    },
+    "3": {
+      "name": "mouth",
+      "parent_index": 0,
+      "child_indices": [
+        -1,
+        -2
+      ]
+    }
+  },
+  "targets": {
+    "0": {
+      "groups": {
+        "0": {
+          "name": "mouth_L_driver_jnt_smile",
+          "mode": 0,
+          "items": {
+            "6000": {
+              "components": [],
+              "points": []
+            }
+          }
+        },
+        "1": {
+          "name": "mouth_L_driver_jnt_frown",
+          "mode": 0,
+          "items": {
+            "6000": {
+              "components": [],
+              "points": []
+            }
+          }
+        },
+        "2": {
+          "name": "mouth_L_driver_jnt_wide",
+          "mode": 0,
+          "items": {
+            "6000": {
+              "components": [],
+              "points": []
+            }
+          }
+        },
+        "3": {
+          "name": "mouth_L_driver_jnt_wide_smile",
+          "mode": 0,
+          "items": {
+            "6000": {
+              "components": [],
+              "points": []
+            }
+          }
+        },
+        "4": {
+          "name": "mouth_L_driver_jnt_wide_frown",
+          "mode": 0,
+          "items": {
+            "6000": {
+              "components": [],
+              "points": []
+            }
+          }
+        },
+        "5": {
+          "name": "mouth_L_driver_jnt_narrow",
+          "mode": 0,
+          "items": {
+            "6000": {
+              "components": [],
+              "points": []
+            }
+          }
+        },
+        "6": {
+          "name": "mouth_L_driver_jnt_narrow_smile",
+          "mode": 0,
+          "items": {
+            "6000": {
+              "components": [],
+              "points": []
+            }
+          }
+        },
+        "7": {
+          "name": "mouth_L_driver_jnt_narrow_frown",
+          "mode": 0,
+          "items": {
+            "6000": {
+              "components": [],
+              "points": []
+            }
+          }
+        },
+        "8": {
+          "name": "mouth_R_driver_jnt_smile",
+          "mode": 0,
+          "items": {
+            "6000": {
+              "components": [],
+              "points": []
+            }
+          }
+        },
+        "9": {
+          "name": "mouth_R_driver_jnt_frown",
+          "mode": 0,
+          "items": {
+            "6000": {
+              "components": [],
+              "points": []
+            }
+          }
+        },
+        "10": {
+          "name": "mouth_R_driver_jnt_wide",
+          "mode": 0,
+          "items": {
+            "6000": {
+              "components": [],
+              "points": []
+            }
+          }
+        },
+        "11": {
+          "name": "mouth_R_driver_jnt_wide_smile",
+          "mode": 0,
+          "items": {
+            "6000": {
+              "components": [],
+              "points": []
+            }
+          }
+        },
+        "12": {
+          "name": "mouth_R_driver_jnt_wide_frown",
+          "mode": 0,
+          "items": {
+            "6000": {
+              "components": [],
+              "points": []
+            }
+          }
+        },
+        "13": {
+          "name": "mouth_R_driver_jnt_narrow",
+          "mode": 0,
+          "items": {
+            "6000": {
+              "components": [],
+              "points": []
+            }
+          }
+        },
+        "14": {
+          "name": "mouth_R_driver_jnt_narrow_smile",
+          "mode": 0,
+          "items": {
+            "6000": {
+              "components": [],
+              "points": []
+            }
+          }
+        },
+        "15": {
+          "name": "mouth_R_driver_jnt_narrow_frown",
+          "mode": 0,
+          "items": {
+            "6000": {
+              "components": [],
+              "points": []
+            }
+          }
+        }
+      }
+    }
+  }
+}
