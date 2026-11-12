@@ -6,7 +6,7 @@ from pathlib import Path
 from maya import cmds
 
 from yrig.control import Control, ControlShape, create_control
-from yrig.deformer.blendshape import create_blendshape
+from yrig.deformer.blendshape import create_blendshape, import_blendshape
 from yrig.deformer.blendshape.core import add_blendshape_target_from_geometry
 from yrig.name import Side
 from yrig.skin import skin_and_apply_weights
@@ -51,7 +51,9 @@ class Mouth:
         secondary_skin: Path,
         tertiary_skin: Path,
         body_skin: Path,
+        blendshape_path: Path,
         blendshape_directory: str = "/rig/logic/face/mouth",
+        psd_network: str = "mouth_psd",
         skin_set: str = "main_skin_grp",
     ):
         self.def_group = create_transform("mouth_def", parent=joint_parent)
@@ -142,6 +144,13 @@ class Mouth:
         self.lip_ribbon_tertiary = _dup_ribbon("lip_ribbon_tertiary")
 
         self.lip_ribbon_primary_only = _dup_ribbon("lip_ribbon_primary_only")
+
+        self.lip_ribbon_psd = create_blendshape(
+            self.lip_ribbon_primary,
+            parent_directory=blendshape_directory,
+            name=f"{self.lip_ribbon_primary}_main_psd",
+        )
+        import_blendshape(blendshape_path, self.lip_ribbon_psd, psd_network=psd_network)
 
         self.lip_ribbon_def = _dup_ribbon("lip_ribbon_def")
         self.lip_ribbon_def_uv_pin = setup_uv_pin_node("lip_def_uvPin", self.lip_ribbon_def)
