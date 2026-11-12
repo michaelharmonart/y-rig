@@ -98,7 +98,6 @@ def apply_pose_interpolator_data(
                     driver_controller,
                     value,
                 )
-            driver.driver_controller[controller_index].connect_from(source_attr=value)
 
     node.pose.clear()
     for index, pose_data in enumerate(data.poses):
