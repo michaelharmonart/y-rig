@@ -24,7 +24,6 @@ from yrig.mirror import (
     generate_geometry_mirror_mapping,
 )
 from yrig.name import Side, filter_side, flip_side
-from yrig.progress import progress_step
 
 log = logging.getLogger(__name__)
 
@@ -165,37 +164,31 @@ def mirror_blendshape_targets(
         input_component_mirror_map[input_index] = generate_geometry_mirror_mapping(
             original_geometry, mirror_axis
         )
-    with progress_step("Mirror Blendshapes", total=len(original_targets)):
         for original_target, mirrored_target in zip(
             original_targets, mirrored_targets, strict=True
         ):
-            with progress_step(original_target, total=len(input_indices)):
-                original_target_index = name_to_index_map[original_target]
-                if mirrored_target not in name_to_index_map:
-                    raise NotImplementedError(
-                        "This should create a mirror target if it doesn't already exist. Ideally it would even put it in the right directory."
-                    )
-                mirrored_target_index = name_to_index_map[mirrored_target]
-                for input_index in input_indices:
-                    with progress_step(name=f"Input {input_index}"):
-                        input_target = blendshape_node.input_target[input_index]
-                        input_shape: str = input_shape_map[input_index]
-                        input_geometry_path = get_dag_path(input_shape)
-                        existing_target_group_indices = set(
-                            input_target.input_target_group.get_indices()
-                        )
-                        if original_target_index not in existing_target_group_indices:
-                            continue
-                        mirror_blendshape_target(
-                            blendshape_node,
-                            input_geometry=input_geometry_path,
-                            input_index=input_index,
-                            source_index=original_target_index,
-                            destination_index=mirrored_target_index,
-                            mirror_axis=mirror_axis,
-                            mirror_map=input_component_mirror_map[input_index],
-                        )
-                        mirrored[original_target] = mirrored_target
+            original_target_index = name_to_index_map[original_target]
+            if mirrored_target not in name_to_index_map:
+                raise NotImplementedError(
+                    "This should create a mirror target if it doesn't already exist. Ideally it would even put it in the right directory."
+                )
+            mirrored_target_index = name_to_index_map[mirrored_target]
+            input_target = blendshape_node.input_target[input_index]
+            input_shape: str = input_shape_map[input_index]
+            input_geometry_path = get_dag_path(input_shape)
+            existing_target_group_indices = set(input_target.input_target_group.get_indices())
+            if original_target_index not in existing_target_group_indices:
+                continue
+            mirror_blendshape_target(
+                blendshape_node,
+                input_geometry=input_geometry_path,
+                input_index=input_index,
+                source_index=original_target_index,
+                destination_index=mirrored_target_index,
+                mirror_axis=mirror_axis,
+                mirror_map=input_component_mirror_map[input_index],
+            )
+            mirrored[original_target] = mirrored_target
     return mirrored
 
 
