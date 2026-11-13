@@ -588,7 +588,7 @@ class Component(component.Main):
                         "leaf_joint": self.settings["leafJoints"],
                     }
                 )
-                current_parent = "root"
+                current_parent = len(self.jnt_pos) - 1
                 twist_name = jdn_upper_twist
                 twist_idx = 1
                 increment = 1
@@ -616,7 +616,6 @@ class Component(component.Main):
                     }
                 )
                 twist_name = jdn_lower_twist
-                current_parent = self.mid_guide
                 twist_idx = self.settings["div1"]
                 increment = -1
             else:
@@ -633,6 +632,7 @@ class Component(component.Main):
                     }
                 )
                 twist_idx += increment
+            current_parent = len(self.jnt_pos) - 1
         self.divisions_end = current_parent
 
     def _add_end_reference(self) -> None:
