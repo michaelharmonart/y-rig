@@ -167,6 +167,9 @@ def mirror_blendshape_targets(
         for original_target, mirrored_target in zip(
             original_targets, mirrored_targets, strict=True
         ):
+            if original_target == mirrored_target:
+                # TODO: Make this mirror the target itself (for things like jaw_open, that should be self symmetrical)
+                continue
             original_target_index = name_to_index_map[original_target]
             if mirrored_target not in name_to_index_map:
                 raise NotImplementedError(
