@@ -17,6 +17,7 @@ from maya.api.OpenMaya import (
     MPointArray,
 )
 
+from yrig.deformer.blendshape.core import get_blendshape_input_shape
 from yrig.maya_api.node import BlendShapeNode
 from yrig.maya_api.utils import get_dag_path, get_plug, set_point_array
 from yrig.shape import get_component_mfn_and_type_of_shape
@@ -73,14 +74,19 @@ def set_component_list_indices(
     mfn_component_type: type[MFnComponent],
     component_type: int,
     indices: list[int | tuple[int, int]],
-) -> None:
+) -> list[int | tuple[int, int]]:
+    """Write components and return their order as arranged by Maya."""
     fn_data: MFnComponentListData = MFnComponentListData()
     data_mob: MObject = fn_data.create()
     fn_comp = mfn_component_type()
     comp_mob: MObject = fn_comp.create(component_type)
     fn_comp.addElements(indices)
+    ordered_indices = [
+        element if isinstance(element, int) else tuple(element) for element in fn_comp.getElements()
+    ]
     fn_data.add(comp_mob)
     plug.setMObject(data_mob)
+    return ordered_indices
 
 
 def find_child_blendshape_target(
@@ -110,7 +116,12 @@ def merge_target_group(
 ) -> int | None:
     """Add a target group, or update an existing target with the same name."""
     if existing_policy != ExistingPolicy.DUPLICATE:
-        existing_index = find_child_blendshape_target(blendshape, parent_directory_index, data.name)
+        if data.name is None:
+            existing_index = None
+        else:
+            existing_index = find_child_blendshape_target(
+                blendshape, parent_directory_index, data.name
+            )
         if existing_index is not None:
             if existing_policy == ExistingPolicy.SKIP:
                 return None
@@ -154,14 +165,18 @@ def add_target_group(
 
     parent_directory = blendshape.target_directory[parent_directory_index]
     original_child_indices = parent_directory.child_indices.get()
-    input_geometry_attr = blendshape.input[input_target_index].input_geometry.get_input()
-    if input_geometry_attr is None:
-        raise RuntimeError(f"{input_geometry_attr} had no input geometry.")
-    input_geometry_node = str(input_geometry_attr).split(".", 1)[0]
+    input_geometry_node = get_blendshape_input_shape(blendshape, input_target_index)
+    if input_geometry_node is None:
+        raise RuntimeError(f"{blendshape.input[input_target_index]} had no input geometry.")
     input_geometry = get_dag_path(input_geometry_node)
     with preserve_root_target_directory(blendshape):
         apply_blendshape_target_group_data(
-            blendshape, data, input_geometry, input_target_index, target_group_index
+            blendshape,
+            data,
+            input_geometry,
+            input_target_index,
+            target_group_index,
+            set_weight_to_zero=True,
         )
     parent_directory.child_indices.set([*original_child_indices, target_group_index])
     return target_group_index
@@ -262,22 +277,26 @@ def apply_blendshape_target_item_data(
     input_geometry: MDagPath,
     target_item: BlendShapeInputTargetItemAttribute,
 ) -> None:
-
-    points_plug = get_plug(target_item.input_points_target)
-    points_to_apply = data.points or [(0, 0, 0)]  # Maya crashes if there are NO points
-    point_array: MPointArray = MPointArray()
-    point_array.setLength(len(points_to_apply))
-    for index, point in enumerate(points_to_apply):
-        point_array[index] = MPoint(*point)
-    set_point_array(points_plug, point_array)
-
     component_mfn, component_type = get_component_mfn_and_type_of_shape(input_geometry)
     component_plug = get_plug(target_item.input_components_target)
     # Maya crashes if there are NO components
     components_to_apply: list[int | tuple[int, int]] = data.components or (
         [(0, 0)] if component_mfn is MFnDoubleIndexedComponent else [0]
     )
-    set_component_list_indices(component_plug, component_mfn, component_type, components_to_apply)
+    points_to_apply = data.points or [(0, 0, 0)]  # Maya crashes if there are NO points
+    component_points = dict(zip(components_to_apply, points_to_apply, strict=True))
+    if len(component_points) != len(components_to_apply):
+        raise ValueError("Cannot apply multiple deltas to the same component.")
+    ordered_components = set_component_list_indices(
+        component_plug, component_mfn, component_type, components_to_apply
+    )
+
+    points_plug = get_plug(target_item.input_points_target)
+    point_array: MPointArray = MPointArray()
+    point_array.setLength(len(ordered_components))
+    for index, component in enumerate(ordered_components):
+        point_array[index] = MPoint(*component_points[component])
+    set_point_array(points_plug, point_array)
 
 
 def apply_blendshape_target_items_dict(
@@ -299,10 +318,16 @@ def apply_blendshape_target_group_data(
     input_geometry: MDagPath,
     input_target_index: int,
     target_group_index: int,
+    apply_name: bool = True,
+    set_weight_to_zero: bool = False,
 ) -> None:
-    if blendshape.weight[target_group_index].get_alias() != data.name:
+    if (
+        apply_name
+        and data.name is not None
+        and blendshape.weight[target_group_index].get_alias() != data.name
+    ):
         blendshape.weight[target_group_index].set_alias(data.name)
-    if blendshape.weight[target_group_index].is_settable():
+    if set_weight_to_zero and blendshape.weight[target_group_index].is_settable():
         blendshape.weight[target_group_index].set(0)
     target_group = blendshape.input_target[input_target_index].input_target_group[
         target_group_index

@@ -4,11 +4,15 @@ from pathlib import Path, PurePosixPath
 
 from maya import cmds
 from maya.api.OpenMaya import (
+    MDagPath,
+    MFn,
     MPlug,
     MSelectionList,
 )
+from maya.api.OpenMayaAnim import MFnGeometryFilter
 
 from yrig.maya_api.node import BlendShapeNode, ShapeEditorManagerNode
+from yrig.maya_api.utils import get_depend_node
 from yrig.select import maintain_selection
 from yrig.shape import get_shape, get_shape_output
 
@@ -185,6 +189,27 @@ def export_maya_shape_file(
         edit=True,
         export=str(filepath),
     )
+
+
+def get_blendshape_input_shape(
+    blendshape: BlendShapeNode,
+    input_index: int,
+) -> str | None:
+    """Return the upstream DAG shape for an existing logical input index."""
+    if isinstance(input_index, bool) or not isinstance(input_index, int):
+        raise TypeError("input_index must be an integer")
+    if input_index < 0:
+        raise ValueError("input_index must be nonnegative")
+
+    node = get_depend_node(str(blendshape))
+    try:
+        shape = MFnGeometryFilter(node).inputShapeAtIndex(input_index)
+    except RuntimeError as exc:
+        return None
+    if shape.isNull() or not shape.hasFn(MFn.kShape):
+        return None
+    shape_path: MDagPath = MDagPath.getAPathTo(shape)
+    return shape_path.partialPathName()
 
 
 def get_blendshape_targets(blendshape: str) -> dict[str, str]:

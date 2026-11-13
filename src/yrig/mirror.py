@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from enum import StrEnum
 from typing import TypeAlias
 
@@ -14,10 +15,11 @@ from maya.api.OpenMaya import (
 )
 
 from yrig.maya_api.utils import get_dag_path, get_depend_node
+from yrig.shape import get_shape
 
-MeshMirrorMap: TypeAlias = dict[int, int]
-CurveMirrorMap: TypeAlias = dict[int, int]
-SurfaceMirrorMap: TypeAlias = dict[tuple[int, int], tuple[int, int]]
+MeshMirrorMap: TypeAlias = Mapping[int, int]
+CurveMirrorMap: TypeAlias = Mapping[int, int]
+SurfaceMirrorMap: TypeAlias = Mapping[tuple[int, int], tuple[int, int]]
 TopologyMirrorMap: TypeAlias = MeshMirrorMap | CurveMirrorMap | SurfaceMirrorMap
 
 
@@ -64,7 +66,7 @@ def generate_mesh_mirror_mapping(
     mobject = get_depend_node(mesh)
     if not dag_path.hasFn(MFn.kMesh):
         raise RuntimeError(f"{mesh} is not a valid mesh shape node")
-    mfn_mesh: MFnMesh = MFnMesh(mobject)
+    mfn_mesh: MFnMesh = MFnMesh(dag_path)
     if local:
         matrix = MMatrix.kIdentity
     else:
@@ -122,9 +124,11 @@ def generate_surface_mirror_mapping(
     mirror_matrix = get_mirror_matrix(axis)
     num_u = mfn_surface.numCVsInU
     num_v = mfn_surface.numCVsInV
+    cv_array = mfn_surface.cvPositions(space)
     cv_positions: dict[tuple[int, int], MPoint] = {
-        divmod(index, num_v): point for index, point in enumerate(mfn_surface.cvPositions(space))
+        divmod(index, num_v): MPoint(point) for index, point in enumerate(cv_array)
     }
+
     mirror_indices: dict[tuple[int, int], tuple[int, int]] = {}
     for (u, v), point in cv_positions.items():
         mirrored_point: MPoint = point * mirror_matrix
@@ -136,3 +140,26 @@ def generate_surface_mirror_mapping(
         mirror_indices[u, v] = mirrored_index
 
     return mirror_indices
+
+
+def generate_geometry_mirror_mapping(
+    geometry: str,
+    axis: MirrorAxis | str = MirrorAxis.X,
+    *,
+    local: bool = True,
+) -> TopologyMirrorMap:
+    shape = get_shape(geometry)
+    if shape is None:
+        raise ValueError(f"No shape found: {geometry}")
+
+    path = get_dag_path(shape)
+
+    for shape_type, generate in (
+        (MFn.kMesh, generate_mesh_mirror_mapping),
+        (MFn.kNurbsCurve, generate_curve_mirror_mapping),
+        (MFn.kNurbsSurface, generate_surface_mirror_mapping),
+    ):
+        if path.hasFn(shape_type):
+            return generate(shape, axis=axis, local=local)
+
+    raise TypeError(f"Unsupported shape type: {path.node().apiTypeStr}")

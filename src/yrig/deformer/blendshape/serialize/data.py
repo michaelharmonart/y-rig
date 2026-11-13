@@ -35,7 +35,7 @@ class BlendShapeInputTargetData:
 
 @dataclass
 class BlendShapeTargetGroupData:
-    name: str
+    name: str | None
     mode: BlendShapePostDeformationOrder
     items: dict[int, BlendShapeTargetItemData]
 
@@ -51,5 +51,6 @@ def get_target_group_indices_map(data: BlendShapeData) -> dict[str, int]:
     name_to_index = {}
     for input_target in data.targets.values():
         for group_index, group_data in input_target.groups.items():
-            name_to_index[group_data.name] = group_index
+            if group_data.name is not None:
+                name_to_index[group_data.name] = group_index
     return name_to_index

@@ -106,6 +106,22 @@ def get_blendshape_target_items_dict(
     return items
 
 
+def get_blendshape_target_group_data(
+    blendshape: BlendShapeNode,
+    input_geometry: MDagPath,
+    target_group: BlendShapeInputTargetGroupAttribute,
+    target_index: int,
+) -> BlendShapeTargetGroupData:
+    target_name = blendshape.weight[target_index].get_alias()
+    tagret_mode = target_group.post_deformers_mode.get()
+    target_group_data = BlendShapeTargetGroupData(
+        name=target_name,
+        mode=tagret_mode,
+        items=get_blendshape_target_items_dict(input_geometry, target_group),
+    )
+    return target_group_data
+
+
 def get_blendshape_target_groups_dict(
     blendshape: BlendShapeNode,
     input_geometry: MDagPath,
@@ -121,12 +137,8 @@ def get_blendshape_target_groups_dict(
     )
     for index in indices:
         target_group = target.input_target_group[index]
-        target_name = alias_map[index]
-        target_mode = target_group.post_deformers_mode.get()
-        target_group_data = BlendShapeTargetGroupData(
-            name=target_name,
-            mode=target_mode,
-            items=get_blendshape_target_items_dict(input_geometry, target_group),
+        target_group_data = get_blendshape_target_group_data(
+            blendshape, input_geometry, target_group, index
         )
         target_groups[index] = target_group_data
 
