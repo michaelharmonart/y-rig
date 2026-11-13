@@ -1107,6 +1107,10 @@
             ],
             "enabled": true,
             "attrs": {
+                "child_index": {
+                    "type": "int",
+                    "value": "2"
+                },
                 "model_filepath": {
                     "comment": "Filepath to the Model to be imported.",
                     "type": "raw",
@@ -1117,6 +1121,10 @@
                     "type": "raw",
                     "value": "geo"
                 },
+                "model_group_parent": {
+                    "type": "raw",
+                    "value": "${rig_root}"
+                },
                 "model_set": {
                     "comment": "All imported model geometry is added to this set.",
                     "type": "raw",
@@ -1125,46 +1133,27 @@
             },
             "code": [
                 "from yrig.io import import_maya_file",
+                "",
                 "model_filepath = Path(\"${model_filepath}\")",
                 "imported_nodes: list[str] = import_maya_file(model_filepath)",
-                "",
                 "top_level_nodes: list[str] = cmds.ls(imported_nodes, assemblies=True)",
-                "",
-                "# # Case 1: exactly one root transform",
-                "if len(top_level_nodes) == 1:",
-                "    top_level_node = top_level_nodes[0]",
-                "    if cmds.nodeType(top_level_node) == \"transform\":",
-                "        geo_grp = top_level_node",
-                "    else:",
-                "        geo_grp = cmds.group(top_level_node, name=\"${model_group}\", world=True)",
-                "    if geo_grp != \"${model_group}\":",
-                "        geo_grp = cmds.rename(geo_grp)",
-                "else:",
-                "    # Case 2: multiple top level transforms (we need to group them)",
-                "    geo_grp = cmds.group(top_level_nodes, name=\"${model_group}\", world=True)  # type: ignore",
-                "",
-                "# Keep in mind the mgear rig object's \"model\" is actually the root rig transform.",
-                "cmds.parent(geo_grp, \"${rig_root}\")",
-                "cmds.reorder(geo_grp, front=True)",
-                "cmds.reorder(geo_grp, relative=1)",
-                "",
-                "# Get the imported meshes",
-                "meshes = cmds.listRelatives(geo_grp, allDescendents=True, type=\"mesh\")",
-                "mesh_transforms = (",
-                "    cmds.listRelatives(",
-                "        meshes,  # type: ignore",
-                "        parent=True,",
-                "        fullPath=True,",
+                "for top_level_node in reversed(top_level_nodes):",
+                "    cmds.parent(top_level_node, \"${model_group_parent}\")",
+                "    cmds.reorder(top_level_node, front=True)",
+                "    cmds.reorder(top_level_node, relative=${child_index})",
+                "    meshes = cmds.listRelatives(top_level_node, allDescendents=True, type=\"mesh\")",
+                "    mesh_transforms = (",
+                "        cmds.listRelatives(",
+                "            meshes,  # type: ignore",
+                "            parent=True,",
+                "            fullPath=True,",
+                "        )",
+                "        or []",
                 "    )",
-                "    or []",
-                ")",
-                "# remove duplicates",
-                "mesh_transforms: list[str] = list(set(mesh_transforms))",
-                "# Put the geo in the set.",
-                "yrig.sets.add_to_set(mesh_transforms, \"${model_set}\", parent=\"${rig_set}\")",
-                "yrig.sets.add_to_set(mesh_transforms, \"${anim_publish_set}\", parent=\"${rig_set}\")",
-                "cmds.viewFit()",
-                ""
+                "    yrig.sets.add_to_set(mesh_transforms, \"${model_set}\", parent=\"${rig_set}\")",
+                "    yrig.sets.add_to_set(mesh_transforms, \"${anim_publish_set}\", parent=\"${rig_set}\")",
+                "    cmds.viewFit()",
+                "    "
             ]
         },
         "/setup/root/model/smooth_preview": {
@@ -1182,6 +1171,10 @@
         },
         "/setup/root/trs": {
             "attrs": {
+                "child_index": {
+                    "type": "int",
+                    "value": "1"
+                },
                 "trs_group": {
                     "type": "raw",
                     "value": "trs"
@@ -1189,6 +1182,10 @@
             },
             "code": [
                 "self.trs_group = yrig.transform.create_transform(\"${trs_group}\", parent=\"${rig_root}\")",
+                "",
+                "cmds.reorder(self.trs_group, front=True)",
+                "cmds.reorder(self.trs_group, relative=${child_index})",
+                "",
                 "yrig.sets.add_to_set(self.trs_group, \"${anim_publish_set}\", parent=\"${rig_set}\")"
             ]
         },

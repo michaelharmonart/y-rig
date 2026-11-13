@@ -67,7 +67,7 @@ def create_transform(
 
 def get_transform(node: str) -> str:
     """Return the transform associated with a DAG node."""
-    if cmds.nodeType(node) == "transform":
+    if cmds.objectType(node, isAType="transform"):
         return node
 
     transform = cmds.listRelatives(node, parent=True, type="transform")

@@ -11,6 +11,7 @@ from maya.api.OpenMaya import (
     MFnMesh,
     MFnSingleIndexedComponent,
     MIntArray,
+    MMatrix,
     MObject,
     MPlug,
     MPointArray,
@@ -19,6 +20,7 @@ from maya.api.OpenMaya import (
 )
 from maya.api.OpenMayaAnim import MFnSkinCluster
 
+from yrig.maya_api.attribute import MatrixAttribute
 from yrig.maya_api.enum import (
     SkinClusterNormalizeWeights,
     SkinClusterRelativeSpaceMode,
@@ -28,6 +30,7 @@ from yrig.maya_api.node import SkinClusterNode
 from yrig.maya_api.utils import get_dag_path, get_depend_node
 from yrig.name import natural_sort_key
 from yrig.shape import get_components_of_shape, get_shape
+from yrig.transform import get_transform
 
 ZERO_TOLERANCE = 1e-7
 
@@ -97,7 +100,8 @@ def skin_geometry(
     dual_quaternion: bool = False,
     weight_blend: bool = False,
     support_non_rigid: bool = True,
-    relative_space_mode: SkinClusterRelativeSpaceMode = SkinClusterRelativeSpaceMode.WORLD,
+    relative_space_mode: SkinClusterRelativeSpaceMode = SkinClusterRelativeSpaceMode.CUSTOM,
+    relative_space_matrix: MatrixAttribute | str | MMatrix | None = None,
     normalize_weights: SkinClusterNormalizeWeights = SkinClusterNormalizeWeights.INTERACTIVE,
     weight_distribution: SkinClusterWeightDistribution = SkinClusterWeightDistribution.DISTANCE,
     max_influences: int = 6,
@@ -118,6 +122,9 @@ def skin_geometry(
         support_non_rigid: Whether to enable support for non-rigid
             transformations when dual quaternion skinning is enabled.
         relative_space_mode: Space mode used by the skin cluster.
+        relative_space_matrix: The matrix that will be used for relative space.
+            When None this will be the world matrix of the geometry.
+            We use this as the default instead of `local` space because DQ skinning scale breaks otherwise.
         normalize_weights: Weight normalization mode used by the skin cluster.
         weight_distribution: Method used to distribute weights when binding.
         max_influences: Maximum number of influences allowed per vertex.
@@ -129,6 +136,7 @@ def skin_geometry(
     if not name:
         name = f"{geometry}_SC"
 
+    transform = get_transform(geometry)
     shape = get_shape(geometry)
 
     if shape is None:
@@ -158,6 +166,17 @@ def skin_geometry(
     skin_cluster_node = SkinClusterNode.from_existing(skin_cluster)
     skin_cluster_node.dqs_support_non_rigid.set(support_non_rigid)
     skin_cluster_node.relative_space_mode.set(relative_space_mode)
+    if relative_space_matrix is None:
+        skin_cluster_node.relative_space_matrix.connect_from(f"{transform}.worldMatrix[0]")
+    elif isinstance(relative_space_matrix, (str, MatrixAttribute)):
+        skin_cluster_node.relative_space_matrix.connect_from(relative_space_matrix)
+    elif isinstance(relative_space_matrix, MMatrix):
+        skin_cluster_node.relative_space_matrix.set(relative_space_matrix)
+    else:
+        raise ValueError(
+            f"Relative space matrix {relative_space_matrix} is not a valid matrix type or attirbute."
+        )
+
     return skin_cluster_node
 
 
