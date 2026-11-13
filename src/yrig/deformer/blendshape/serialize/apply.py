@@ -126,11 +126,10 @@ def merge_target_group(
             if existing_policy == ExistingPolicy.SKIP:
                 return None
 
-            input_geometry_attr = blendshape.input[input_target_index].input_geometry.get_input()
-            if input_geometry_attr is None:
+            input_geometry_node = get_blendshape_input_shape(blendshape, input_target_index)
+            if input_geometry_node is None:
                 raise RuntimeError(f"No input geometry connected to target {input_target_index}.")
-
-            input_geometry = get_dag_path(str(input_geometry_attr).split(".", 1)[0])
+            input_geometry = get_dag_path(input_geometry_node)
             target_group = blendshape.input_target[input_target_index].input_target_group[
                 existing_index
             ]
