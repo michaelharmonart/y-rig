@@ -127,7 +127,7 @@ class MouthCorner:
         roundness_side_offset.output.connect_to(f"{self.upper_control.offset}.translateX")
         roundness_side_offset.output.connect_to(f"{self.upper_local_npo}.translateX")
         roundness_side_offset.output.connect_to(f"{self.lower_control.offset}.translateX")
-        roundness_side_offset.output.connect_to(f"{self.lower_local}.translateX")
+        roundness_side_offset.output.connect_to(f"{self.lower_local_npo}.translateX")
 
         self.upper_sub_control = create_control(
             f"mouth_corner_{side}_up_sub",
