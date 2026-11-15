@@ -34,6 +34,11 @@ class AnimCurveNode(Node):
         self.input = ScalarAttribute(f"{self.name}.input")
         self.output = ScalarAttribute(f"{self.name}.output")
 
+        self.key_time_value = ArrayAttribute(
+            f"{self.name}.keyTimeValue",
+            lambda path: AnimCurveKeyTimeValueAttribute(path, DoubleAttribute, DoubleAttribute),
+        )
+
         self.apply = FunctionAttribute(f"{self.name}.baseOrigin")
         self.bin_membership = StringAttribute(f"{self.name}.binMembership")
         self.curve_color = ColorAttribute(f"{self.name}.curveColor")
@@ -64,6 +69,9 @@ class AnimCurveNode(Node):
         self.tangent_type = EnumAttribute(f"{self.name}.tangentType", KeyframeTangentType)
         self.use_curve_color = BooleanAttribute(f"{self.name}.useCurveColor")
         self.weighted_tangents = BooleanAttribute(f"{self.name}.weightedTangents")
+
+    def _setup_attributes(self) -> None:
+        pass
 
 
 class AnimCurveTA(AnimCurveNode):

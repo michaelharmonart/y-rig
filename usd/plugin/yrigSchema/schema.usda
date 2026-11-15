@@ -22,19 +22,19 @@ class AnimCurve "AnimCurve" (
     uniform string input (
         doc = "The input attribute for the AnimCurve"
     )
-    uniform token[] keyOutInType (
-        allowedTokens = ["fixed", "linear", "flat", "stepped", "slow", "fast", "spline", "clamped", "plateau", "stepNext", "auto", "autoMix", "autoEase", "autoCustom"]
-    )
     uniform double2[] keyTanIn
     uniform token[] keyTanInType (
         allowedTokens = ["fixed", "linear", "flat", "stepped", "slow", "fast", "spline", "clamped", "plateau", "stepNext", "auto", "autoMix", "autoEase", "autoCustom"]
     )
     uniform bool[] keyTanLocked
     uniform double2[] keyTanOut
+    uniform token[] keyTanOutType (
+        allowedTokens = ["fixed", "linear", "flat", "stepped", "slow", "fast", "spline", "clamped", "plateau", "stepNext", "auto", "autoMix", "autoEase", "autoCustom"]
+    )
     uniform double[] keyTime
     uniform double[] keyValue
     uniform bool[] keyWeightLocked
-    uniform string output (
+    uniform string[] output (
         doc = "The output attribute for the AnimCurve"
     )
     uniform token postInfinity = "constant" (

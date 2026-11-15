@@ -195,6 +195,27 @@ class KeyframeInfinityType(IntEnum):
     OSCILLATE = 5
 
     @property
+    def usd_token(self) -> str:
+        match self:
+            case KeyframeInfinityType.CONSTANT:
+                return "constant"
+            case KeyframeInfinityType.LINEAR:
+                return "linear"
+            case KeyframeInfinityType.CYCLE:
+                return "cycle"
+            case KeyframeInfinityType.CYCLE_WITH_OFFSET:
+                return "cycleRelative"
+            case KeyframeInfinityType.OSCILLATE:
+                return "oscillate"
+
+    @classmethod
+    def from_usd_token(cls, token: str) -> KeyframeInfinityType:
+        for member in cls:
+            if member.usd_token == token:
+                return member
+        raise ValueError(f"Unknown infinity token: {token!r}")
+
+    @property
     def ktype(self) -> int:
         match self:
             case self.CONSTANT:
@@ -218,7 +239,7 @@ class KeyframeTangentType(IntEnum):
     FAST = 7
     SPLINE = 9
     CLAMPED = 10
-    PLATEAU = 10
+    PLATEAU = 16
     STEP_NEXT = 17
     AUTO = 18
     AUTO_MIX = 27
@@ -226,36 +247,75 @@ class KeyframeTangentType(IntEnum):
     AUTO_CUSTOM = 29
 
     @property
+    def usd_token(self) -> str:
+        match self:
+            case KeyframeTangentType.FIXED:
+                return "fixed"
+            case KeyframeTangentType.LINEAR:
+                return "linear"
+            case KeyframeTangentType.FLAT:
+                return "flat"
+            case KeyframeTangentType.STEPPED:
+                return "stepped"
+            case KeyframeTangentType.SLOW:
+                return "slow"
+            case KeyframeTangentType.FAST:
+                return "fast"
+            case KeyframeTangentType.SPLINE:
+                return "spline"
+            case KeyframeTangentType.CLAMPED:
+                return "clamped"
+            case KeyframeTangentType.PLATEAU:
+                return "plateau"
+            case KeyframeTangentType.STEP_NEXT:
+                return "stepNext"
+            case KeyframeTangentType.AUTO:
+                return "auto"
+            case KeyframeTangentType.AUTO_MIX:
+                return "autoMix"
+            case KeyframeTangentType.AUTO_EASE:
+                return "autoEase"
+            case KeyframeTangentType.AUTO_CUSTOM:
+                return "autoCustom"
+
+    @classmethod
+    def from_usd_token(cls, token: str) -> KeyframeTangentType:
+        for member in cls:
+            if member.usd_token == token:
+                return member
+        raise ValueError(f"Unknown tangent token: {token!r}")
+
+    @property
     def ktype(self) -> int:
         match self:
-            case KeyframeTangentType.AUTO:
-                return MFnAnimCurve.kTangentAuto
-            case KeyframeTangentType.AUTO_CUSTOM:
-                return MFnAnimCurve.kTangentAutoCustom
-            case KeyframeTangentType.AUTO_EASE:
-                return MFnAnimCurve.kTangentAutoEase
-            case KeyframeTangentType.AUTO_MIX:
-                return MFnAnimCurve.kTangentAutoMix
-            case KeyframeTangentType.CLAMPED:
-                return MFnAnimCurve.kTangentClamped
-            case KeyframeTangentType.FAST:
-                return MFnAnimCurve.kTangentFast
             case KeyframeTangentType.FIXED:
                 return MFnAnimCurve.kTangentFixed
-            case KeyframeTangentType.FLAT:
-                return MFnAnimCurve.kTangentFlat
             case KeyframeTangentType.LINEAR:
                 return MFnAnimCurve.kTangentLinear
-            case KeyframeTangentType.PLATEAU:
-                return MFnAnimCurve.kTangentPlateau
-            case KeyframeTangentType.SLOW:
-                return MFnAnimCurve.kTangentSlow
-            case KeyframeTangentType.SPLINE:
-                return MFnAnimCurve.kTangentSmooth
+            case KeyframeTangentType.FLAT:
+                return MFnAnimCurve.kTangentFlat
             case KeyframeTangentType.STEPPED:
                 return MFnAnimCurve.kTangentStep
+            case KeyframeTangentType.SLOW:
+                return MFnAnimCurve.kTangentSlow
+            case KeyframeTangentType.FAST:
+                return MFnAnimCurve.kTangentFast
+            case KeyframeTangentType.SPLINE:
+                return MFnAnimCurve.kTangentSmooth
+            case KeyframeTangentType.CLAMPED:
+                return MFnAnimCurve.kTangentClamped
+            case KeyframeTangentType.PLATEAU:
+                return MFnAnimCurve.kTangentPlateau
             case KeyframeTangentType.STEP_NEXT:
                 return MFnAnimCurve.kTangentStepNext
+            case KeyframeTangentType.AUTO:
+                return MFnAnimCurve.kTangentAuto
+            case KeyframeTangentType.AUTO_MIX:
+                return MFnAnimCurve.kTangentAutoMix
+            case KeyframeTangentType.AUTO_EASE:
+                return MFnAnimCurve.kTangentAutoEase
+            case KeyframeTangentType.AUTO_CUSTOM:
+                return MFnAnimCurve.kTangentAutoCustom
 
 
 class KeyframeRotationInterpolation(IntEnum):
@@ -264,6 +324,27 @@ class KeyframeRotationInterpolation(IntEnum):
     QUAT_TAN = 3
     QUAT_SLERP = 4
     QUAT_SQUAD = 5
+
+    @property
+    def usd_token(self) -> str:
+        match self:
+            case KeyframeRotationInterpolation.NONE:
+                return "none"
+            case KeyframeRotationInterpolation.EULER:
+                return "euler"
+            case KeyframeRotationInterpolation.QUAT_TAN:
+                return "quatTan"
+            case KeyframeRotationInterpolation.QUAT_SLERP:
+                return "quatSlerp"
+            case KeyframeRotationInterpolation.QUAT_SQUAD:
+                return "quatSquad"
+
+    @classmethod
+    def from_usd_token(cls, token: str) -> KeyframeRotationInterpolation:
+        for member in cls:
+            if member.usd_token == token:
+                return member
+        raise ValueError(f"Unknown rotation interpolation token: {token!r}")
 
 
 class UnsignedAxis(IntEnum):
