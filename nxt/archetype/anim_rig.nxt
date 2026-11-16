@@ -1139,7 +1139,7 @@
                 },
                 "model_group_parent": {
                     "type": "raw",
-                    "value": "${rig_root}"
+                    "value": "${../trs.trs_group}"
                 },
                 "model_set": {
                     "comment": "All imported model geometry is added to this set.",
