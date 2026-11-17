@@ -3,15 +3,19 @@ from pathlib import Path
 
 from pxr import Usd
 
+from yrig.io import confirm_overwrite
 from yrig.maya_api.node.anim_curve import AnimCurveNode
 
 from .apply import apply_scene_driven_keys_data
 from .get import get_scene_driven_keys_data
 
 
-def export_driven_key_layer(filepath: Path) -> None:
+def export_driven_key_layer(filepath: Path, force: bool = False) -> bool:
+    if not confirm_overwrite(filepath, force):
+        return False
     driven_key_data = get_scene_driven_keys_data()
     driven_key_data.Export(str(filepath), args={"format": "usda"})
+    return True
 
 
 def import_driven_key_layers(filepaths: Path | Iterable[Path]) -> list[AnimCurveNode]:
