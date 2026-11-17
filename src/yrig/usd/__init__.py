@@ -1,3 +1,3 @@
-from . import plugin
+from . import diff, plugin
 
-__all__ = ["plugin"]
+__all__ = ["diff", "plugin"]
