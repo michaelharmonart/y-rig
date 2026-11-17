@@ -1,0 +1,149 @@
+import logging
+
+from maya import cmds
+from maya.api.OpenMaya import MFnDependencyNode, MObject
+from maya.api.OpenMayaAnim import MFnAnimCurve
+from pxr import Usd, Vt
+
+from yrig.maya_api.enum import KeyframeInfinityType, KeyframeTangentType
+from yrig.maya_api.node import AnimCurveUU
+from yrig.maya_api.node.anim_curve import AnimCurveNode
+from yrig.maya_api.utils import get_depend_node, get_plug
+
+log = logging.getLogger(__name__)
+
+
+def merge_driven_key_from_prim(prim: Usd.Prim) -> AnimCurveNode:
+    driven_key_name = prim.GetName()
+
+    output_attr = prim.GetAttribute("output")
+    output_paths: list[str] = output_attr.Get()
+
+    if cmds.objExists(driven_key_name):
+        if not cmds.objectType(driven_key_name, isAType="animCurve"):
+            raise RuntimeError(
+                f"A node called {driven_key_name} already exists in the scene and isn't an animCurve node."
+            )
+        driven_key = AnimCurveNode.from_existing(driven_key_name)
+    else:
+        existing_outputs = [path for path in output_paths if cmds.objExists(path)]
+        if existing_outputs:
+            curve_fn: MFnAnimCurve = MFnAnimCurve()
+            curve_types = [
+                curve_fn.unitlessAnimCurveTypeForPlug(get_plug(path)) for path in existing_outputs
+            ]
+            curve_type = (
+                curve_fn.kAnimCurveUU if curve_fn.kAnimCurveUU in curve_types else curve_types[0]
+            )
+            curve: MObject = curve_fn.create(curve_type)
+            curve_node: MFnDependencyNode = MFnDependencyNode(curve)
+            name: str = curve_node.setName(driven_key_name)
+            driven_key = AnimCurveNode.from_existing(name)
+        else:
+            driven_key = AnimCurveUU.create(driven_key_name)
+
+    input_attr = prim.GetAttribute("input")
+    input_value: str = input_attr.Get()
+    current_input = driven_key.input.get_input(skip_conversion_nodes=True)
+    current_input = str(current_input) if current_input else ""
+    if current_input != input_value:
+        try:
+            if input_value:
+                driven_key.input.connect_from(input_value, force=True)
+            elif current_input:
+                driven_key.input.disconnect_input()
+        except Exception:
+            log.warning(
+                f"Couldn't connect {driven_key}'s input to the attribute specified in it's data: {input_value}"
+            )
+
+    existing_outputs = {str(output) for output in driven_key.output.get_outputs()}
+    to_connect = set(output_paths) - existing_outputs
+    to_disconnect = existing_outputs - set(output_paths)
+    for output_path in to_connect:
+        try:
+            driven_key.output.connect_to(output_path, force=True)
+        except Exception:
+            log.warning(
+                f"Couldn't connect {driven_key}'s output to the attribute specified in it's data: {output_path}"
+            )
+    for output_path in to_disconnect:
+        driven_key.output.disconnect_to(output_path)
+
+    driven_key_mfn: MFnAnimCurve = MFnAnimCurve(get_depend_node(driven_key))
+
+    key_time_attr = prim.GetAttribute("keyTime")
+    key_time_value: list[float] = key_time_attr.Get()
+
+    key_value_attr = prim.GetAttribute("keyValue")
+    key_value_value: list[float] = key_value_attr.Get()
+
+    keys = list(zip(key_time_value, key_value_value, strict=True))
+
+    for index in reversed(range(driven_key_mfn.numKeys)):
+        driven_key_mfn.remove(index)
+
+    weighted_tangents_attr = prim.GetAttribute("weightedTangents")
+    weighted_tangents_value: bool = weighted_tangents_attr.Get()
+    driven_key_mfn.setIsWeighted(weighted_tangents_value)
+
+    for driver_value, value in keys:
+        driven_key_mfn.addKey(driver_value, value)
+
+    for index in range(driven_key_mfn.numKeys):
+        driven_key_mfn.setTangentsLocked(index, False)
+        driven_key_mfn.setWeightsLocked(index, False)
+
+    key_tan_in_attr = prim.GetAttribute("keyTanIn")
+    key_tan_in_value: Vt.Vec2dArray = key_tan_in_attr.Get()
+    for index, key_tan_in in enumerate(key_tan_in_value):
+        driven_key_mfn.setTangent(index, key_tan_in[0], key_tan_in[1], True, convertUnits=False)
+
+    key_tan_in_type_attr = prim.GetAttribute("keyTanInType")
+    key_tan_in_type_value: Vt.TokenArray = key_tan_in_type_attr.Get()
+
+    for index, key_tan_in_type in enumerate(key_tan_in_type_value):
+        key_tan_in_type_enum = KeyframeTangentType.from_usd_token(key_tan_in_type)
+        driven_key_mfn.setInTangentType(index, key_tan_in_type_enum.ktype)
+
+    key_tan_out_attr = prim.GetAttribute("keyTanOut")
+    key_tan_out_value: Vt.Vec2dArray = key_tan_out_attr.Get()
+    for index, key_tan_out in enumerate(key_tan_out_value):
+        driven_key_mfn.setTangent(index, key_tan_out[0], key_tan_out[1], False, convertUnits=False)
+
+    key_tan_out_type_attr = prim.GetAttribute("keyTanOutType")
+    key_tan_out_type_value: Vt.TokenArray = key_tan_out_type_attr.Get()
+    for index, key_tan_out_type in enumerate(key_tan_out_type_value):
+        key_tan_out_type_enum = KeyframeTangentType.from_usd_token(key_tan_out_type)
+        driven_key_mfn.setOutTangentType(index, key_tan_out_type_enum.ktype)
+
+    key_tan_locked_attr = prim.GetAttribute("keyTanLocked")
+    key_tan_locked_value: Vt.BoolArray = key_tan_locked_attr.Get()
+    for index, key_tan_locked in enumerate(key_tan_locked_value):
+        driven_key_mfn.setTangentsLocked(index, key_tan_locked)
+
+    key_weight_locked_attr = prim.GetAttribute("keyWeightLocked")
+    key_weight_locked_value: Vt.BoolArray = key_weight_locked_attr.Get()
+    for index, key_weight_locked in enumerate(key_weight_locked_value):
+        driven_key_mfn.setWeightsLocked(index, key_weight_locked)
+
+    pre_inifinity_attr = prim.GetAttribute("preInfinity")
+    pre_inifinity_value: str = pre_inifinity_attr.Get()
+    pre_inifinity_enum = KeyframeInfinityType.from_usd_token(pre_inifinity_value)
+    driven_key_mfn.setPreInfinityType(pre_inifinity_enum.ktype)
+
+    post_inifinity_attr = prim.GetAttribute("postInfinity")
+    post_inifinity_value: str = post_inifinity_attr.Get()
+    post_inifinity_enum = KeyframeInfinityType.from_usd_token(post_inifinity_value)
+    driven_key_mfn.setPostInfinityType(post_inifinity_enum.ktype)
+
+    return driven_key
+
+
+def apply_scene_driven_keys_data(stage: Usd.Stage) -> list[AnimCurveNode]:
+    applied = []
+    for prim in stage.Traverse():
+        if (prim.GetTypeName() == "AnimCurve") or prim.IsA("AnimCurve"):
+            driven_key = merge_driven_key_from_prim(prim)
+            applied.append(driven_key)
+    return applied

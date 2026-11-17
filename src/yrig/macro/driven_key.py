@@ -29,7 +29,7 @@ def set_driven_key(
     curve_fn: MFnAnimCurve = MFnAnimCurve()
     curve_type = curve_fn.unitlessAnimCurveTypeForPlug(driven_plug)
     curve: MObject = curve_fn.create(driven_plug, curve_type)
-    curve_nope: MFnDependencyNode = MFnDependencyNode(curve)
+    curve_node: MFnDependencyNode = MFnDependencyNode(curve)
 
     modifier = MDGModifier()
     modifier.connect(driver_plug, curve_fn.findPlug("input", False))
@@ -72,4 +72,4 @@ def set_driven_key(
         )
     curve_fn.setPreInfinityType(pre_infinity.ktype)
     curve_fn.setPostInfinityType(post_infinity.ktype)
-    return curve_nope.name()
+    return curve_node.name()
