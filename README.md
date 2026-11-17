@@ -1,4 +1,4 @@
-# y-rig: BYU Animation Program Rigging Framework
+# y-rig: BYU Animation's Rigging Framework
 
 ![y-rig logo](docs/images/y-rig_logo.svg)
 
