@@ -74,6 +74,10 @@
                 "export"
             ],
             "attrs": {
+                "import_filepath": {
+                    "type": "raw",
+                    "value": "${file::${rig_path}/${relative_filepath}}"
+                },
                 "pair_name": {
                     "type": "raw",
                     "value": "Data"
@@ -81,10 +85,6 @@
                 "relative_filepath": {
                     "type": "raw",
                     "value": "data"
-                },
-                "text": {
-                    "type": "raw",
-                    "value": "${title}"
                 }
             }
         },
@@ -118,10 +118,6 @@
         "/io_pair/import": {
             "instance": "/button",
             "attrs": {
-                "import_filepath": {
-                    "type": "raw",
-                    "value": "${file::${rig_path}/${relative_filepath}}"
-                },
                 "title": {
                     "type": "raw",
                     "value": "Import ${pair_name}"
