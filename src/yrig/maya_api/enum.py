@@ -326,6 +326,20 @@ class KeyframeRotationInterpolation(IntEnum):
     QUAT_SQUAD = 5
 
     @property
+    def maya_string(self) -> str:
+        match self:
+            case KeyframeRotationInterpolation.NONE:
+                return "none"
+            case KeyframeRotationInterpolation.EULER:
+                return "euler"
+            case KeyframeRotationInterpolation.QUAT_TAN:
+                return "quaternion"
+            case KeyframeRotationInterpolation.QUAT_SLERP:
+                return "quaternionSlerp"
+            case KeyframeRotationInterpolation.QUAT_SQUAD:
+                return "quaternionSquad"
+
+    @property
     def usd_token(self) -> str:
         match self:
             case KeyframeRotationInterpolation.NONE:

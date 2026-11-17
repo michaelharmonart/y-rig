@@ -37,12 +37,6 @@ class AnimCurve "AnimCurve" (
     uniform token preInfinity = "constant" (
         allowedTokens = ["constant", "linear", "cycle", "cycleRelative", "Oscillate"]
     )
-    uniform token rotationInterpolation = "euler" (
-        allowedTokens = ["none", "euler", "quatTan", "quatSlerp", "quatSquad"]
-    )
-    uniform token tangentType = "linear" (
-        allowedTokens = ["fixed", "linear", "flat", "stepped", "slow", "fast", "spline", "clamped", "plateau", "stepNext", "auto", "autoMix", "autoEase", "autoCustom"]
-    )
     uniform bool weightedTangents = 0
 }
 
