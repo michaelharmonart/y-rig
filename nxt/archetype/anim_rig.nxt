@@ -218,7 +218,8 @@
                 "rest_pose",
                 "control_shapes",
                 "deformation",
-                "visibility_sets"
+                "visibility_sets",
+                "macro"
             ]
         },
         "/apply/control_shapes": {
@@ -265,6 +266,25 @@
         },
         "/apply/deformation/main/skin/split": {
             "instance": "/split_skin_weights"
+        },
+        "/apply/macro": {
+            "child_order": [
+                "driven_keys"
+            ]
+        },
+        "/apply/macro/driven_keys": {
+            "attrs": {
+                "driven_keys_filepath": {
+                    "type": "raw",
+                    "value": "${file::${rig_path}/data/driven_keys.usd}"
+                }
+            },
+            "code": [
+                "layer_filepath_strings = ${filelist::${driven_keys_filepath}}",
+                "if layer_filepath_strings:",
+                "    layer_paths = [Path(filepath) for filepath in layer_filepath_strings]",
+                "    yrig.macro.import_driven_key_layers(layer_paths)"
+            ]
         },
         "/apply/rest_pose": {
             "attrs": {
