@@ -5,9 +5,7 @@ from yrig.maya_api.node.anim_curve import AnimCurveNode
 
 
 def _create_attr(prim: Sdf.PrimSpec, name: str, type_name: Sdf.ValueTypeName) -> Sdf.AttributeSpec:
-    attr_spec = Sdf.AttributeSpec(
-        prim, name, typeName=type_name, variability=Sdf.VariabilityUniform, custom=False
-    )
+    attr_spec = Sdf.AttributeSpec(prim, name, type_name, Sdf.VariabilityUniform, False)
     return attr_spec
 
 
@@ -23,7 +21,7 @@ def define_prim_from_driven_key(
     driven_key_prim.typeName = "AnimCurve"
 
     input_attr = _create_attr(driven_key_prim, "input", Sdf.ValueTypeNames.String)
-    input_attr.default = str(driven_key.output.get_input() or "")
+    input_attr.default = str(driven_key.input.get_input() or "")
 
     output_attr = _create_attr(driven_key_prim, "output", Sdf.ValueTypeNames.StringArray)
     output_attr.default = [str(out) for out in driven_key.output.get_outputs()]
@@ -48,7 +46,7 @@ def define_prim_from_driven_key(
     key_tan_out_attr = _create_attr(driven_key_prim, "keyTanOut", Sdf.ValueTypeNames.Double2Array)
     key_tan_out_attr.default = [
         (x.get(), y.get())
-        for x, y in zip(driven_key.key_tan_in_x, driven_key.key_tan_in_y, strict=True)
+        for x, y in zip(driven_key.key_tan_out_x, driven_key.key_tan_out_y, strict=True)
     ]
 
     key_tan_out_type_attr = _create_attr(
