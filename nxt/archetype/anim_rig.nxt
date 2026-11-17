@@ -1566,6 +1566,10 @@
         },
         "/wrap": {
             "attrs": {
+                "falloff_scale": {
+                    "type": "int",
+                    "value": "5"
+                },
                 "wrap_mapping": {
                     "type": "dict",
                     "value": "{}"
@@ -1574,7 +1578,7 @@
             "code": [
                 "wrap_mapping = ${wrap_mapping}",
                 "for source, target in wrap_mapping.items():",
-                "    yrig.deformer.proximity_wrap.create_proximity_wrap(source, target)"
+                "    yrig.deformer.proximity_wrap.create_proximity_wrap(source, target, falloff_scale=${falloff_scale})"
             ]
         }
     }
