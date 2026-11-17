@@ -33,16 +33,19 @@ def define_prim_from_driven_key(
     driven_key_prim.typeName = "AnimCurve"
 
     input_attr = _create_attr(driven_key_prim, "input", Sdf.ValueTypeNames.String)
-    input_attr.default = str(driven_key.input.get_input() or "")
+    input_attr.default = str(driven_key.input.get_input(skip_conversion_nodes=True) or "")
 
     output_attr = _create_attr(driven_key_prim, "output", Sdf.ValueTypeNames.StringArray)
-    output_attr.default = [str(out) for out in driven_key.output.get_outputs()]
+    output_attr.default = [
+        str(out) for out in driven_key.output.get_outputs(skip_conversion_nodes=True)
+    ]
 
     key_time_attr = _create_attr(driven_key_prim, "keyTime", Sdf.ValueTypeNames.DoubleArray)
     key_time_attr.default = [attr.key_time.get() for attr in driven_key.key_time_value]
 
     key_value_attr = _create_attr(driven_key_prim, "keyValue", Sdf.ValueTypeNames.DoubleArray)
-    key_value_attr.default = [attr.key_value.get() for attr in driven_key.key_time_value]
+    driven_key_mfn: MFnAnimCurve = MFnAnimCurve(get_depend_node(driven_key))
+    key_value_attr.default = [driven_key_mfn.value(i) for i in range(driven_key_mfn.numKeys)]
 
     key_tan_in_attr = _create_attr(driven_key_prim, "keyTanIn", Sdf.ValueTypeNames.Double2Array)
     key_tan_in_attr.default = [
@@ -111,11 +114,15 @@ def merge_driven_key_from_prim(prim: Usd.Prim) -> AnimCurveNode:
             )
         driven_key = AnimCurveNode.from_existing(driven_key_name)
     else:
-        existing_output = next((path for path in output_paths if cmds.objExists(path)), None)
-        if existing_output:
-            ouput_plug = get_plug(existing_output)
+        existing_outputs = [path for path in output_paths if cmds.objExists(path)]
+        if existing_outputs:
             curve_fn: MFnAnimCurve = MFnAnimCurve()
-            curve_type = curve_fn.unitlessAnimCurveTypeForPlug(ouput_plug)
+            curve_types = [
+                curve_fn.unitlessAnimCurveTypeForPlug(get_plug(path)) for path in existing_outputs
+            ]
+            curve_type = (
+                curve_fn.kAnimCurveUU if curve_fn.kAnimCurveUU in curve_types else curve_types[0]
+            )
             curve: MObject = curve_fn.create(curve_type)
             curve_node: MFnDependencyNode = MFnDependencyNode(curve)
             name: str = curve_node.setName(driven_key_name)
@@ -125,11 +132,14 @@ def merge_driven_key_from_prim(prim: Usd.Prim) -> AnimCurveNode:
 
     input_attr = prim.GetAttribute("input")
     input_value: str = input_attr.Get()
-    current_input = driven_key.input.get_input()
+    current_input = driven_key.input.get_input(skip_conversion_nodes=True)
     current_input = str(current_input) if current_input else ""
     if current_input != input_value:
         try:
-            driven_key.input.connect_from(input_value)
+            if input_value:
+                driven_key.input.connect_from(input_value, force=True)
+            elif current_input:
+                driven_key.input.disconnect_input()
         except Exception:
             log.warning(
                 f"Couldn't connect {driven_key}'s input to the attribute specified in it's data: {input_value}"
@@ -140,13 +150,13 @@ def merge_driven_key_from_prim(prim: Usd.Prim) -> AnimCurveNode:
     to_disconnect = existing_outputs - set(output_paths)
     for output_path in to_connect:
         try:
-            driven_key.output.connect_to(output_path)
+            driven_key.output.connect_to(output_path, force=True)
         except Exception:
             log.warning(
                 f"Couldn't connect {driven_key}'s output to the attribute specified in it's data: {output_path}"
             )
     for output_path in to_disconnect:
-        driven_key.output.disconnect_from(output_path)
+        driven_key.output.disconnect_to(output_path)
 
     driven_key_mfn: MFnAnimCurve = MFnAnimCurve(get_depend_node(driven_key))
 
@@ -175,7 +185,7 @@ def merge_driven_key_from_prim(prim: Usd.Prim) -> AnimCurveNode:
     key_tan_in_attr = prim.GetAttribute("keyTanIn")
     key_tan_in_value: Vt.Vec2dArray = key_tan_in_attr.Get()
     for index, key_tan_in in enumerate(key_tan_in_value):
-        driven_key_mfn.setTangent(index, key_tan_in[0], key_tan_in[1], True)
+        driven_key_mfn.setTangent(index, key_tan_in[0], key_tan_in[1], True, convertUnits=False)
 
     key_tan_in_type_attr = prim.GetAttribute("keyTanInType")
     key_tan_in_type_value: Vt.TokenArray = key_tan_in_type_attr.Get()
@@ -187,7 +197,7 @@ def merge_driven_key_from_prim(prim: Usd.Prim) -> AnimCurveNode:
     key_tan_out_attr = prim.GetAttribute("keyTanOut")
     key_tan_out_value: Vt.Vec2dArray = key_tan_out_attr.Get()
     for index, key_tan_out in enumerate(key_tan_out_value):
-        driven_key_mfn.setTangent(index, key_tan_out[0], key_tan_out[1], False)
+        driven_key_mfn.setTangent(index, key_tan_out[0], key_tan_out[1], False, convertUnits=False)
 
     key_tan_out_type_attr = prim.GetAttribute("keyTanOutType")
     key_tan_out_type_value: Vt.TokenArray = key_tan_out_type_attr.Get()
