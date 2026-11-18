@@ -73,13 +73,14 @@ class Attribute(Generic[T]):
         """True if this attribute is settable."""
         return cmds.getAttr(self.attr_path, settable=True)
 
-    def get_input(self) -> Attribute | None:
+    def get_input(self, skip_conversion_nodes: bool = False) -> Attribute | None:
         """Return the source attribute connected to this attribute."""
         connections = cmds.listConnections(
             self.attr_path,
             source=True,
             destination=False,
             plugs=True,
+            skipConversionNodes=skip_conversion_nodes,
         )
         return Attribute(connections[0]) if connections else None
 
@@ -89,7 +90,7 @@ class Attribute(Generic[T]):
 
         return self.get_input()
 
-    def get_outputs(self) -> list[Attribute]:
+    def get_outputs(self, skip_conversion_nodes: bool = False) -> list[Attribute]:
         """Return the destination attributes connected to this attribute."""
         connections = (
             cmds.listConnections(
@@ -97,6 +98,7 @@ class Attribute(Generic[T]):
                 source=False,
                 destination=True,
                 plugs=True,
+                skipConversionNodes=skip_conversion_nodes,
             )
             or []
         )
@@ -107,10 +109,10 @@ class Attribute(Generic[T]):
         """The destination attributes connected to this attribute."""
         return self.get_outputs()
 
-    def connect_from(self, source_attr: str | Attribute) -> None:
+    def connect_from(self, source_attr: str | Attribute, force: bool = False) -> None:
         """Connect another attribute to this one."""
         source = str(source_attr)  # Works with both strings and Attribute objects
-        cmds.connectAttr(source, self.attr_path)
+        cmds.connectAttr(source, self.attr_path, force=force)
 
     def disconnect_from(self, source_attr: str | Attribute) -> None:
         """Disconnect this attribute from another attribute."""
@@ -124,6 +126,13 @@ class Attribute(Generic[T]):
     def disconnect_to(self, dest_attr: str | Attribute) -> None:
         """Disconnect this attribute from another attribute."""
         cmds.disconnectAttr(self.attr_path, str(dest_attr))
+
+    def disconnect_input(self) -> bool:
+        input = self.get_input()
+        if input is not None:
+            self.disconnect_from(input)
+            return True
+        return False
 
     def disconnect_outputs(self) -> bool:
         outputs = self.get_outputs()

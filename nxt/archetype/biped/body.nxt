@@ -20,6 +20,10 @@
             "/legs": [
                 400,
                 20
+            ],
+            "/split_mgear_constraints2": [
+                280,
+                20
             ]
         }
     },
@@ -101,7 +105,8 @@
             "instance": "/shifter_build",
             "child_order": [
                 "attribute_defaults",
-                "finger_meta_fix"
+                "finger_meta_fix",
+                "split_mgear_constraints"
             ],
             "attrs": {
                 "body_rig_temp_filepath": {
@@ -180,6 +185,9 @@
                 "        group_name = f\"finger_{side}{num}_root\"",
                 "        cmds.parent(group_name, control_name)"
             ]
+        },
+        "/setup/shifter_component_build/split_mgear_constraints": {
+            "instance": "/split_mgear_constraints"
         },
         "/tools_window/biped/body": {
             "instance": "/panel",
