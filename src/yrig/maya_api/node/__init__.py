@@ -1,6 +1,22 @@
-from .blendshape import BlendShapeNode
+from .anim_curve import (
+    AnimCurveTA,
+    AnimCurveTL,
+    AnimCurveTT,
+    AnimCurveTU,
+    AnimCurveUA,
+    AnimCurveUL,
+    AnimCurveUT,
+    AnimCurveUU,
+)
+from .blendshape import BlendShapeNode, ShapeEditorManagerNode
 from .core import Node
-from .geometry import ClosestPointOnSurfaceNode, CurveInfoNode, MotionPathNode, UvPinNode
+from .geometry import (
+    ClosestPointOnSurfaceNode,
+    CurveInfoNode,
+    MotionPathNode,
+    NearestPointOnCurveNode,
+    UvPinNode,
+)
 from .geometry_filter import GeometryFilter, WeightGeometryFilter
 from .matrix import (
     AimMatrixNode,
@@ -26,7 +42,7 @@ from .quat import (
     QuatSlerpNode,
     QuatToEulerNode,
 )
-from .skincluster import SkinCluster
+from .skincluster import SkinClusterNode
 from .utility import (
     AbsoluteNode,
     AddDLNode,
@@ -53,6 +69,14 @@ __all__ = [
     "AbsoluteNode",
     "AddDLNode",
     "AimMatrixNode",
+    "AnimCurveTA",
+    "AnimCurveTL",
+    "AnimCurveTT",
+    "AnimCurveTU",
+    "AnimCurveUA",
+    "AnimCurveUL",
+    "AnimCurveUT",
+    "AnimCurveUU",
     "AxisFromMatrixNode",
     "BlendColorsNode",
     "BlendMatrixNode",
@@ -79,6 +103,7 @@ __all__ = [
     "MultiplyNode",
     "MultiplyPointByMatrixNode",
     "MultiplyVectorByMatrixNode",
+    "NearestPointOnCurveNode",
     "Node",
     "NormalizeNode",
     "PickMatrixNode",
@@ -92,8 +117,9 @@ __all__ = [
     "QuatToEulerNode",
     "RemapValueNode",
     "RowFromMatrixNode",
+    "ShapeEditorManagerNode",
     "SinNode",
-    "SkinCluster",
+    "SkinClusterNode",
     "SubtractNode",
     "SumNode",
     "UvPinNode",

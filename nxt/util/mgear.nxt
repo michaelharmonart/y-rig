@@ -10,6 +10,10 @@
                 -702.7225770097671,
                 -573.8845792637115
             ]
+        },
+        "collapse": {
+            "/tools_window/tools/mgear": true,
+            "/tools_window/tools/mgear/shifter_guides_io": false
         }
     },
     "nodes": {
@@ -29,7 +33,9 @@
             "code": [
                 "guide_path = Path(\"${guide_filepath}\")",
                 "",
-                "yrig.build.mgear_api.build_from_shifter_file(guide_path, dev_build=${dev_build}, custom_steps=${custom_steps})"
+                "result = yrig.build.mgear_api.build_from_shifter_file(guide_path, dev_build=${dev_build}, custom_steps=${custom_steps})",
+                "if not result:",
+                "    raise RuntimeError(\"Shifter build failed or was cancelled!\")"
             ]
         },
         "/tools_window/tools/mgear": {

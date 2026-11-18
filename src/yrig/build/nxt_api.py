@@ -12,6 +12,8 @@ from nxt.runtime import ExitGraph, ExitNode, InvalidNodeError
 from nxt.session import Session
 from nxt.stage import Stage, logger, run
 
+from nxt import nxt_path
+
 if TYPE_CHECKING:
     from collections.abc import Generator, Iterable
 
@@ -19,7 +21,7 @@ if TYPE_CHECKING:
     from nxt.nxt_node import SpecNode
 
 
-from yrig.build.progress import progress_step
+from yrig.progress import progress_step
 
 log = logging.getLogger(__name__)
 
@@ -51,6 +53,11 @@ def nxt_file_roots(
                 os.environ["NXT_FILE_ROOTS"] = default_value
 
 
+def get_node_logger(node_path: str) -> logging.Logger:
+    """Get a logger for an NXT node."""
+    return logging.getLogger(f"{__name__}.{node_path.strip('/').replace('/', '.')}")
+
+
 # We wrap the NXT execution so we can have nice progress reporting :)
 class ProgressStage(Stage):
     def execute_nodes(self, node_paths, layer, parameters=None):  # noqa: ANN001, ANN201
@@ -74,6 +81,10 @@ class ProgressStage(Stage):
         """
         if not isinstance(layer, CompLayer):
             raise ValueError("Execute Nodes requires a comp layer.")  # noqa
+        # Path expansions and inferred comps are cached for the duration of
+        # a run, so start each run looking at things as they are now.
+        nxt_path.clear_file_expand_cache()
+        self._inferred_comp_cache = {}
         if not layer.runtime:
             dup_comp = self.build_stage(layer.layer_idx())
             runtime_layer: CompLayer = self.setup_runtime_layer(dup_comp, parameters=parameters)
@@ -126,7 +137,7 @@ def _add_world_node(stage: Stage, layer: SpecLayer) -> SpecNode:
 
 
 def setup_rig_build_nxt_layer(
-    filepath: Path, *, rig_path: Path, inherits: Path | None, name: str, color: str
+    filepath: Path, *, rig_path: Path, inherits: Path | None, asset_name: str, color: str
 ) -> None:
     """
     Create and save an NXT layer for a rig build.
@@ -151,7 +162,7 @@ def setup_rig_build_nxt_layer(
     stage: Stage = session.new_file()
     layer: SpecLayer = stage.top_layer
 
-    layer.set_alias(name)
+    layer.set_alias(asset_name)
     layer.color = color
 
     if inherits is not None:
@@ -165,4 +176,26 @@ def setup_rig_build_nxt_layer(
         attr_data={"value": rig_path.as_posix()},
         layer=layer,
     )
+    stage.add_node_attr(
+        node=world_node,
+        attr="asset_name",
+        attr_data={"value": asset_name},
+        layer=layer,
+    )
     layer.save(filepath=filepath.as_posix())
+
+
+def open_nxt_editor(path: Path | Iterable[Path] | None = None) -> None:
+    from maya import cmds
+
+    from yrig.maya_api.utils import ensure_plugin_loaded
+
+    ensure_plugin_loaded("nxt_maya.py")
+    if path is None:
+        cmds.nxt_ui()  # type: ignore
+        return
+    elif isinstance(path, Path):
+        cmds.nxt_ui(path=str(path))  # type: ignore
+    else:
+        cmds.nxt_ui(path=[str(path) for path in path])  # type: ignore
+        return

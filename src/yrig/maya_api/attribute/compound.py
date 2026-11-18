@@ -7,6 +7,7 @@ from yrig.maya_api.enum import (
 from .core import (
     Attribute,
     BooleanAttribute,
+    DoubleAttribute,
     EnumAttribute,
     MatrixAttribute,
     ScalarAttribute,
@@ -48,6 +49,16 @@ class ClosestPointOnSurfaceResultAttribute(Attribute):
         self.position = Vector3Attribute(f"{attr_path}.position")
         self.parameter_u = ScalarAttribute(f"{attr_path}.parameterU")
         self.parameter_v = ScalarAttribute(f"{attr_path}.parameterV")
+
+
+class NearestPointOnCurveResultAttribute(Attribute):
+    """A Maya attribute of the type UV"""
+
+    def __init__(self, attr_path: str) -> None:
+        super().__init__(attr_path)
+
+        self.position = Vector3Attribute(f"{attr_path}.position")
+        self.parameter = DoubleAttribute(f"{attr_path}.parameter")
 
 
 class UvPinCoordinateAttribute(Attribute[tuple[float, float]]):

@@ -11,7 +11,14 @@ This repository contains three main parts:
 The main aim being to expand on the feature set of an established rig build system (mGear),
 without needing the high maintanence burden of a fork.
 
+## Documentation
+
+Find the documentation for this project [here](https://michaelharmonart.github.io/y-rig/docs/)
+
 ## Developing/Using y-rig
+
+> [!WARNING]
+> You probably have important things to do, but before you touch this codebase, please read [this foundational document on the y-rig approach](https://michaelharmonart.github.io/y-rig/docs/approach/).
 
 After cloning this repo to a convenient place, run `git config --local core.hooksPath .githooks/` to set up the githooks, these will then install the needed dependencies.  
 You'll also need to install mGear. See [mGear Website](https://mgear-framework.com/).
@@ -22,7 +29,7 @@ Make sure to run this BEFORE you build a rig with mGear if you're developing a c
 Shifter's reload component function will reload the components but won't update them to the ones in a new path if you change
 the MGEAR_SHIFTER_COMPONENT_PATH environment variable at runtime.
 
-```
+```py
 # Run to import yrig and its components
 import sys
 import os
@@ -41,7 +48,7 @@ os.environ["MGEAR_SHIFTER_COMPONENT_PATH"] = str(component_path)
 
 During development if you have made changes to the yrig library, you can re-import to test your changes immediately.
 
-```
+```py
 # Run to reload yrig during development
 import sys
 modules = [name for name in sys.modules.keys() if name.startswith("yrig")]
@@ -52,7 +59,7 @@ import yrig
 
 You can also open a debug port to set breakpoints and test yrig library code.
 
-```
+```py
 # Run to open debug port
 import os
 from pathlib import Path

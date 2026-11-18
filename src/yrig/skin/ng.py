@@ -25,6 +25,7 @@ log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from ngSkinTools2 import api as ng
+    from ngSkinTools2.api.influenceMapping import InfluenceMapping
     from ngSkinTools2.api.plugin import (
         is_plugin_loaded,
         load_plugin,
@@ -76,6 +77,12 @@ def require_ng_skin(func: Callable[P, R]) -> Callable[P, R]:
         return func(*args, **kwargs)
 
     return wrapper
+
+
+@require_ng_skin
+def has_ng_layer_data(geometry: str) -> bool:
+    """Return whether ngSkinTools2 layers are initialized on the geometry."""
+    return ng.get_layers_enabled(geometry)
 
 
 @require_ng_skin
@@ -155,7 +162,6 @@ def apply_ng_skin_weights(weights_file: Path, geometry: str) -> None:
 
     if not weights_file.exists():
         raise RuntimeError(f"{weights_file} doesn't exist, unable to load weights.")
-
     # Run the import
     ng.import_json(
         target=geometry,
@@ -163,6 +169,20 @@ def apply_ng_skin_weights(weights_file: Path, geometry: str) -> None:
         vertex_transfer_mode=ng.transfer.VertexTransferMode.vertexId,
         influences_mapping_config=config,
     )
+
+    # Set a sane default mirror config
+    mirror = ng.mirror.Mirror(geometry)
+    mirror.axis = "x"
+
+    mapper: InfluenceMapping = mirror.build_influences_mapper()
+    mapper.config.globs = [("*_L*", "*_R*")]
+    mapper.config.use_name_matching = True
+    mapper.config.use_distance_matching = False
+    mapper.config.use_label_matching = False
+    mapper.config.use_dg_link_matching = True
+
+    mirror.save_influences_mapper(mapper)
+    mirror.recalculate_influences_mapping()
 
 
 @require_ng_skin

@@ -1,24 +1,121 @@
-from collections.abc import Iterable
-from pathlib import Path
+from collections.abc import Generator, Iterable
+from contextlib import contextmanager
+from pathlib import Path, PurePosixPath
 
 from maya import cmds
 from maya.api.OpenMaya import (
+    MDagPath,
+    MFn,
     MPlug,
     MSelectionList,
 )
+from maya.api.OpenMayaAnim import MFnGeometryFilter
 
+from yrig.maya_api.node import BlendShapeNode, ShapeEditorManagerNode
+from yrig.maya_api.utils import get_depend_node
 from yrig.select import maintain_selection
+from yrig.shape import get_shape, get_shape_output
+
+
+@contextmanager
+def preserve_shape_editor_root_directory(
+    manager: ShapeEditorManagerNode,
+) -> Generator[None, None, None]:
+    """
+    When initializing a blendShape Maya adds it to the root directory.
+    This screws up our manual handling of directories on import.
+
+    This is an easy way to guarantee that Maya won't screw up directory data.
+    """
+    snapshot = manager.blend_shape_directory[0].child_indices.get()
+    try:
+        yield
+    finally:
+        manager.blend_shape_directory[0].child_indices.set(snapshot)
+
+
+def resolve_blendshape(node: str) -> BlendShapeNode | None:
+    if cmds.objectType(node, isAType="blendShape"):
+        return BlendShapeNode.from_existing(node)
+    history: list[str] = cmds.listHistory(node)  # type: ignore
+    blendshapes = cmds.ls(history, type="blendShape")  # type: ignore
+    return BlendShapeNode.from_existing(blendshapes[0]) if blendshapes else None
+
+
+def find_child_directory_index(
+    manager: ShapeEditorManagerNode,
+    parent_directory_index: int,
+    name: str,
+) -> int | None:
+    """Return the index of the direct child directory called ``name``, or None."""
+    child_indices = manager.blend_shape_directory[parent_directory_index].child_indices.get()
+    for child_index in child_indices:
+        if child_index >= 0:  # positive entries are non directory children
+            continue
+        directory_index = -child_index
+        directory = manager.blend_shape_directory[directory_index]
+        if directory.directory_name.get() == name:
+            return directory_index
+    return None
+
+
+def add_blendshape_to_directory(
+    manager: ShapeEditorManagerNode, blendshape: BlendShapeNode, parent_directory_index: int
+) -> int:
+    child_index = blendshape.mid_layer_id.get()
+    blendshape.mid_layer_parent.set(parent_directory_index)
+    parent_directory = manager.blend_shape_directory[parent_directory_index]
+    original_child_indices = parent_directory.child_indices.get()
+    parent_directory.child_indices.set(value=[*original_child_indices, child_index])
+
+    return child_index
+
+
+def add_shape_editor_directory(
+    manager: ShapeEditorManagerNode, name: str, parent_directory_index: int
+) -> int:
+    directory_index = manager.blend_shape_directory.next_available_index()
+    directory = manager.blend_shape_directory[directory_index]
+    directory.parent_index.set(parent_directory_index)
+    directory.directory_name.set(name)
+    parent_directory = manager.blend_shape_directory[parent_directory_index]
+    original_child_indices = parent_directory.child_indices.get()
+    parent_directory.child_indices.set([*original_child_indices, -directory_index])
+    return directory_index
 
 
 def create_blendshape(
     geometry: str,
-    name: str,
+    name: str | None = None,
+    *,
     front_of_chain: bool = True,
-) -> str:
-    result: list[str] = cmds.blendShape(geometry, name=name, frontOfChain=front_of_chain)  # type: ignore
-    if not result:
-        raise RuntimeError(f"Failed to create blendShape: {name}")
-    return result[0]
+    parent_directory: PurePosixPath | str = "/",
+) -> BlendShapeNode:
+    resolved_name = name or f"{geometry}_BS"
+
+    parent_directory_path = PurePosixPath(parent_directory)
+    parent_directories = tuple(
+        part for part in parent_directory_path.parts if part != parent_directory_path.anchor
+    )
+    shape_editor_manager = ShapeEditorManagerNode.from_existing("shapeEditorManager")
+    with preserve_shape_editor_root_directory(shape_editor_manager):
+        maya_result: list[str] = cmds.blendShape(
+            geometry, name=resolved_name, frontOfChain=front_of_chain
+        )  # type: ignore
+    if not maya_result:
+        raise RuntimeError(f"Failed to create blendShape: {resolved_name}")
+    blendshape_node = BlendShapeNode.from_existing(maya_result[0])
+    parent_index: int = 0
+    for dir in parent_directories:
+        child_index: int | None = find_child_directory_index(
+            shape_editor_manager, parent_index, dir
+        )
+        if child_index is None:
+            parent_index = add_shape_editor_directory(shape_editor_manager, dir, parent_index)
+        else:
+            parent_index = child_index
+    add_blendshape_to_directory(shape_editor_manager, blendshape_node, parent_index)
+    return blendshape_node
 
 
 def import_maya_shape_file(
@@ -94,6 +191,27 @@ def export_maya_shape_file(
     )
 
 
+def get_blendshape_input_shape(
+    blendshape: BlendShapeNode,
+    input_index: int,
+) -> str | None:
+    """Return the upstream DAG shape for an existing logical input index."""
+    if isinstance(input_index, bool) or not isinstance(input_index, int):
+        raise TypeError("input_index must be an integer")
+    if input_index < 0:
+        raise ValueError("input_index must be nonnegative")
+
+    node = get_depend_node(str(blendshape))
+    try:
+        shape = MFnGeometryFilter(node).inputShapeAtIndex(input_index)
+    except RuntimeError as exc:
+        return None
+    if shape.isNull() or not shape.hasFn(MFn.kShape):
+        return None
+    shape_path: MDagPath = MDagPath.getAPathTo(shape)
+    return shape_path.partialPathName()
+
+
 def get_blendshape_targets(blendshape: str) -> dict[str, str]:
     """Return a mapping of blendShape target names to weight attributes.
 
@@ -138,67 +256,10 @@ def get_name_to_target_index_map(blendshape: str) -> dict[str, int]:
     }
 
 
-def build_blendshape_networks(blendshape: str) -> dict[str, str]:
-    """
-    Creates one network node per blendshape type and connects
-    custom attributes to the corresponding blendshape targets.
-
-    Example:
-        mouth_l_up_07
-            -> mouth_l_nw.up_07
-
-        mouth_l_up_07_out_10
-            -> mouth_l_nw.up_07_out_10
-    """
-    network_nodes: dict[str, str] = {}
-
-    for alias, attr in get_blendshape_targets(blendshape).items():
-        parts = alias.split("_")
-
-        if len(parts) < 3:
-            cmds.warning(f"Invalid blendshape name: {alias}")
-            continue
-
-        target_type = "_".join(parts[:2])
-        target_name = "_".join(parts[2:])
-
-        network_name = f"{target_type}_nw"
-
-        if target_type not in network_nodes:
-            if cmds.objExists(network_name):
-                network_node = network_name
-            else:
-                network_node = cmds.createNode(
-                    "network",
-                    name=network_name,
-                )
-
-            network_nodes[target_type] = network_node
-
-        network_node = network_nodes[target_type]
-
-        if not cmds.attributeQuery(
-            target_name,
-            node=network_node,
-            exists=True,
-        ):
-            cmds.addAttr(
-                network_node,
-                longName=target_name,
-                attributeType="double",
-                defaultValue=0.0,
-                minValue=0.0,
-                maxValue=1.0,
-                keyable=True,
-            )
-
-        cmds.connectAttr(
-            f"{network_node}.{target_name}",
-            f"{blendshape}.{attr}",
-            force=True,
-        )
-
-    return network_nodes
+def get_blendshape_target_names(blendshape: str) -> list[str]:
+    """Return all target names on a blendShape node."""
+    aliases = cmds.aliasAttr(blendshape, query=True) or []
+    return aliases[::2]
 
 
 def get_target_weights(
@@ -286,3 +347,90 @@ def connect_target_deltas(source_target_attr: str, driven_target_attr: str) -> N
                 f"{source_target_item_attr}[{index}].{attr}",
                 f"{driven_target_item_attr}[{index}].{attr}",
             )
+
+
+def copy_target_deltas(
+    blendshape: BlendShapeNode | str,
+    input_index: int,
+    source_index: int,
+    destination_index: int,
+    *,
+    replace: bool = True,
+) -> None:
+    if replace:
+        cmds.blendShape(
+            str(blendshape), edit=True, resetTargetDelta=(input_index, destination_index)
+        )
+    cmds.blendShape(
+        str(blendshape),
+        edit=True,
+        copyDelta=(input_index, source_index, destination_index),
+    )
+
+
+def connect_to_psd_network(
+    blendshape: str | BlendShapeNode, psd_network: str, create_missing: bool = True
+) -> tuple[str, list[str]]:
+    blendshape_node = (
+        blendshape
+        if isinstance(blendshape, BlendShapeNode)
+        else BlendShapeNode.from_existing(blendshape)
+    )
+    if cmds.objExists(psd_network):
+        resolved_psd_network = psd_network
+    else:
+        if create_missing:
+            resolved_psd_network = cmds.createNode("network", name=psd_network)
+            cmds.setAttr(f"{resolved_psd_network}.isHistoricallyInteresting", False)  # type: ignore
+        else:
+            raise RuntimeError(f"Couldn't find the node {psd_network}")
+    connected: list[str] = []
+    for weight_attr in blendshape_node.weight:
+        alias = weight_attr.get_alias()
+        if alias is not None:
+            input = weight_attr.get_input()
+            if not input:
+                network_alias_attr = f"{resolved_psd_network}.{alias}"
+                if not cmds.objExists(network_alias_attr):
+                    if create_missing:
+                        cmds.addAttr(resolved_psd_network, longName=alias, attributeType="float")
+                    else:
+                        continue
+                weight_attr.connect_from(network_alias_attr)
+                connected.append(network_alias_attr)
+    return resolved_psd_network, connected
+
+
+def get_existing_target_group_indices(blendshape: BlendShapeNode) -> set[int]:
+    existing_group_indices: set[int] = set()
+    for index in blendshape.input_target.get_indices():
+        input_target = blendshape.input_target[index]
+        target_group_indices = input_target.input_target_group.get_indices()
+        existing_group_indices.update(target_group_indices)
+    return existing_group_indices
+
+
+def add_blendshape_target_from_geometry(
+    blendshape: str | BlendShapeNode,
+    geometry: str,
+    name: str | None = None,
+    default_value: float = 1,
+    *,
+    local: bool = True,
+) -> int:
+    blendshape_node = (
+        blendshape
+        if isinstance(blendshape, BlendShapeNode)
+        else BlendShapeNode.from_existing(blendshape)
+    )
+    index = blendshape_node.input_target[0].input_target_group.next_available_index()
+    target_item = blendshape_node.input_target[0].input_target_group[index].input_target_item[6000]
+
+    shape = get_shape(geometry)
+    if shape is None:
+        raise RuntimeError(f"Couldn't find shape for {geometry}.")
+    shape_out = get_shape_output(shape, local)
+    target_item.input_geom_target.connect_from(shape_out)
+    blendshape_node.weight[index].set_alias(name or geometry)
+    blendshape_node.weight[index].set(default_value)
+    return index

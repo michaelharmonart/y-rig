@@ -1,5 +1,5 @@
 import logging
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -9,13 +9,12 @@ from yrig.io import confirm_overwrite
 from yrig.io.json import export_json, load_json
 from yrig.maya_api.enum import (
     SkinClusterNormalizeWeights,
-    SkinClusterRelativeSpaceMode,
     SkinClusterSkinningMethod,
     SkinClusterWeightDistribution,
 )
-from yrig.maya_api.node import SkinCluster
+from yrig.maya_api.node import SkinClusterNode
 from yrig.name import format_item_count, natural_sort_key
-from yrig.shape import get_shape
+from yrig.shape import get_shape, shape_topology_hash
 from yrig.skin.core import (
     get_skin_cluster,
     get_skin_cluster_influences,
@@ -32,12 +31,13 @@ class SkinBindData:
     name: str
     influences: list[str]
     skinning_method: SkinClusterSkinningMethod
-    relative_space_mode: SkinClusterRelativeSpaceMode
     support_non_rigid: bool
     normalize_weights: SkinClusterNormalizeWeights
     weight_distribution: SkinClusterWeightDistribution
     max_influences: int
     maintain_max_influences: bool
+    input_geometry: str | None = None
+    topology_hash: str | None = None
 
 
 @dataclass
@@ -50,7 +50,15 @@ def _validate_influences(
     influence_names: Iterable[str],
     geometry: str,
     error_on_missing: bool = False,
+    *,
+    influence_map: Callable[[str], str] | None = None,
 ) -> list[str]:
+    """Validate destination influence names after optional remapping."""
+    influence_names = list(
+        dict.fromkeys(
+            influence_map(name) if influence_map is not None else name for name in influence_names
+        )
+    )
     valid = [name for name in influence_names if cmds.objExists(name)]
     missing = set(influence_names) - set(valid)
     if missing:
@@ -73,7 +81,7 @@ def load_skin_bind_data(filepath: Path) -> SkinBindData:
 
 def export_skin_bind_data(
     filepath: Path,
-    skin_cluster: str | SkinCluster,
+    skin_cluster: str | SkinClusterNode,
     force: bool = False,
 ) -> bool:
 
@@ -87,33 +95,40 @@ def export_skin_bind_data(
     return True
 
 
-def get_skin_bind_data(skin_cluster: str | SkinCluster) -> SkinBindData:
+def get_skin_bind_data(skin_cluster: str | SkinClusterNode) -> SkinBindData:
     skin_cluster_node = (
         skin_cluster
-        if isinstance(skin_cluster, SkinCluster)
-        else SkinCluster.from_existing(skin_cluster)
+        if isinstance(skin_cluster, SkinClusterNode)
+        else SkinClusterNode.from_existing(skin_cluster)
     )
+    input_geometry_attribute = next(iter(skin_cluster_node.original_geometry)).get_input()
+    if input_geometry_attribute is not None:
+        input_geometry = str(input_geometry_attribute).split(".", 1)[0]
+        topology_hash = shape_topology_hash(input_geometry)
+    else:
+        input_geometry = None
+        topology_hash = None
     return SkinBindData(
         name=str(skin_cluster),
         influences=get_skin_cluster_influences(skin_cluster),
         skinning_method=skin_cluster_node.skinning_method.get(),
-        relative_space_mode=skin_cluster_node.relative_space_mode.get(),
         support_non_rigid=skin_cluster_node.dqs_support_non_rigid.get(),
         normalize_weights=skin_cluster_node.normalize_weights.get(),
         weight_distribution=skin_cluster_node.weight_distribution.get(),
         max_influences=skin_cluster_node.max_influences.get(),
         maintain_max_influences=skin_cluster_node.maintain_max_influences.get(),
+        input_geometry=input_geometry,
+        topology_hash=topology_hash,
     )
 
 
-def apply_skin_bind_data(skin_cluster: str | SkinCluster, data: SkinBindData) -> None:
+def apply_skin_bind_data(skin_cluster: str | SkinClusterNode, data: SkinBindData) -> None:
     skin_cluster_node = (
         skin_cluster
-        if isinstance(skin_cluster, SkinCluster)
-        else SkinCluster.from_existing(skin_cluster)
+        if isinstance(skin_cluster, SkinClusterNode)
+        else SkinClusterNode.from_existing(skin_cluster)
     )
     skin_cluster_node.skinning_method.set(data.skinning_method)
-    skin_cluster_node.relative_space_mode.set(data.relative_space_mode)
     skin_cluster_node.dqs_support_non_rigid.set(data.support_non_rigid)
     skin_cluster_node.normalize_weights.set(data.normalize_weights)
     skin_cluster_node.weight_distribution.set(data.weight_distribution)
@@ -122,10 +137,17 @@ def apply_skin_bind_data(skin_cluster: str | SkinCluster, data: SkinBindData) ->
 
 
 def skin_geometry_from_bind_data(
-    geometry: str, data: SkinBindData, skip_missing_influences: bool = True
-) -> SkinCluster:
+    geometry: str,
+    data: SkinBindData,
+    skip_missing_influences: bool = True,
+    *,
+    influence_map: Callable[[str], str] | None = None,
+) -> SkinClusterNode:
     valid_influences = _validate_influences(
-        data.influences, geometry, error_on_missing=not skip_missing_influences
+        data.influences,
+        geometry,
+        error_on_missing=not skip_missing_influences,
+        influence_map=influence_map,
     )
     return skin_geometry(
         bind_joints=valid_influences,
@@ -135,7 +157,6 @@ def skin_geometry_from_bind_data(
         in {SkinClusterSkinningMethod.DUAL_QUATERNION, SkinClusterSkinningMethod.WEIGHT_BLENDED},
         weight_blend=data.skinning_method == SkinClusterSkinningMethod.WEIGHT_BLENDED,
         support_non_rigid=data.support_non_rigid,
-        relative_space_mode=data.relative_space_mode,
         normalize_weights=data.normalize_weights,
         weight_distribution=data.weight_distribution,
         max_influences=data.max_influences,
@@ -148,7 +169,11 @@ def load_skin_weight_data(filepath: Path) -> SkinWeightData:
 
 
 def apply_skin_weight_data(
-    data: SkinWeightData, geometry: str, skin_cluster: str | None = None
+    data: SkinWeightData,
+    geometry: str,
+    skin_cluster: str | None = None,
+    *,
+    influence_map: Callable[[str], str] | None = None,
 ) -> str:
     """
     Apply SkinWeightData to the skinCluster on the given geometry.
@@ -164,7 +189,9 @@ def apply_skin_weight_data(
     shape = get_shape(geometry)
     if shape is None:
         raise RuntimeError(f"{geometry} has no attached shape node")
-    applied_skin_cluster = set_skin_weights(shape, data.skin_weights, skin_cluster=skin_cluster)
+    applied_skin_cluster = set_skin_weights(
+        shape, data.skin_weights, skin_cluster=skin_cluster, influence_map=influence_map
+    )
     return applied_skin_cluster
 
 

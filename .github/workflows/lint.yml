@@ -1,10 +1,20 @@
-name: CI — Lint & Type Check
+name: Lint & Type Check
 
 on:
   push:
     branches: ["main"]
+    paths:
+      - "src/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/lint.yml"
   pull_request:
     branches: ["main"]
+    paths:
+      - "src/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/lint.yml"
 
 permissions:
   contents: read

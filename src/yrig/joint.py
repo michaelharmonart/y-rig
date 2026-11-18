@@ -1,4 +1,4 @@
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 
@@ -15,7 +15,7 @@ _joint_collection: ContextVar[list[str] | None] = ContextVar("joint_collection",
 
 
 @contextmanager
-def collect_joints() -> Iterator[list[str]]:
+def collect_joints() -> Generator[list[str], None, None]:
     """
     Collect joints created inside this block.
 
@@ -56,10 +56,12 @@ def create_joint(
     radius: float = 1,
     add_to_set: bool = True,
 ) -> str:
-    joint = cmds.createNode("joint", name=f"{name}{JOINT_SUFFIX}")
-
     if parent is not None:
-        cmds.parent(joint, parent, relative=True)
+        joint = cmds.createNode(
+            "joint", name=f"{name}{JOINT_SUFFIX}", skipSelect=True, parent=parent
+        )
+    else:
+        joint = cmds.createNode("joint", name=f"{name}{JOINT_SUFFIX}", skipSelect=True)
     source_transform: str | None = None
     if transform is None:
         pass

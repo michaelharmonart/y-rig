@@ -11,9 +11,14 @@
     "meta_data": {
         "positions": {
             "/shifter_build": [
-                -1220.0,
-                0.0
+                -840.0,
+                -120.0
             ]
+        },
+        "collapse": {
+            "/build/base_controls": true,
+            "/tools_window/tools/mgear": false,
+            "/tools_window/tools/mgear/shifter_guides_io": true
         }
     },
     "nodes": {
@@ -24,6 +29,17 @@
                     "value": "prop/mgear_prop"
                 }
             }
+        },
+        "/build/base_controls/local": {
+            "enabled": true,
+            "attrs": {
+                "control_parent": {
+                    "value": "${../global.control}"
+                }
+            }
+        },
+        "/build/base_controls/shot": {
+            "enabled": false
         },
         "/setup": {
             "child_order": [

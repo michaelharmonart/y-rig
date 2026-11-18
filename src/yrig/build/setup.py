@@ -21,10 +21,10 @@ def setup_rig_build_file(filepath: Path, rig_path: Path) -> bool:
     if config is None:
         return False
     setup_rig_build_nxt_layer(
-        filepath,
-        rig_path=Path(config.rig_path),
+        config.filepath,
+        rig_path=config.rig_path,
         inherits=config.inherits,
-        name=config.name,
+        asset_name=config.asset_name,
         color=config.color,
     )
     return True
@@ -48,7 +48,7 @@ class RigBuildLayerConfig:
     filepath: Path
     rig_path: Path
     inherits: Path | None
-    name: str
+    asset_name: str
     color: str
 
 
@@ -72,14 +72,14 @@ class RigBuildSetupWizard(QtWidgets.QWizard):
         self.rig_path = QtWidgets.QLineEdit(rig_path)
         self.inherits_path = QtWidgets.QLineEdit()
 
-        self.name = QtWidgets.QLineEdit(name)
+        self.asset_name = QtWidgets.QLineEdit(name)
         self.color = QtGui.QColor(color)
         self.color_button = QtWidgets.QPushButton()
         self._update_color_button()
         self.color_button.clicked.connect(self._choose_color)  # type: ignore
 
         form.addRow("Layer:", self.filepath)
-        form.addRow("Name:", self.name)
+        form.addRow("Asset Name:", self.asset_name)
         form.addRow("Rig Path:", self.rig_path)
         form.addRow("Inherits:", self.inherits_path)
         form.addRow("Color:", self.color_button)
@@ -107,6 +107,6 @@ class RigBuildSetupWizard(QtWidgets.QWizard):
             filepath=Path(self.filepath.text()),
             rig_path=Path(self.rig_path.text()),
             inherits=Path(inherits) if inherits else None,
-            name=self.name.text().strip(),
+            asset_name=self.asset_name.text().strip(),
             color=self.color.name(),
         )

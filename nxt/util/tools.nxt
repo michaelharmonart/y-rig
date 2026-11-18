@@ -59,7 +59,10 @@
             ]
         },
         "collapse": {
+            "/tools_window/tools": false,
+            "/tools_window/tools/geometry": true,
             "/tools_window/tools/layout": false,
+            "/tools_window/tools/skin": true,
             "/workflow_tools/test_panel": false
         }
     },
@@ -142,13 +145,49 @@
         "/tools_window/tools": {
             "instance": "/tab",
             "child_order": [
-                "geometry"
+                "geometry",
+                "skin",
+                "blendshape"
             ],
             "attrs": {
                 "text": {
                     "value": "Tools"
                 }
             }
+        },
+        "/tools_window/tools/blendshape": {
+            "instance": "/panel",
+            "child_order": [
+                "layout"
+            ],
+            "attrs": {
+                "text": {
+                    "type": "raw",
+                    "value": "BlendShape"
+                }
+            }
+        },
+        "/tools_window/tools/blendshape/layout": {
+            "instance": "/gridLayout",
+            "child_order": [
+                "mirror_blendshapes"
+            ]
+        },
+        "/tools_window/tools/blendshape/layout/mirror_blendshapes": {
+            "instance": "/button",
+            "attrs": {
+                "text": {
+                    "value": "Mirror BlendShapes"
+                }
+            },
+            "code": [
+                "selection = yrig.select.get_selection()",
+                "",
+                "for node in selection:",
+                "    blendshape = yrig.deformer.blendshape.resolve_blendshape(node)",
+                "    if node is not None:",
+                "        yrig.deformer.blendshape.mirror_all_blendshape_targets(blendshape)"
+            ]
         },
         "/tools_window/tools/geometry": {
             "instance": "/panel",
@@ -178,8 +217,62 @@
                 "from yrig.color.bake import face_color_from_texture",
                 "",
                 "selection = cmds.ls(selection=True)",
-                "for object in selection:",
-                "    face_color_from_texture(object)"
+                "with yrig.progress.progress_step(\"Bake Face Colors\", total=len(selection)):",
+                "    for object in selection:",
+                "        try:",
+                "            with yrig.progress.progress_step(object):",
+                "                face_color_from_texture(object)",
+                "        except Exception as e:",
+                "            log = yrig.build.nxt_api.get_node_logger(\"${_nxtpath}\")",
+                "            log.warning(f\"Couldn't bake face colors for {object}, {e}\")"
+            ]
+        },
+        "/tools_window/tools/skin": {
+            "instance": "/panel",
+            "child_order": [
+                "layout"
+            ],
+            "attrs": {
+                "text": {
+                    "value": "Skin"
+                }
+            }
+        },
+        "/tools_window/tools/skin/layout": {
+            "instance": "/gridLayout",
+            "child_order": [
+                "split_skin_weights",
+                "transfer_skin"
+            ]
+        },
+        "/tools_window/tools/skin/layout/split_skin_weights": {
+            "instance": "/button",
+            "attrs": {
+                "text": {
+                    "value": "Split Skin Weights"
+                }
+            },
+            "code": [
+                "selection = yrig.select.get_selection()",
+                "yrig.skin.split.auto_split_weights(selection)"
+            ]
+        },
+        "/tools_window/tools/skin/layout/transfer_skin": {
+            "instance": "/button",
+            "attrs": {
+                "text": {
+                    "value": "Transfer Skin"
+                }
+            },
+            "code": [
+                "log = yrig.build.nxt_api.get_node_logger(\"${_nxtpath}\")",
+                "selection = cmds.ls(selection=True)",
+                "if len(selection) != 2:",
+                "    raise RuntimeError(\"Select the source geo, then the target geo.\")",
+                "source = selection[0]",
+                "dest = selection[-1]",
+                "yrig.skin.transfer_skin(source, dest)",
+                "log.info(f\"Transferred skin from {source} to {dest}\")"
             ]
         }
     }

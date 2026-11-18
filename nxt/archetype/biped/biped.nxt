@@ -18,114 +18,17 @@
         }
     },
     "meta_data": {
-        "positions": {
-            "/apply": [
-                120.0,
-                0.0
-            ],
-            "/build": [
-                -360.0,
-                0.0
-            ],
-            "/cleanup": [
-                580.0,
-                0.0
-            ],
-            "/component": [
-                -360.0,
-                -200.0
-            ],
-            "/ear_component": [
-                -360.0,
-                -560.0
-            ],
-            "/eye_component": [
-                -360.0,
-                -800.0
-            ],
-            "/eye_def": [
-                -360.0,
-                -380.0
-            ],
-            "/eyes_psd": [
-                720.0,
-                760.0
-            ],
-            "/face_base_component": [
-                -360.0,
-                -620.0
-            ],
-            "/io_pair": [
-                -2900.0,
-                -1400.0
-            ],
-            "/look_component": [
-                -360.0,
-                -440.0
-            ],
-            "/mouth_component": [
-                -360.0,
-                -320.0
-            ],
-            "/nose_component": [
-                -360.0,
-                -740.0
-            ],
-            "/psd_import": [
-                120.0,
-                -320.0
-            ],
-            "/psd_io": [
-                -2900.0,
-                -1160.0
-            ],
-            "/psd_layer": [
-                120.0,
-                -380.0
-            ],
-            "/setup": [
-                -840.0,
-                0.0
-            ],
-            "/shifter_build": [
-                -1260.0,
-                0.0
-            ],
-            "/side": [
-                -360.0,
-                -140.0
-            ],
-            "/simple_eyebrow": [
-                -360.0,
-                -680.0
-            ],
-            "/skin_geometry": [
-                120.0,
-                -200.0
-            ],
-            "/split_skin_weights": [
-                120.0,
-                -260.0
-            ],
-            "/teeth_component": [
-                -360.0,
-                -260.0
-            ],
-            "/tongue_component": [
-                -360.0,
-                -500.0
-            ],
-            "/transfer_skin_weights": [
-                120.0,
-                -140.0
-            ]
-        },
         "collapse": {
-            "/apply/deformation/main/psd/body_psd/arms": true,
-            "/apply/deformation/main/psd/body_psd/eyes": true,
+            "/apply/deformation/main/psd/arms": true,
+            "/apply/deformation/main/psd/body/arms": true,
+            "/apply/deformation/main/psd/body/hands": true,
+            "/apply/deformation/main/psd/body/legs": true,
             "/apply/deformation/main/psd/body_psd/eyes/shapes": true,
-            "/apply/deformation/main/psd/body_psd/hands": true,
-            "/apply/deformation/main/psd/body_psd/legs": true,
+            "/apply/deformation/main/psd/eyes": true,
+            "/apply/deformation/main/psd/face/eyes": true,
+            "/apply/deformation/main/psd/face/mouth": true,
+            "/apply/deformation/main/psd/hands": true,
+            "/apply/deformation/main/psd/legs": true,
             "/build/left": false,
             "/build/left/ear": true,
             "/build/left/eye": true,
@@ -146,6 +49,7 @@
             "/io_pair": true,
             "/look_component": true,
             "/mouth_component": true,
+            "/mouth_legacy_component": true,
             "/nose_component": true,
             "/psd_import": true,
             "/psd_io": true,
@@ -165,51 +69,98 @@
             "/tools_window/biped/body/psd/leg_psd_io": true,
             "/tools_window/biped/body/psd/leg_shapes_io": false,
             "/tools_window/biped/face/face_guides_io": true,
+            "/tools_window/biped/face/guides": true,
             "/tools_window/biped/face/guides/face_guides_io": true,
             "/tools_window/biped/face/guides/mouth_surf_skin_io": true,
             "/tools_window/biped/face/guides/mouth_surface_io": true,
             "/tools_window/biped/face/guides/solo_face_guides_io": true,
             "/tools_window/biped/face/mouth_surf_skin_io": true,
             "/tools_window/biped/face/mouth_surface_io": true,
+            "/tools_window/biped/face/psd": true,
             "/tools_window/biped/face/psd/eye_psd_io": true,
+            "/tools_window/biped/face/psd/mouth_psd_io": true,
             "/tools_window/biped/face/skin_data_io": true,
             "/tools_window/biped/face/solo_face_guides_io": true,
-            "/tools_window/biped/visibility_sets_io": true,
             "/tools_window/tools/mgear/shifter_guides_io": true
+        },
+        "positions": {
+            "/apply": [
+                120.0,
+                0.0
+            ],
+            "/build": [
+                -360.0,
+                0.0
+            ],
+            "/ear_component": [
+                -360.0,
+                -660.0
+            ],
+            "/eye_component": [
+                -360.0,
+                -360.0
+            ],
+            "/eye_def": [
+                -360.0,
+                -420.0
+            ],
+            "/face_base_component": [
+                -360.0,
+                -240.0
+            ],
+            "/finalize": [
+                600.0,
+                0.0
+            ],
+            "/look_component": [
+                -360.0,
+                -480.0
+            ],
+            "/mouth_component": [
+                -360.0,
+                -840.0
+            ],
+            "/mouth_legacy_component": [
+                -360.0,
+                -600.0
+            ],
+            "/nose_component": [
+                -360.0,
+                -540.0
+            ],
+            "/psd_import": [
+                120.0,
+                -300.0
+            ],
+            "/shifter_build": [
+                -840.0,
+                -120.0
+            ],
+            "/simple_eyebrow": [
+                -360.0,
+                -300.0
+            ],
+            "/skin_geometry": [
+                120.0,
+                -180.0
+            ],
+            "/teeth_component": [
+                -360.0,
+                -720.0
+            ],
+            "/tongue_component": [
+                -360.0,
+                -780.0
+            ]
         }
     },
     "nodes": {
         "/": {
             "attrs": {
                 "rig_path": {
-                    "value": "character/biped"
+                    "value": "archetype/biped"
                 }
             }
-        },
-        "/apply": {
-            "child_order": [
-                "rest_pose",
-                "control_shapes",
-                "deformation",
-                "visibility_sets"
-            ]
-        },
-        "/apply/visibility_sets": {
-            "attrs": {
-                "rig_set": {
-                    "type": "raw",
-                    "value": "${/setup/root.rig_set}"
-                },
-                "visibility_sets_filepath": {
-                    "type": "raw",
-                    "value": "${file::${rig_path}/data/visibility.ysets}"
-                }
-            },
-            "code": [
-                "if \"${visibility_sets_filepath}\":",
-                "    filepath = Path(\"${visibility_sets_filepath}\")",
-                "    yrig.sets.import_sets(filepath, parent=\"${rig_set}\")"
-            ]
         },
         "/skin_geometry": {
             "attrs": {
@@ -220,64 +171,11 @@
         },
         "/tools_window/biped": {
             "instance": "/tab",
-            "child_order": [
-                "visibility_sets_io"
-            ],
             "attrs": {
                 "text": {
                     "value": "Biped"
                 }
             }
-        },
-        "/tools_window/biped/visibility_sets_io": {
-            "instance": "/io_pair",
-            "child_order": [
-                "import",
-                "export"
-            ],
-            "attrs": {
-                "relative_filepath": {
-                    "value": "data/visibility.ysets"
-                },
-                "text": {
-                    "value": "Visibility Sets"
-                },
-                "visibility_set_name": {
-                    "type": "raw",
-                    "value": "rig_visibility_sets"
-                }
-            }
-        },
-        "/tools_window/biped/visibility_sets_io/export": {
-            "attrs": {
-                "text": {
-                    "value": "Export Visibility Sets"
-                }
-            },
-            "code": [
-                "export_root_path = \"${export_root_path}\"",
-                "if not export_root_path or not Path(export_root_path).is_dir():",
-                "    raise ValueError(f\"Invalid directory: {export_root_path}\")",
-                "export_path = Path(\"${export_path}\")",
-                "",
-                "yrig.sets.export_sets(export_path, \"${visibility_set_name}\")"
-            ]
-        },
-        "/tools_window/biped/visibility_sets_io/import": {
-            "attrs": {
-                "rig_set": {
-                    "type": "raw",
-                    "value": "rig_sets_grp"
-                },
-                "text": {
-                    "value": "Import Visibility Sets"
-                }
-            },
-            "code": [
-                "import_path = Path(\"${import_filepath}\")",
-                "",
-                "yrig.sets.import_sets(import_path, parent=\"${rig_set}\")"
-            ]
         }
     }
 }

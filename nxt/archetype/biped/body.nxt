@@ -9,67 +9,63 @@
     ],
     "meta_data": {
         "positions": {
-            "/pose_intepolators2": [
-                1164.9789899989946,
-                14.14114315884109
+            "/arms": [
+                400,
+                20
             ],
-            "/shapes2": [
-                1164.9789899989946,
-                14.14114315884109
+            "/hands": [
+                400,
+                20
             ],
-            "/shifter_component_build": [
-                -1095.9382886947733,
-                19.226987520960936
+            "/legs": [
+                400,
+                20
             ]
         }
     },
     "nodes": {
-        "/apply/deformation/main/psd/body_psd": {
-            "instance": "/psd_layer",
+        "/apply/deformation/main/psd": {
             "child_order": [
-                "arms",
-                "legs",
-                "hands"
+                "body"
             ],
             "attrs": {
-                "blendshape": {
-                    "type": "raw",
-                    "value": "body_psd"
-                },
                 "geometry": {
-                    "type": "raw",
-                    "value": "body_geo"
-                },
+                    "value": "[\"body_geo\"]"
+                }
+            }
+        },
+        "/apply/deformation/main/psd/body": {
+            "child_order": [
+                "arms",
+                "hands",
+                "legs"
+            ],
+            "attrs": {
                 "psd_path": {
-                    "type": "raw",
                     "value": "${rig_path}/data/body/psd"
                 }
-            },
-            "code": [
-                "yrig.deformer.blendshape.create_blendshape(geometry=\"${geometry}\", name=\"${blendshape}\")"
-            ]
+            }
         },
-        "/apply/deformation/main/psd/body_psd/arms": {
+        "/apply/deformation/main/psd/body/arms": {
             "instance": "/psd_import",
             "attrs": {
-                "psd_filename": {
+                "psd_system": {
                     "value": "arms"
                 }
             }
         },
-        "/apply/deformation/main/psd/body_psd/eyes/node": {},
-        "/apply/deformation/main/psd/body_psd/hands": {
+        "/apply/deformation/main/psd/body/hands": {
             "instance": "/psd_import",
             "attrs": {
-                "psd_filename": {
+                "psd_system": {
                     "value": "hands"
                 }
             }
         },
-        "/apply/deformation/main/psd/body_psd/legs": {
+        "/apply/deformation/main/psd/body/legs": {
             "instance": "/psd_import",
             "attrs": {
-                "psd_filename": {
+                "psd_system": {
                     "type": "raw",
                     "value": "legs"
                 }
@@ -79,6 +75,15 @@
             "instance": "/transfer_skin_weights",
             "attrs": {
                 "transfer_mapping": {
+                    "type": "dict",
+                    "value": "{}"
+                }
+            }
+        },
+        "/apply/deformation/main/wrap_from_sim": {
+            "instance": "/wrap",
+            "attrs": {
+                "wrap_mapping": {
                     "type": "dict",
                     "value": "{}"
                 }
@@ -123,31 +128,39 @@
                 }
             },
             "code": [
+                "log = yrig.build.nxt_api.get_node_logger(\"${_nxtpath}\")",
+                "",
                 "guide_path = Path(\"${guide_filepath}\")",
                 "",
                 "run_shifter_build = True",
                 "body_rig_temp_filepath = Path(\"${body_rig_temp_filepath}\")",
-                "if ${build_caching}:",
-                "    if \"${build_scope}\" == \"face\":",
-                "        if body_rig_temp_filepath.exists():",
-                "            yrig.io.import_maya_file(body_rig_temp_filepath)",
-                "            run_shifter_build = False",
-                "        else:",
-                "            run_shifter_build = True",
-                "    else:",
-                "        run_shifter_build = True",
-                "        ",
-                "    ",
+                "if ${build_caching} and \"${build_scope}\" == \"face\":",
+                "    if yrig.cache.is_cache_valid(body_rig_temp_filepath, guide_path):",
+                "        yrig.io.import_maya_file(body_rig_temp_filepath)",
+                "        run_shifter_build = False",
+                "",
                 "if run_shifter_build:",
-                "    result = yrig.build.mgear_api.build_from_shifter_file(guide_path, dev_build=${dev_build}, custom_steps=${custom_steps})",
+                "    result = yrig.build.mgear_api.build_from_shifter_file(",
+                "        guide_path, ",
+                "        dev_build=${dev_build}, ",
+                "        custom_steps=${custom_steps},",
+                "    )",
                 "    if result and ${build_caching}:",
                 "        export_root_path = \"${export_root_path}\"",
                 "        if not export_root_path or not Path(export_root_path).is_dir():",
                 "            raise ValueError(f\"Invalid directory: {export_root_path}\")",
                 "        try:",
-                "            yrig.io.export_maya_file(body_rig_temp_filepath, binary=True, force=True)",
+                "            yrig.io.export_maya_file(",
+                "                body_rig_temp_filepath, ",
+                "                binary=True, ",
+                "                force=True,",
+                "            )",
+                "            yrig.cache.write_cache_metadata(",
+                "                body_rig_temp_filepath,",
+                "                guide_path,",
+                "            )",
                 "        except Exception as e:",
-                "            STAGE.log.warning(\"Couldn't export body build cache: {e}\")"
+                "            log.warning(\"Couldn't export body build cache: {e}\")"
             ]
         },
         "/setup/shifter_component_build/attribute_defaults": {
@@ -187,10 +200,6 @@
                 "leg_psd_io"
             ],
             "attrs": {
-                "blendshape": {
-                    "type": "raw",
-                    "value": "body_psd"
-                },
                 "text": {
                     "value": "PSD"
                 }
@@ -199,10 +208,11 @@
         "/tools_window/biped/body/psd/arm_psd_io": {
             "instance": "/psd_io",
             "attrs": {
-                "psd_directory": {
+                "psd_system": {
                     "value": "arms"
                 },
                 "relative_path_stem": {
+                    "type": "raw",
                     "value": "data/body/psd/arms"
                 },
                 "system_name": {
@@ -221,7 +231,7 @@
                     "type": "raw",
                     "value": "body_psd"
                 },
-                "psd_directory": {
+                "psd_system": {
                     "value": "hands"
                 },
                 "relative_path_stem": {
@@ -238,7 +248,7 @@
         "/tools_window/biped/body/psd/leg_psd_io": {
             "instance": "/psd_io",
             "attrs": {
-                "psd_directory": {
+                "psd_system": {
                     "value": "legs"
                 },
                 "relative_path_stem": {

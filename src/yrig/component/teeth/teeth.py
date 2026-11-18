@@ -17,6 +17,7 @@ class Teeth:
         control_parent: str = "neck_M0_head_ctl",
         control_size: float = 1.0,
         parent_jnt: str = "face_jnt",
+        big_teeth: bool = True,
     ):
         self.part = part
         self.side = side
@@ -24,6 +25,7 @@ class Teeth:
         self.control_parent = control_parent
         self.control_size = control_size
         self.parent_jnt = parent_jnt
+        self.big_teeth = big_teeth
 
         self.guides: dict[str, str] = {
             "root": "jaw_M",
@@ -31,10 +33,8 @@ class Teeth:
             "bottom_teeth": "teeth_bottom_M",
         }
 
-    # Structure
-
     def setup_structure(self) -> None:
-        # Match the Nose component implementation exactly
+
         self.main_grp = create_transform(
             name=f"teeth_{self.side}",
             parent=self.parent,
@@ -55,7 +55,7 @@ class Teeth:
     def create_controls(self) -> None:
 
         self.main_ctrl = create_control(
-            name="teeth_M",
+            name=f"teeth_{self.side}",
             parent=self.control_grp,
             transform=self.guides["root"],
             size=self.control_size,
@@ -64,6 +64,7 @@ class Teeth:
         )
 
     def create_joints(self) -> None:
+
         cmds.select(cl=True)  # type: ignore
 
         parent = self.parent_jnt if cmds.objExists(self.parent_jnt) else None
@@ -72,6 +73,7 @@ class Teeth:
             cmds.select(parent)
 
         source_transform = None
+
         if hasattr(self.main_ctrl, "transform"):
             source_transform = self.main_ctrl.transform
 
@@ -81,36 +83,38 @@ class Teeth:
             transform=source_transform,
         )
 
-    # Build
-
     def build(self) -> None:
 
         self.setup_structure()
         self.create_controls()
         self.create_joints()
 
-        teeth_spline = TeethSpline(
+        teeth_builder = TeethSpline(
             guides=self.guides,
-            main_ctrl=self.main_ctrl.transform
-            if hasattr(self.main_ctrl, "transform")
-            else self.guides["root"],
+            main_ctrl=(
+                self.main_ctrl.transform
+                if hasattr(self.main_ctrl, "transform")
+                else self.guides["root"]
+            ),
             joint_parent=self.main_jnt,
             control_grp=self.control_grp,
             component_grp=self.component_grp,
             control_size=self.control_size,
+            big_teeth=self.big_teeth,
         )
 
-        self.teeth_joints = teeth_spline.build_teeth()
+        top_joints, bottom_joints = teeth_builder.build_teeth()
 
-        top_joints = self.teeth_joints[:5]
-        bottom_joints = self.teeth_joints[5:]
+        self.teeth_joints = top_joints + bottom_joints
 
-        tag_for_weight_split(
-            influence=top_joints[0],
-            split_influences=top_joints,
-        )
+        if top_joints:
+            tag_for_weight_split(
+                influence=top_joints[0],
+                split_influences=top_joints,
+            )
 
-        tag_for_weight_split(
-            influence=bottom_joints[0],
-            split_influences=bottom_joints,
-        )
+        if bottom_joints:
+            tag_for_weight_split(
+                influence=bottom_joints[0],
+                split_influences=bottom_joints,
+            )

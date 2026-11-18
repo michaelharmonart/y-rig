@@ -1,4 +1,10 @@
-runtime
+# Docs
+/docs/hugo/public/
+/docs/hugo/resources/
+/docs/hugo/assets/jsconfig.json
+/docs/hugo/.hugo_build.lock
+
+
 
 # Python General gitignore
 

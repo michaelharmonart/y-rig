@@ -1,10 +1,11 @@
 {
     "version": "1.17",
-    "alias": "rig",
+    "alias": "anim_rig",
     "color": "#0e8b5d",
     "mute": false,
     "solo": false,
     "references": [
+        "util/pipe.nxt",
         "util/tools.nxt",
         "util/skin.nxt",
         "core.nxt"
@@ -15,12 +16,16 @@
                 120.0,
                 0.0
             ],
-            "/build": [
-                -360.0,
+            "/apply/deformation/main/psd": [
+                0.0,
                 0.0
             ],
-            "/cleanup": [
+            "/attr_version": [
                 600.0,
+                -120.0
+            ],
+            "/build": [
+                -360.0,
                 0.0
             ],
             "/cleanup/control_shapes": [
@@ -35,6 +40,14 @@
                 -2.4974733523247323,
                 95.12116921241874
             ],
+            "/def_layer": [
+                -840.0,
+                -80.0
+            ],
+            "/finalize": [
+                600.0,
+                0.0
+            ],
             "/left": [
                 -140.88553886974233,
                 201.63824350300638
@@ -46,6 +59,10 @@
             "/middle": [
                 -414.87530251227207,
                 -11.02092554557493
+            ],
+            "/node": [
+                372.3757491458175,
+                382.71951995542355
             ],
             "/psd_import": [
                 120.0,
@@ -122,13 +139,32 @@
             "/transfer_skin_weights": [
                 120.0,
                 -120.0
+            ],
+            "/visibility_sets": [
+                280,
+                800
+            ],
+            "/visibility_sets_io": [
+                280,
+                20
+            ],
+            "/wrap": [
+                120.0,
+                -420.0
             ]
         },
         "collapse": {
             "/apply/deformation": false,
-            "/cleanup/hide_joints": true,
+            "/apply/visibility_sets/default_hidden": true,
+            "/build/base_controls": true,
+            "/build/base_controls/local": false,
+            "/finalize/hide_joints": true,
+            "/finalize/metadata": true,
+            "/finalize/metadata/build_commit": true,
+            "/finalize/prune/blendshapes": true,
             "/io_pair": true,
             "/psd_import": true,
+            "/psd_import/pose_intepolators": true,
             "/psd_import/shapes": true,
             "/psd_io": true,
             "/rbf_io": true,
@@ -136,11 +172,15 @@
             "/setup/root": false,
             "/shape_io": true,
             "/skin_data_io": true,
+            "/tools_window/tools/control_shapes": true,
             "/tools_window/tools/control_shapes/control_shapes_io": true,
             "/tools_window/tools/control_shapes/control_shapes_io/export": true,
             "/tools_window/tools/control_shapes/control_shapes_io/import": true,
             "/tools_window/tools/geometry/geometry_io": true,
-            "/tools_window/tools/skin/skin_data_io": true
+            "/tools_window/tools/pipe": false,
+            "/tools_window/tools/pipe/ingest_model": true,
+            "/tools_window/tools/skin/skin_data_io": true,
+            "/tools_window/tools/visibility_sets_io": true
         },
         "locks": {
             "$YRIG_NXT_DIR/core.nxt": false,
@@ -170,7 +210,8 @@
             "child_order": [
                 "rest_pose",
                 "control_shapes",
-                "deformation"
+                "deformation",
+                "visibility_sets"
             ]
         },
         "/apply/control_shapes": {
@@ -182,7 +223,8 @@
             },
             "code": [
                 "import_paths = [Path(filepath) for filepath in ${filelist::${control_shapes_filepath}}]",
-                "yrig.control.serialize.apply_control_shapes_files(import_paths)"
+                "yrig.control.serialize.apply_control_shapes_files(import_paths)",
+                "cmds.refresh()"
             ]
         },
         "/apply/deformation": {
@@ -197,19 +239,7 @@
             ]
         },
         "/apply/deformation/main/psd": {
-            "attrs": {
-                "psd_group": {
-                    "type": "raw",
-                    "value": "psd"
-                },
-                "psd_group_parent": {
-                    "type": "raw",
-                    "value": "${/setup/root.rig_root}"
-                }
-            },
-            "code": [
-                "yrig.transform.create_transform(name=\"${psd_group}\", parent=\"${psd_group_parent}\")"
-            ]
+            "instance": "/psd_layer"
         },
         "/apply/deformation/main/skin": {
             "instance": "/skin_geometry",
@@ -218,7 +248,8 @@
             ],
             "attrs": {
                 "geo_set": {
-                    "value": "${/setup/root/model.model_set}"
+                    "type": "raw",
+                    "value": "${/setup/root/deformation/main/skin.skin_set}"
                 },
                 "skin_directory": {
                     "value": "${file::${rig_path}/data/skin}"
@@ -230,23 +261,180 @@
         },
         "/apply/rest_pose": {
             "attrs": {
+                "control_set": {
+                    "type": "raw",
+                    "value": "${/setup/root/controls.control_set}"
+                },
                 "rest_pose": {
                     "type": "raw",
                     "value": "dagPose1"
                 }
             },
             "code": [
-                "if STAGE.control_list:",
-                "    cmds.dagPose(STAGE.control_list, name=\"${rest_pose}\", addToPose=True)"
+                "controls = cmds.sets(\"${control_set}\", query=True) or []",
+                "if controls:",
+                "    pose = \"${rest_pose}\"",
+                "    if cmds.ls(pose, type=\"dagPose\"):",
+                "        cmds.dagPose(controls, name=\"${rest_pose}\", addToPose=True)",
+                "    else:",
+                "        pose = cmds.dagPose(controls, name=pose, save=True)",
+                "    ",
+                "    "
+            ]
+        },
+        "/apply/visibility_sets": {
+            "child_order": [
+                "default_hidden"
+            ],
+            "attrs": {
+                "rig_set": {
+                    "type": "raw",
+                    "value": "${/setup/root.rig_set}"
+                },
+                "visibility_sets_filepath": {
+                    "type": "raw",
+                    "value": "${file::${rig_path}/data/visibility.ysets}"
+                }
+            },
+            "code": [
+                "if \"${visibility_sets_filepath}\":",
+                "    filepath = Path(\"${visibility_sets_filepath}\")",
+                "    yrig.sets.import_sets(filepath, parent=\"${rig_set}\")"
+            ]
+        },
+        "/apply/visibility_sets/default_hidden": {
+            "attrs": {
+                "hidden_sets": {
+                    "type": "list",
+                    "value": "[]"
+                }
+            },
+            "code": [
+                "for set in ${hidden_sets}:",
+                "    in_set = yrig.sets.get_set_members(flatten=True, set_name=set)",
+                "    cmds.hide(in_set)"
             ]
         },
         "/build": {
             "execute_in": "/setup",
             "child_order": [
+                "base_controls",
                 "middle",
                 "left",
                 "right"
             ]
+        },
+        "/build/base_controls": {
+            "child_order": [
+                "global",
+                "shot",
+                "local"
+            ],
+            "attrs": {
+                "control_parent": {
+                    "type": "raw",
+                    "value": "${/setup/root.rig_root}"
+                },
+                "control_size": {
+                    "type": "int",
+                    "value": "24"
+                }
+            }
+        },
+        "/build/base_controls/global": {
+            "attrs": {
+                "control": {
+                    "type": "raw",
+                    "value": "${control_name}_ctl"
+                },
+                "control_color": {
+                    "type": "raw",
+                    "value": "#34a1eb"
+                },
+                "control_name": {
+                    "type": "raw",
+                    "value": "global"
+                },
+                "control_shape": {
+                    "type": "raw",
+                    "value": "hexagon"
+                },
+                "skip_if_exists": {
+                    "type": "raw",
+                    "value": "world_ctl"
+                }
+            },
+            "code": [
+                "if not cmds.objExists(\"${skip_if_exists}\"):",
+                "    control = yrig.control.create_control(",
+                "        \"${control_name}\", ",
+                "        parent=\"${control_parent}\", ",
+                "        size = ${control_size},",
+                "        control_shape = \"${control_shape}\"",
+                "    )",
+                "    self.control = control.transform",
+                "    yrig.control.set_override_color(control, color=\"${control_color}\", override_shapes=True)",
+                "else:",
+                "    self.control = \"${skip_if_exists}\""
+            ]
+        },
+        "/build/base_controls/local": {
+            "instance": "../shot",
+            "child_order": [
+                "constrain_trs"
+            ],
+            "attrs": {
+                "control_name": {
+                    "value": "local"
+                },
+                "control_parent": {
+                    "value": "${../shot.control}"
+                },
+                "control_size": {
+                    "type": "raw",
+                    "value": "${../.control_size} * 0.5"
+                },
+                "skip_if_exists": {
+                    "value": "local_M0_ctl"
+                }
+            }
+        },
+        "/build/base_controls/local/constrain_trs": {
+            "attrs": {
+                "trs_group": {
+                    "type": "raw",
+                    "value": "${/setup/root/trs.trs_group}"
+                }
+            },
+            "code": [
+                "yrig.transform.matrix_constraint(\"${control}\", \"${trs_group}\", shear=False, keep_offset=False)"
+            ]
+        },
+        "/build/base_controls/shot": {
+            "instance": "../global",
+            "attrs": {
+                "control_color": {
+                    "value": "#ebcf34"
+                },
+                "control_name": {
+                    "type": "raw",
+                    "value": "shot"
+                },
+                "control_parent": {
+                    "value": "${../global.control}"
+                },
+                "control_shape": {
+                    "type": "raw",
+                    "value": "round_square"
+                },
+                "control_size": {
+                    "type": "raw",
+                    "value": "${../.control_size} * 0.6"
+                },
+                "skip_if_exists": {
+                    "value": "global_M0_ctl"
+                }
+            }
         },
         "/build/left": {
             "instance": "/side",
@@ -284,15 +472,31 @@
                 }
             }
         },
-        "/cleanup": {
+        "/finalize": {
             "execute_in": "/apply",
             "child_order": [
+                "delete_guides",
                 "hide_joints",
                 "model_override",
-                "skin_tools_data"
+                "prune",
+                "metadata",
+                "lock_attrs"
             ]
         },
-        "/cleanup/hide_joints": {
+        "/finalize/delete_guides": {
+            "attrs": {
+                "guides_group": {
+                    "type": "raw",
+                    "value": "${/setup/root/guides.guides_group}"
+                }
+            },
+            "code": [
+                "guides_group = \"${guides_group}\"",
+                "if cmds.objExists(guides_group):",
+                "    cmds.delete(guides_group)"
+            ]
+        },
+        "/finalize/hide_joints": {
             "code": [
                 "if not ${dev_build}:",
                 "    # Hide Joints",
@@ -300,16 +504,200 @@
                 ""
             ]
         },
-        "/cleanup/model_override": {
+        "/finalize/lock_attrs": {
+            "attrs": {
+                "ignored_attrs": {
+                    "type": "list",
+                    "value": "[\"visibility\"]"
+                },
+                "ignored_nodes": {
+                    "type": "list",
+                    "value": "[\"${/setup/root.rig_root}\"]"
+                }
+            },
             "code": [
+                "DEFAULT_NODES = getattr(STAGE, \"default_nodes\", {})",
+                "log = yrig.build.nxt_api.get_node_logger(\"${_nxtpath}\")",
+                "",
+                "def get_ik_joints() -> set[str]:",
+                "    joints = set()",
+                "    for handle in cmds.ls(type=\"ikHandle\") or []:",
+                "        chain = cmds.ikHandle(handle, query=True, jointList=True) or []",
+                "        joints.update(chain)",
+                "    return set(joints)",
+                "",
+                "def is_connected(plug: str) -> bool:",
+                "    try:",
+                "        if cmds.listConnections(plug, source=True, destination=True):",
+                "            return True",
+                "        node, attr = plug.split(\".\", 1)",
+                "        parent: list[float] = cmds.attributeQuery(attr.split(\".\")[-1], node=node, listParent=True)  # type: ignore",
+                "        if parent:",
+                "            return bool(cmds.listConnections(f\"{node}.{parent[0]}\", source=True, destination=True))",
+                "    except (RuntimeError, ValueError):",
+                "        # Can't be resolved, so treat it as \"don't touch\"",
+                "        return True",
+                "    return False",
+                "",
+                "",
+                "def lock_non_control_attrs(ignored_nodes: set[str], ignored_attrs: set[str]) -> list[str] | None:",
+                "    controls = yrig.control.get_tagged_controls()",
+                "    if not controls:",
+                "        log.warning(\"No controller tags found - aborting so nothing gets locked by mistake.\")",
+                "        return",
+                "",
+                "    nodes = cmds.ls(type=\"transform\") or []",
+                "    ik_joints = get_ik_joints()",
+                "    locked = []",
+                "    skipped = []",
+                "",
+                "    for node in nodes:",
+                "        short = node.split(\"|\")[-1]",
+                "        if short in DEFAULT_NODES or short in ignored_nodes:",
+                "            continue",
+                "",
+                "        # Controls are left completely untouched",
+                "        if node in controls:",
+                "            continue",
+                "            ",
+                "        if node in ik_joints:",
+                "            continue",
+                "",
+                "        keyable = set(cmds.listAttr(node, keyable=True) or [])",
+                "        channel_box = set(cmds.listAttr(node, channelBox=True) or [])",
+                "",
+                "        for attr in sorted((keyable | channel_box) - ignored_attrs):",
+                "            plug = f\"{node}.{attr}\"",
+                "",
+                "            # Unindexed multi/compound names (e.g. constraint \"target.xxx\") don't resolve",
+                "            if not cmds.objExists(plug):",
+                "                skipped.append(plug)",
+                "                continue",
+                "",
+                "            try:",
+                "                if cmds.getAttr(plug, lock=True):",
+                "                    continue",
+                "            except (RuntimeError, ValueError):",
+                "                skipped.append(plug)",
+                "                continue",
+                "",
+                "            if is_connected(plug):",
+                "                continue",
+                "",
+                "            locked.append(plug)",
+                "            try:",
+                "                cmds.setAttr(plug, lock=True)",
+                "            except RuntimeError as e:",
+                "                log.warning(f\"Could not lock {plug}: {e}\")",
+                "    return locked",
+                "",
                 "if not ${dev_build}:",
-                "    geo_group = \"${/setup/root/model.model_group}\"",
-                "    cmds.setAttr(f\"{geo_group}.overrideEnabled\", True)  # type: ignore",
-                "    cmds.setAttr(f\"{geo_group}.overrideDisplayType\", 2)  # type: ignore",
-                ""
+                "    locked = lock_non_control_attrs(ignored_nodes=set(${ignored_nodes}), ignored_attrs=set(${ignored_attrs}))",
+                "    if locked:",
+                "        log.info(f\"Locked {len(locked)} attributes.\")"
             ]
         },
-        "/cleanup/skin_tools_data": {
+        "/finalize/metadata": {
+            "child_order": [
+                "build_commit"
+            ],
+            "attrs": {
+                "metadata_node": {
+                    "type": "raw",
+                    "value": "METADATA"
+                },
+                "rig_root": {
+                    "type": "raw",
+                    "value": "${/setup/root.rig_root}"
+                }
+            },
+            "code": [
+                "metadata_node = cmds.createNode(\"network\", name=\"${metadata_node}\")",
+                "cmds.addAttr(",
+                "    metadata_node,",
+                "    longName=\"rig_root\",",
+                "    attributeType=\"message\",",
+                ")",
+                "rig_root = \"${rig_root}\"",
+                "cmds.connectAttr(",
+                "    f\"{rig_root}.message\",",
+                "    f\"{metadata_node}.rig_root\",",
+                ")"
+            ]
+        },
+        "/finalize/metadata/build_commit": {
+            "attrs": {
+                "build_path": {
+                    "type": "raw",
+                    "value": "${file::${rig_path}}"
+                }
+            },
+            "code": [
+                "build_path_str = \"${build_path}\"",
+                "build_path = Path(build_path_str) if build_path_str else None",
+                "yrig.build.metadata.write_rig_build_metadata(\"${metadata_node}\", build_path)"
+            ]
+        },
+        "/finalize/model_override": {
+            "attrs": {
+                "geo_group": {
+                    "type": "raw",
+                    "value": "${/setup/root/model.model_group}"
+                },
+                "rig_root": {
+                    "type": "raw",
+                    "value": "${/setup/root.rig_root}"
+                }
+            },
+            "code": [
+                "",
+                "rig_root = \"${rig_root}\"",
+                "geo_group = \"${geo_group}\"",
+                "",
+                "# Create display enum",
+                "cmds.addAttr(",
+                "    rig_root,",
+                "    longName=\"Model_Display\",",
+                "    attributeType=\"enum\",",
+                "    enumName=\"Normal:Template:Reference\",",
+                "    defaultValue=0 if ${dev_build} else 2,",
+                "    keyable=True,",
+                ")",
+                "",
+                "# Enable display overrides",
+                "cmds.setAttr(f\"{geo_group}.overrideEnabled\", True)",
+                "",
+                "# Connect enum directly to display type",
+                "cmds.connectAttr(",
+                "    f\"{rig_root}.Model_Display\",",
+                "    f\"{geo_group}.overrideDisplayType\",",
+                "    force=True,",
+                ")"
+            ]
+        },
+        "/finalize/prune": {
+            "child_order": [
+                "skin_tools_data",
+                "blendshapes"
+            ]
+        },
+        "/finalize/prune/blendshapes": {
+            "code": [
+                "log = yrig.build.nxt_api.get_node_logger(\"${_nxtpath}\")",
+                "",
+                "if not ${dev_build}:",
+                "    empty_blendshapes = []",
+                "    for node in cmds.ls(type=\"blendShape\") or []:",
+                "        target_indices = cmds.getAttr(f\"{node}.weight\", multiIndices=True) or []",
+                "        if not target_indices:",
+                "            empty_blendshapes.append(node)",
+                "    ",
+                "    if empty_blendshapes:",
+                "        cmds.delete(empty_blendshapes)",
+                "        log.info(f\"Deleted {len(empty_blendshapes)} blendShape node(s) that had no targets: {empty_blendshapes}\")"
+            ]
+        },
+        "/finalize/prune/skin_tools_data": {
             "code": [
                 "if not ${dev_build}:",
                 "    yrig.skin.ng.cleanup_ng_data_nodes()"
@@ -321,14 +709,37 @@
                 "pose_intepolators"
             ],
             "attrs": {
-                "psd_filename": {}
+                "geometry": {
+                    "type": "list",
+                    "value": "[]"
+                },
+                "psd_layer": {
+                    "type": "raw",
+                    "value": "main_psd"
+                },
+                "psd_path": {
+                    "type": "raw",
+                    "value": "${rig_path}/data/psd"
+                },
+                "psd_system": {
+                    "type": "raw",
+                    "value": "main"
+                },
+                "psd_system_path": {
+                    "type": "raw",
+                    "value": "${psd_path}/${psd_system}"
+                }
             }
         },
         "/psd_import/pose_intepolators": {
             "attrs": {
                 "pose_filepath": {
                     "type": "raw",
-                    "value": "${file::${psd_path}/${psd_filename}.ypose}"
+                    "value": "${file::${psd_system_path}/${psd_system}.ypose}"
+                },
+                "rbf_group": {
+                    "type": "raw",
+                    "value": "${/setup/root/deformation/rbf.rbf_group}"
                 }
             },
             "code": [
@@ -337,25 +748,41 @@
                 "    pose_filepath = Path(pose_filepath_str)",
                 "    yrig.rbf.pose_interpolator.import_pose_file(",
                 "        filepath = pose_filepath,",
-                "        parent = \"${psd_group}\",",
+                "        parent = \"${rbf_group}\",",
                 "    )"
             ]
         },
         "/psd_import/shapes": {
             "attrs": {
-                "yshape_filepath": {
+                "psd_network": {
                     "type": "raw",
-                    "value": "${file::${psd_path}/${psd_filename}.yshape}"
+                    "value": "${psd_system}_psd"
+                },
+                "resolved_yshape_directories": {
+                    "type": "raw",
+                    "value": "${filelist::${yshape_directory}}"
+                },
+                "yshape_directory": {
+                    "type": "raw",
+                    "value": "${file::${psd_system_path}}"
                 }
             },
             "code": [
-                "shape_filepath_str = \"${yshape_filepath}\"",
-                "if shape_filepath_str:",
-                "    shape_filepath = Path(shape_filepath_str)",
-                "    yrig.deformer.blendshape.import_blendshape(",
-                "        filepath=shape_filepath,",
-                "        blendshape=\"${blendshape}\",",
-                "        )"
+                "from yrig.deformer.blendshape import import_blendshapes_from_directories",
+                "",
+                "shape_directories = [Path(dir) for dir in ${resolved_yshape_directories}]",
+                "geometry = ${geometry}",
+                "",
+                "def _geo_to_blendshape(geo: str):",
+                "    return f\"{geo}_${psd_layer}\"",
+                "    ",
+                "if shape_directories and geometry:",
+                "    import_blendshapes_from_directories(",
+                "        shape_directories,",
+                "        geometry,",
+                "        geo_to_blendshape=_geo_to_blendshape,",
+                "        psd_network=\"${psd_network}\",",
+                "    )"
             ]
         },
         "/psd_io": {
@@ -366,6 +793,14 @@
             ],
             "attrs": {
                 "psd_directory": {
+                    "type": "raw",
+                    "value": "${psd_system}"
+                },
+                "psd_network": {
+                    "type": "raw",
+                    "value": "${psd_system}_psd"
+                },
+                "psd_system": {
                     "type": "raw",
                     "value": "main"
                 },
@@ -393,7 +828,8 @@
                     "value": "${psd_directory}"
                 },
                 "relative_filepath": {
-                    "value": "${relative_path_stem}${filetype}"
+                    "type": "raw",
+                    "value": "${relative_path_stem}/${psd_system}${filetype}"
                 }
             }
         },
@@ -412,18 +848,24 @@
                     "value": "${system_name} Shapes"
                 },
                 "relative_filepath": {
-                    "value": "${relative_path_stem}${filetype}"
+                    "type": "raw",
+                    "value": "${relative_path_stem}"
                 }
             }
         },
         "/psd_layer": {
             "attrs": {
-                "blendshape": {
+                "blendshape_directory": {
                     "type": "raw",
-                    "value": "psd"
+                    "value": "rig"
                 },
                 "geometry": {
-                    "type": "raw"
+                    "type": "list",
+                    "value": "[]"
+                },
+                "psd_layer": {
+                    "type": "raw",
+                    "value": "main_psd"
                 },
                 "psd_path": {
                     "type": "raw",
@@ -431,7 +873,10 @@
                 }
             },
             "code": [
-                "yrig.deformer.blendshape.create_blendshape(geometry=\"${geometry}\", name=\"${blendshape}\")"
+                "psd_layer = \"${psd_layer}\"",
+                "",
+                "for geo in ${geometry}:",
+                "    yrig.deformer.blendshape.create_blendshape(geometry=geo, name=f\"{geo}_{psd_layer}\", parent_directory=\"${blendshape_directory}\")"
             ]
         },
         "/rbf_io": {
@@ -445,6 +890,10 @@
                     "value": "RBF"
                 },
                 "pose_directory": {},
+                "rbf_group": {
+                    "type": "raw",
+                    "value": "rbf"
+                },
                 "relative_filepath": {
                     "value": "data/psd/name.ypose"
                 }
@@ -464,7 +913,10 @@
             "code": [
                 "import_path = Path(\"${import_filepath}\")",
                 "",
-                "yrig.rbf.pose_interpolator.import_pose_file(import_path, directories=[\"${pose_directory}\"])"
+                "yrig.rbf.pose_interpolator.import_pose_file(",
+                "    import_path, ",
+                "    parent=\"${rbf_group}\",",
+                ")"
             ]
         },
         "/setup": {
@@ -476,18 +928,25 @@
         },
         "/setup/new_scene": {
             "code": [
-                "cmds.file(new=True, force=True)"
+                "cmds.file(new=True, force=True)",
+                "STAGE.default_nodes = set(cmds.ls())"
             ]
         },
         "/setup/root": {
             "start_point": false,
             "child_order": [
+                "trs",
                 "model",
                 "guides",
                 "controls",
-                "deformation"
+                "deformation",
+                "logic"
             ],
             "attrs": {
+                "anim_publish_set": {
+                    "type": "raw",
+                    "value": "anim_publish_set"
+                },
                 "rig_root": {
                     "comment": "Name for the root node that houses the entire rig.",
                     "type": "raw",
@@ -510,16 +969,29 @@
             ]
         },
         "/setup/root/controls": {
+            "attrs": {
+                "control_set": {
+                    "type": "raw",
+                    "value": "${rig_root}_controllers_grp"
+                }
+            },
             "code": [
-                "STAGE.control_list = []"
+                "control_set_name = \"${control_set}\"",
+                "if not cmds.objExists(control_set_name):",
+                "   yrig.sets.add_set(control_set_name, parent=\"${rig_set}\")"
             ]
         },
         "/setup/root/deformation": {
             "child_order": [
                 "static_joint",
-                "main"
+                "main",
+                "rbf"
             ],
             "attrs": {
+                "def_set": {
+                    "type": "raw",
+                    "value": "def_grp"
+                },
                 "joint_group": {
                     "type": "raw",
                     "value": "jnt_org"
@@ -532,11 +1004,23 @@
             "code": [
                 "joint_group = \"${joint_group}\"",
                 "if not cmds.objExists(joint_group):",
-                "    yrig.transform.create_transform(joint_group, parent=\"${rig_root}\")"
+                "    yrig.transform.create_transform(joint_group, parent=\"${rig_root}\")",
+                "yrig.sets.add_set(\"${def_set}\", parent=\"${rig_set}\")"
             ]
         },
         "/setup/root/deformation/main": {
+            "child_order": [
+                "skin"
+            ],
             "attrs": {
+                "def_layer": {
+                    "type": "raw",
+                    "value": "main"
+                },
+                "def_layer_set": {
+                    "type": "raw",
+                    "value": "${def_layer}_def_grp"
+                },
                 "deformers_set": {
                     "type": "raw",
                     "value": "${rig_root}_deformers_grp"
@@ -547,9 +1031,32 @@
                 }
             },
             "code": [
-                "rig_set = \"${deformers_set}\"",
-                "if not cmds.objExists(rig_set):",
-                "    cmds.sets(name=rig_set)"
+                "deformers_set = \"${deformers_set}\"",
+                "if not cmds.objExists(deformers_set):",
+                "    yrig.sets.add_set(deformers_set, parent=\"${rig_set}\")",
+                "yrig.sets.add_set(\"${def_layer_set}\", parent=\"${def_set}\")"
+            ]
+        },
+        "/setup/root/deformation/main/skin": {
+            "attrs": {
+                "skin_set": {
+                    "type": "raw",
+                    "value": "${def_layer}_skin_grp"
+                }
+            },
+            "code": [
+                "yrig.sets.add_to_set(\"${model_set}\", \"${skin_set}\", parent=\"${def_layer_set}\")"
+            ]
+        },
+        "/setup/root/deformation/rbf": {
+            "attrs": {
+                "rbf_group": {
+                    "type": "raw",
+                    "value": "rbf"
+                }
+            },
+            "code": [
+                "yrig.transform.create_transform(name=\"${rbf_group}\", parent=\"${rig_root}\")"
             ]
         },
         "/setup/root/deformation/static_joint": {
@@ -567,15 +1074,43 @@
             "attrs": {
                 "guides_filepath": {
                     "type": "raw",
-                    "value": "${file::${rig_path}/data/guides.mb}"
+                    "value": "${file::${rig_path}/data/guides.ma}"
+                },
+                "guides_group": {
+                    "type": "raw",
+                    "value": "guides"
                 }
-            }
+            },
+            "code": [
+                "guides_filepath_str = \"${guides_filepath}\"",
+                "if guides_filepath_str:",
+                "    guides_filepath = Path(guides_filepath_str)",
+                "    yrig.io.import_maya_file(guides_filepath)"
+            ]
+        },
+        "/setup/root/logic": {
+            "attrs": {
+                "logic_group": {
+                    "type": "raw",
+                    "value": "logic"
+                }
+            },
+            "code": [
+                "if not cmds.objExists(\"${logic_group}\"):",
+                "    logic_group = yrig.transform.create_transform(\"${logic_group}\", parent=\"${rig_root}\")",
+                "    cmds.hide(logic_group)"
+            ]
         },
         "/setup/root/model": {
             "child_order": [
                 "smooth_preview"
             ],
+            "enabled": true,
             "attrs": {
+                "child_index": {
+                    "type": "int",
+                    "value": "2"
+                },
                 "model_filepath": {
                     "comment": "Filepath to the Model to be imported.",
                     "type": "raw",
@@ -586,6 +1121,10 @@
                     "type": "raw",
                     "value": "geo"
                 },
+                "model_group_parent": {
+                    "type": "raw",
+                    "value": "${rig_root}"
+                },
                 "model_set": {
                     "comment": "All imported model geometry is added to this set.",
                     "type": "raw",
@@ -594,45 +1133,27 @@
             },
             "code": [
                 "from yrig.io import import_maya_file",
+                "",
                 "model_filepath = Path(\"${model_filepath}\")",
                 "imported_nodes: list[str] = import_maya_file(model_filepath)",
-                "",
                 "top_level_nodes: list[str] = cmds.ls(imported_nodes, assemblies=True)",
-                "",
-                "# # Case 1: exactly one root transform",
-                "if len(top_level_nodes) == 1:",
-                "    top_level_node = top_level_nodes[0]",
-                "    if cmds.nodeType(top_level_node) == \"transform\":",
-                "        geo_grp = top_level_node",
-                "    else:",
-                "        geo_grp = cmds.group(top_level_node, name=\"${model_group}\", world=True)",
-                "    if geo_grp != \"${model_group}\":",
-                "        geo_grp = cmds.rename(geo_grp)",
-                "else:",
-                "    # Case 2: multiple top level transforms (we need to group them)",
-                "    geo_grp = cmds.group(top_level_nodes, name=\"${model_group}\", world=True)  # type: ignore",
-                "",
-                "# Keep in mind the mgear rig object's \"model\" is actually the root rig transform.",
-                "cmds.parent(geo_grp, \"${rig_root}\")",
-                "cmds.reorder(geo_grp, front=True)",
-                "cmds.reorder(geo_grp, relative=1)",
-                "",
-                "# Get the imported meshes",
-                "meshes = cmds.listRelatives(geo_grp, allDescendents=True, type=\"mesh\")",
-                "mesh_transforms = (",
-                "    cmds.listRelatives(",
-                "        meshes,  # type: ignore",
-                "        parent=True,",
-                "        fullPath=True,",
+                "for top_level_node in reversed(top_level_nodes):",
+                "    cmds.parent(top_level_node, \"${model_group_parent}\")",
+                "    cmds.reorder(top_level_node, front=True)",
+                "    cmds.reorder(top_level_node, relative=${child_index})",
+                "    meshes = cmds.listRelatives(top_level_node, allDescendents=True, type=\"mesh\")",
+                "    mesh_transforms = (",
+                "        cmds.listRelatives(",
+                "            meshes,  # type: ignore",
+                "            parent=True,",
+                "            fullPath=True,",
+                "        )",
+                "        or []",
                 "    )",
-                "    or []",
-                ")",
-                "# remove duplicates",
-                "mesh_transforms: list[str] = list(set(mesh_transforms))",
-                "# Put the geo in the set.",
-                "yrig.sets.add_to_set(mesh_transforms, \"${model_set}\", parent=\"${rig_set}\")",
-                "cmds.viewFit()",
-                ""
+                "    yrig.sets.add_to_set(mesh_transforms, \"${model_set}\", parent=\"${rig_set}\")",
+                "    yrig.sets.add_to_set(mesh_transforms, \"${anim_publish_set}\", parent=\"${rig_set}\")",
+                "    cmds.viewFit()",
+                "    "
             ]
         },
         "/setup/root/model/smooth_preview": {
@@ -648,6 +1169,26 @@
                 "    yrig.shape.set_smooth_preview(geo)"
             ]
         },
+        "/setup/root/trs": {
+            "attrs": {
+                "child_index": {
+                    "type": "int",
+                    "value": "1"
+                },
+                "trs_group": {
+                    "type": "raw",
+                    "value": "trs"
+                }
+            },
+            "code": [
+                "self.trs_group = yrig.transform.create_transform(\"${trs_group}\", parent=\"${rig_root}\")",
+                "",
+                "cmds.reorder(self.trs_group, front=True)",
+                "cmds.reorder(self.trs_group, relative=${child_index})",
+                "",
+                "yrig.sets.add_to_set(self.trs_group, \"${anim_publish_set}\", parent=\"${rig_set}\")"
+            ]
+        },
         "/shape_io": {
             "instance": "/io_pair",
             "child_order": [
@@ -655,10 +1196,19 @@
                 "export"
             ],
             "attrs": {
-                "blendshape": {},
+                "blendshape": {
+                    "type": "raw"
+                },
                 "blendshape_directory": {},
                 "pair_name": {
                     "value": "Shapes"
+                },
+                "psd_layer": {
+                    "type": "raw",
+                    "value": "main_psd"
+                },
+                "psd_network": {
+                    "type": "raw"
                 },
                 "relative_filepath": {
                     "type": "raw",
@@ -673,15 +1223,40 @@
                 "    raise ValueError(f\"Invalid directory: {export_root_path}\")",
                 "export_path = Path(\"${export_path}\")",
                 "",
-                "yrig.deformer.blendshape.export_blendshape(export_path, \"${blendshape}\", directories={\"${blendshape_directory}\"})",
+                "def _map_geo_to_blendshape(geometry: str):",
+                "    return f\"{geometry}_${psd_layer}\"",
+                "",
+                "selection = yrig.select.get_selection()",
+                "yrig.deformer.blendshape.batch_export_blendshapes(",
+                "    selection, ",
+                "    directory=export_path, ",
+                "    geo_to_blendshape=_map_geo_to_blendshape,",
+                "    directories={\"${blendshape_directory}\"},",
+                ")",
+                "",
                 ""
             ]
         },
         "/shape_io/import": {
+            "attrs": {
+                "shape_directories": {
+                    "type": "raw",
+                    "value": "${filelist::${import_filepath}}"
+                }
+            },
             "code": [
-                "import_path = Path(\"${import_filepath}\")",
+                "shape_directories = [Path(dir) for dir in ${shape_directories}]",
                 "",
-                "yrig.deformer.blendshape.import_blendshape(import_path, \"${blendshape}\")"
+                "def _map_geo_to_blendshape(geometry: str):",
+                "    return f\"{geometry}_${psd_layer}\"",
+                "",
+                "selection = yrig.select.get_selection()",
+                "yrig.deformer.blendshape.import_blendshapes_from_directories(",
+                "    shape_directories, ",
+                "    geometry=selection,",
+                "    geo_to_blendshape=_map_geo_to_blendshape,",
+                "    psd_network=\"${psd_network}\"",
+                ")"
             ]
         },
         "/skin_data_io": {
@@ -742,6 +1317,13 @@
                 "    map_geo_to_file=_map_geo_to_file,",
                 ")"
             ]
+        },
+        "/skin_geometry": {
+            "attrs": {
+                "error_on_topology_change": {
+                    "value": "not ${dev_build}"
+                }
+            }
         },
         "/tools_window/tools/control_shapes": {
             "instance": "/panel",
@@ -885,13 +1467,9 @@
         "/tools_window/tools/skin": {
             "instance": "/panel",
             "child_order": [
+                "layout",
                 "skin_data_io"
-            ],
-            "attrs": {
-                "text": {
-                    "value": "Skin"
-                }
-            }
+            ]
         },
         "/tools_window/tools/skin/skin_data_io": {
             "instance": "/skin_data_io",
@@ -919,6 +1497,69 @@
                     "value": "Import Skin Data"
                 }
             }
+        },
+        "/tools_window/tools/visibility_sets_io": {
+            "instance": "/io_pair",
+            "child_order": [
+                "import",
+                "export"
+            ],
+            "attrs": {
+                "relative_filepath": {
+                    "value": "data/visibility.ysets"
+                },
+                "text": {
+                    "value": "Visibility Sets"
+                },
+                "visibility_set_name": {
+                    "type": "raw",
+                    "value": "rig_visibility_sets"
+                }
+            }
+        },
+        "/tools_window/tools/visibility_sets_io/export": {
+            "attrs": {
+                "text": {
+                    "value": "Export Visibility Sets"
+                }
+            },
+            "code": [
+                "export_root_path = \"${export_root_path}\"",
+                "if not export_root_path or not Path(export_root_path).is_dir():",
+                "    raise ValueError(f\"Invalid directory: {export_root_path}\")",
+                "export_path = Path(\"${export_path}\")",
+                "",
+                "yrig.sets.export_sets(export_path, \"${visibility_set_name}\")"
+            ]
+        },
+        "/tools_window/tools/visibility_sets_io/import": {
+            "attrs": {
+                "rig_set": {
+                    "type": "raw",
+                    "value": "rig_sets_grp"
+                },
+                "text": {
+                    "value": "Import Visibility Sets"
+                }
+            },
+            "code": [
+                "import_path = Path(\"${import_filepath}\")",
+                "",
+                "yrig.sets.import_sets(import_path, parent=\"${rig_set}\")"
+            ]
+        },
+        "/wrap": {
+            "attrs": {
+                "wrap_mapping": {
+                    "type": "dict",
+                    "value": "{}"
+                }
+            },
+            "code": [
+                "wrap_mapping = ${wrap_mapping}",
+                "for source, target in wrap_mapping.items():",
+                "    yrig.deformer.proximity_wrap.create_proximity_wrap(source, target)"
+            ]
         }
     }
 }

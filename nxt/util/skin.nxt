@@ -25,6 +25,10 @@
         "/skin_geometry": {
             "instance": "",
             "attrs": {
+                "allow_topology_change": {
+                    "type": "bool",
+                    "value": "False"
+                },
                 "def_set": {
                     "comment": "The joints in this set will be what are used for fallback/default skinning.",
                     "type": "raw",
@@ -48,7 +52,7 @@
                 "geo_set": {
                     "comment": "Geometry will be skinned to the geometry in this set unless there's a manually defined geo_list,",
                     "type": "raw",
-                    "value": "rig_geo_grp"
+                    "value": "skin_grp"
                 },
                 "resolved_skin_directories": {
                     "comment": "Don't override this. This resolves the historical values of the skin_directory attribute to check through each for skinning files.",
@@ -60,6 +64,11 @@
                     "type": "raw",
                     "value": "${file::data/skin}"
                 },
+                "skip_geo": {
+                    "comment": "Geometry in this collection will not be skinned even if fallback skinning is enabled.",
+                    "type": "list",
+                    "value": "[]"
+                },
                 "strip_suffix": {
                     "comment": "If set, the suffix will be striiped from geo names when searching for the skin files."
                 }
@@ -68,19 +77,22 @@
                 "from yrig.skin import skin_and_apply_weights_from_directories",
                 "from yrig.skin.core import skin_geometry",
                 "from yrig.name import natural_sort_key",
-                "def_in_set = cmds.sets(\"${def_set}\", query=True)",
+                "",
+                "log = yrig.build.nxt_api.get_node_logger(\"${_nxtpath}\")",
+                "",
+                "def_in_set = yrig.sets.get_set_members(\"${def_set}\", flatten=True)",
                 "def_joints = sorted(cmds.ls(def_in_set, type=\"joint\"), key=natural_sort_key)",
                 "      ",
                 "",
                 "geo_list = ${geo_list}",
-                "geo_to_skin = geo_list if geo_list else cmds.sets(\"${geo_set}\", query=True)",
+                "geo_to_skin = geo_list if geo_list else  yrig.sets.get_set_members(\"${geo_set}\", flatten=True)",
                 "",
                 "def _fallback_skin(geometry: str):",
                 "    skin_geometry(def_joints, geometry, dual_quaternion=${dual_quaternion})",
-                "    STAGE.log.info(f\"Default skinned {geometry}\")",
+                "    log.info(f\"Default skinned {geometry}\")",
                 "",
                 "strip_suffix = \"${strip_suffix}\"",
-                "def _map_geo_to_file(geometry: str):",
+                "def _geo_to_filename(geometry: str):",
                 "    return geometry.removesuffix(strip_suffix)",
                 "",
                 "",
@@ -89,8 +101,9 @@
                 "    skin_directories, ",
                 "    geo_to_skin, ",
                 "    fallback_skinning=_fallback_skin if ${fallback_skinning} else None, ",
-                "    map_geo_to_file=_map_geo_to_file if strip_suffix else None)",
-                ""
+                "    geo_to_filename=_geo_to_filename if strip_suffix else None,",
+                "    error_on_topology_change=not ${allow_topology_change},",
+                "    )"
             ]
         },
         "/split_skin_weights": {
@@ -105,7 +118,7 @@
                 "from yrig.skin.split import auto_split_weights",
                 "",
                 "geo_list = ${geo_list}",
-                "geo_to_split = geo_list if geo_list else cmds.sets(\"${geo_set}\", query=True)",
+                "geo_to_split = geo_list if geo_list else yrig.sets.get_set_members(\"${geo_set}\", flatten=True)",
                 "auto_split_weights(geo_to_split)"
             ]
         },
