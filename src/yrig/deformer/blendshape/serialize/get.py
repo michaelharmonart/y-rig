@@ -13,6 +13,8 @@ from maya.api.OpenMaya import (
 
 from yrig.deformer.blendshape.core import (
     get_blendshape_input_shape,
+)
+from yrig.deformer.blendshape.target import (
     get_existing_target_group_indices,
     get_target_index_to_name_map,
     resolve_target_index,

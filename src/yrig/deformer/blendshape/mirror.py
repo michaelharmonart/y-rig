@@ -5,17 +5,6 @@ from typing import cast
 from maya.api.OpenMaya import MDagPath
 from mgear.core.utils import get_dag_path
 
-from yrig.deformer.blendshape.core import (
-    get_blendshape_input_shape,
-    get_blendshape_target_names,
-    get_name_to_target_index_map,
-)
-from yrig.deformer.blendshape.serialize.apply import apply_blendshape_target_group_data
-from yrig.deformer.blendshape.serialize.data import (
-    BlendShapeTargetGroupData,
-    BlendShapeTargetItemData,
-)
-from yrig.deformer.blendshape.serialize.get import get_blendshape_target_group_data
 from yrig.maya_api.enum import BlendShapePostDeformationOrder
 from yrig.maya_api.node import BlendShapeNode
 from yrig.mirror import (
@@ -24,6 +13,17 @@ from yrig.mirror import (
     generate_geometry_mirror_mapping,
 )
 from yrig.name import Side, filter_side, flip_side
+
+from .core import (
+    get_blendshape_input_shape,
+)
+from .serialize.apply import apply_blendshape_target_group_data
+from .serialize.data import (
+    BlendShapeTargetGroupData,
+    BlendShapeTargetItemData,
+)
+from .serialize.get import get_blendshape_target_group_data
+from .target import get_blendshape_target_names, get_name_to_target_index_map
 
 log = logging.getLogger(__name__)
 
