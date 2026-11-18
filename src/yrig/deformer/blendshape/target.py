@@ -2,21 +2,9 @@ from maya import cmds
 from maya.api.OpenMaya import MPlug, MSelectionList
 
 from yrig.deformer.blendshape.core import get_blendshape_input_geometry_indices
+from yrig.maya_api.attribute import Attribute
 from yrig.maya_api.node import BlendShapeNode
 from yrig.shape import get_shape, get_shape_output
-
-
-def get_blendshape_targets(blendshape: str) -> dict[str, str]:
-    """Return a mapping of blendShape target names to weight attributes.
-
-    Args:
-        blendshape: Name of the blendShape node.
-
-    Returns:
-        A mapping of target names to their corresponding weight attributes.
-    """
-    aliases = cmds.aliasAttr(blendshape, query=True) or []
-    return dict(zip(aliases[::2], aliases[1::2], strict=True))
 
 
 def get_existing_target_group_indices(blendshape: BlendShapeNode) -> set[int]:
@@ -28,15 +16,17 @@ def get_existing_target_group_indices(blendshape: BlendShapeNode) -> set[int]:
     return existing_group_indices
 
 
+def get_target_name(blendshape: str, index: int) -> str | None:
+    attribute = Attribute(f"{blendshape}.weight[{index}]")
+    return attribute.get_alias()
+
+
 def get_target_index(blendshape: str, target: str) -> int:
-    aliases = cmds.aliasAttr(blendshape, query=True) or []
-    indices = cmds.getAttr(f"{blendshape}.weight", multiIndices=True) or []
-
-    for alias, index in zip(aliases[::2], indices, strict=True):
-        if alias == target:
-            return index
-
-    raise ValueError(f"Target {target} not found on {blendshape}.")
+    target_index_map = get_name_to_target_index_map(blendshape)
+    result = target_index_map.get(target)
+    if result is None:
+        raise ValueError(f"Target {target} not found on {blendshape}.")
+    return result
 
 
 def resolve_target_index(blendshape: str, target: str | int) -> int:

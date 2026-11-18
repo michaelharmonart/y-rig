@@ -60,6 +60,7 @@
         },
         "collapse": {
             "/tools_window/tools": false,
+            "/tools_window/tools/blendshape": true,
             "/tools_window/tools/geometry": true,
             "/tools_window/tools/layout": false,
             "/tools_window/tools/skin": true,
@@ -167,7 +168,58 @@
             "instance": "/gridLayout",
             "child_order": [
                 "mirror_blendshapes",
-                "reset_target_delta"
+                "reset_target_delta",
+                "copy_target_delta"
+            ]
+        },
+        "/tools_window/tools/blendshape/layout/copy_target_delta": {
+            "instance": "/button",
+            "child_order": [
+                "add_target_delta"
+            ],
+            "attrs": {
+                "text": {
+                    "value": "Copy Target Delta"
+                }
+            },
+            "code": [
+                "log = yrig.build.nxt_api.get_node_logger(\"${_nxtpath}\")",
+                "",
+                "selected_targets = yrig.deformer.blendshape.shape_editor.get_selected_blendshape_targets()",
+                "if len(selected_targets) != 2:",
+                "    raise RuntimeError(\"Wrong number of targets selected. Must select exactly two targets for target delta copy (source, destination).\")",
+                "    ",
+                "source_target = selected_targets[0]",
+                "destination_target = selected_targets[-1]",
+                "blendshape = source_target.blendshape",
+                "yrig.deformer.blendshape.copy_target_deltas(blendshape, source_target.target_index, destination_target.target_index)",
+                "log.info(f\"Copied target deltas from {source_target} to {destination_target} (overwrite)\")"
+            ]
+        },
+        "/tools_window/tools/blendshape/layout/copy_target_delta/add_target_delta": {
+            "instance": "/menuItem",
+            "attrs": {
+                "text": {
+                    "value": "Copy Target Delta (Add)"
+                }
+            },
+            "code": [
+                "log = yrig.build.nxt_api.get_node_logger(\"${_nxtpath}\")",
+                "",
+                "selected_targets = yrig.deformer.blendshape.shape_editor.get_selected_blendshape_targets()",
+                "if len(selected_targets) != 2:",
+                "    raise RuntimeError(\"Wrong number of targets selected. Must select exactly two targets for target delta copy (source, destination).\")",
+                "    ",
+                "source_target = selected_targets[0]",
+                "destination_target = selected_targets[-1]",
+                "blendshape = source_target.blendshape",
+                "yrig.deformer.blendshape.copy_target_deltas(",
+                "    blendshape, ",
+                "    source_target.target_index, ",
+                "    destination_target.target_index, ",
+                "    replace=False,",
+                ")",
+                "log.info(f\"Copied target deltas from {source_target} to {destination_target} (add)\")"
             ]
         },
         "/tools_window/tools/blendshape/layout/mirror_blendshapes": {
@@ -200,7 +252,8 @@
                 "selected_targets = yrig.deformer.blendshape.shape_editor.get_selected_blendshape_targets()",
                 "for target in selected_targets:",
                 "    yrig.deformer.blendshape.reset_target_delta(target.blendshape, target.target_index)",
-                "log.info(f\"Reset the deltas on {selected_targets}\")"
+                "target_names = [str(target) for target in selected_targets]",
+                "log.info(f\"Reset the deltas on {target_names}\")"
             ]
         },
         "/tools_window/tools/geometry": {

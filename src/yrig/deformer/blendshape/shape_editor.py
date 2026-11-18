@@ -4,11 +4,18 @@ from dataclasses import dataclass
 
 from maya import mel
 
+from yrig.deformer.blendshape.target import get_target_name
+
 
 @dataclass
 class BlendshapeTarget:
     blendshape: str
     target_index: int
+
+    def __str__(self):
+        target_name = get_target_name(self.blendshape, self.target_index)
+        weight_attr = f"weight[{self.target_index}]"
+        return f"{self.blendshape}.{target_name or weight_attr}"
 
 
 def get_selected_blendshape_targets() -> list[BlendshapeTarget]:
