@@ -13,8 +13,7 @@ from maya.api.OpenMaya import (
 )
 
 from yrig.control import Control, ControlShape, create_control
-from yrig.deformer.blendshape import create_blendshape
-from yrig.deformer.blendshape.core import add_blendshape_target_from_geometry
+from yrig.deformer.blendshape import add_blendshape_target_from_geometry, create_blendshape
 from yrig.joint import create_joint
 from yrig.maya_api.node import SumNode
 from yrig.skin.split.tag import tag_for_weight_split

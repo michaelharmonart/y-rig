@@ -13,10 +13,18 @@ from .serialize import (
     import_blendshapes_from_directories,
     import_maya_shape_file,
 )
-from .target import get_target_weights, set_target_weights
+from .target import (
+    add_blendshape_target_from_geometry,
+    copy_target_deltas,
+    get_target_weights,
+    reset_target_delta,
+    set_target_weights,
+)
 
 __all__ = [
+    "add_blendshape_target_from_geometry",
     "batch_export_blendshapes",
+    "copy_target_deltas",
     "core",
     "create_blendshape",
     "directory",
@@ -30,6 +38,7 @@ __all__ = [
     "mirror",
     "mirror_all_blendshape_targets",
     "mirror_blendshape_targets",
+    "reset_target_delta",
     "resolve_blendshape",
     "set_target_weights",
     "shape_editor",

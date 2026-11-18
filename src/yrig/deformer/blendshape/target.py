@@ -174,6 +174,20 @@ def copy_target_deltas(
         )
 
 
+def reset_target_delta(
+    blendshape: BlendShapeNode | str,
+    target_index: int,
+    *,
+    input_index: int | None = None,
+) -> None:
+    for index in (
+        (input_index,)
+        if input_index is not None
+        else get_blendshape_input_geometry_indices(blendshape)
+    ):
+        cmds.blendShape(str(blendshape), edit=True, resetTargetDelta=(index, target_index))
+
+
 def add_blendshape_target_from_geometry(
     blendshape: str | BlendShapeNode,
     geometry: str,
