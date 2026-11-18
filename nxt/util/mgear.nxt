@@ -9,6 +9,10 @@
             "/shifter_build": [
                 -702.7225770097671,
                 -573.8845792637115
+            ],
+            "/split_mgear_constraints": [
+                -761.6413365231825,
+                -219.90487482334248
             ]
         },
         "collapse": {
@@ -36,6 +40,57 @@
                 "result = yrig.build.mgear_api.build_from_shifter_file(guide_path, dev_build=${dev_build}, custom_steps=${custom_steps})",
                 "if not result:",
                 "    raise RuntimeError(\"Shifter build failed or was cancelled!\")"
+            ]
+        },
+        "/split_mgear_constraints": {
+            "instance": "",
+            "code": [
+                "import maya.cmds as cmds",
+                "log = yrig.build.nxt_api.get_node_logger(\"${_nxtpath}\")",
+                "",
+                "def split_mgear_matrix_connections():",
+                "    count = 0",
+                "",
+                "    for node in cmds.ls(type=\"mgear_matrixConstraint\") or []:",
+                "        for attr, axes in {",
+                "            \"translate\": \"XYZ\",",
+                "            \"rotate\": \"XYZ\",",
+                "            \"scale\": \"XYZ\",",
+                "            \"shear\": \"XYZ\",",
+                "        }.items():",
+                "            source = f\"{node}.{attr}\"",
+                "",
+                "            if not cmds.objExists(source):",
+                "                continue",
+                "",
+                "            destinations = cmds.listConnections(",
+                "                source,",
+                "                source=False,",
+                "                destination=True,",
+                "                plugs=True,",
+                "                connections=True,",
+                "            ) or []",
+                "",
+                "            for src, dst in zip(destinations[::2], destinations[1::2]):",
+                "                if src != source:",
+                "                    continue",
+                "",
+                "                cmds.disconnectAttr(src, dst)",
+                "",
+                "                for axis in axes:",
+                "                    src_axis = f\"{source}{axis}\"",
+                "                    dst_axis = f\"{dst}{axis}\"",
+                "",
+                "                    if cmds.objExists(src_axis) and cmds.objExists(dst_axis):",
+                "                        cmds.connectAttr(src_axis, dst_axis, force=True)",
+                "",
+                "                count += 1",
+                "                # log.debug(f\"Split: {source} -> {dst}\")",
+                "",
+                "    log.info(f\"Split {count} compound mGear constraint connections.\")",
+                "",
+                "split_mgear_matrix_connections()",
+                ""
             ]
         },
         "/tools_window/tools/mgear": {
