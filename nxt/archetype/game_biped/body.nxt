@@ -5,7 +5,7 @@
     "mute": false,
     "solo": false,
     "references": [
-        "/users/student/c/collindv/sandwichRepo/y-rig/nxt/util/mgear.nxt"
+        "util/mgear.nxt"
     ],
     "nodes": {
         "/setup": {
