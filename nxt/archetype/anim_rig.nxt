@@ -1488,8 +1488,14 @@
                 "if not export_root_path or not Path(export_root_path).is_dir():",
                 "    raise ValueError(f\"Invalid directory: {export_root_path}\")",
                 "export_path = Path(\"${export_path}\")",
+                "export_path_resolved = export_path.resolve()",
+                "",
                 "base_layer_filepath_strings = ${filelist::${import_filepath}}",
-                "base_layer_paths = [Path(filepath) for filepath in base_layer_filepath_strings]",
+                "base_layer_paths = [",
+                "    path",
+                "    for filepath in base_layer_filepath_strings",
+                "    if (path := Path(filepath)).resolve() != export_path_resolved",
+                "]",
                 "",
                 "yrig.macro.export_driven_key_layer(export_path, base_layer_paths)"
             ]
