@@ -9,7 +9,10 @@ from typing import TYPE_CHECKING
 from maya import cmds
 from maya.api.OpenMaya import (
     MDoubleArray,
+    MFnDependencyNode,
     MFnNurbsCurve,
+    MFnNurbsCurveData,
+    MPoint,
     MPointArray,
     MSpace,
 )
@@ -28,6 +31,13 @@ log = logging.getLogger(__name__)
 
 SHAPE_LIBRARY_DIR = Path(Path(__file__).resolve().parent / "shape_library")
 _control_shape_data_cache: dict[ControlShape, ControlShapeData] = {}
+
+
+_FORMS = (
+    MFnNurbsCurve.kOpen,
+    MFnNurbsCurve.kClosed,
+    MFnNurbsCurve.kPeriodic,
+)
 
 
 class ControlShape(Enum):
@@ -174,51 +184,34 @@ def control_shape_data_from_library(curve_shape: ControlShape | str) -> ControlS
 
 
 def create_shape_from_named_curve_data(
-    named_curve: NamedNurbsCurveData, parent: str, use_name: bool = True
+    named_curve: NamedNurbsCurveData,
+    parent: str,
+    use_name: bool = True,
 ) -> str:
-    """Create a NURBS curve shape from serialized curve data."""
+    """Create a NURBS curve shape directly under a transform."""
     curve = named_curve.curve
-    positions: list[tuple[float, float, float]] = curve.cv_positions
-    degree: int | list = curve.degree
-    if isinstance(degree, (list, tuple)):
-        degree = int(degree[0])
-    else:
-        degree = int(degree)
 
-    form_val = curve.form
-    if isinstance(form_val, (list, tuple)):
-        form_val = int(form_val[0])
-    else:
-        form_val = int(form_val)
+    points = MPointArray(
+        [
+            MPoint(x, y, z, weight)
+            for (x, y, z), weight in zip(curve.cv_positions, curve.cv_weights, strict=True)
+        ]
+    )
 
-    periodic: bool = form_val == 2
-    knots: list[float] = list(curve.knots)
-    weights: list[float] = list(curve.cv_weights)
-    position_weights: list[tuple[float, float, float, float]] = [
-        (position[0], position[1], position[2], weights[index])
-        for index, position in enumerate(positions)
-    ]
-    shape_name = named_curve.name
-    try:
-        child_curve_transform: str = cmds.curve(
-            pointWeight=position_weights, knot=knots, periodic=periodic, degree=degree
-        )
-    except Exception:
-        log.error(
-            "Failed to create curve from data: degree=%r (type=%s), knots=%r, periodic=%r, position_weights_len=%d",
-            degree,
-            type(degree),
-            knots if isinstance(knots, (list, tuple)) and len(knots) < 20 else "<long>",
-            periodic,
-            len(position_weights),
-        )
-        raise
-    curve_shape_node: str = get_shapes(child_curve_transform)[0]
+    shape_obj = MFnNurbsCurve().create(
+        points,
+        MDoubleArray(curve.knots),
+        int(curve.degree),
+        _FORMS[int(curve.form)],
+        False,  # is2D
+        True,  # rational
+        get_depend_node(parent),
+    )
+    shape_fn: MFnDependencyNode = MFnDependencyNode(shape_obj)
     if use_name:
-        curve_shape_node = cmds.rename(curve_shape_node, shape_name)
-    cmds.parent(curve_shape_node, parent, shape=True, relative=True)
-    cmds.delete(child_curve_transform)
-    return curve_shape_node
+        return shape_fn.setName(named_curve.name)
+    else:
+        return shape_fn.name()
 
 
 def create_curve_from_data(
@@ -332,7 +325,7 @@ def export_control_shapes_file(
     }
     if not confirm_overwrite(filepath, force):
         return False
-    export_json(filepath, controls_shape_dict_data)
+    export_json(filepath, controls_shape_dict_data, compact=False)
     log.info(f"Successfully exported control shapes file to {filepath}")
     return True
 
@@ -360,6 +353,7 @@ def add_override_for_controls(
     export_json(
         filepath,
         {control: data.to_dict() for control, data in control_shapes.items()},
+        compact=False,
     )
     log.info(
         f"Successfully added overrides for control shape(s): {', '.join(resolved_controls)} to file at {filepath}"
@@ -457,19 +451,61 @@ class NurbsCurveShapeState:
         )
 
 
+def _build_points(curve: NurbsCurveData) -> MPointArray:
+    return MPointArray(
+        [
+            MPoint(x, y, z, w)
+            for (x, y, z), w in zip(curve.cv_positions, curve.cv_weights, strict=True)
+        ]
+    )
+
+
+def write_curve_data_to_shape(shape: str, curve: NurbsCurveData) -> None:
+    """Overwrite the geometry of an existing nurbsCurve shape in place."""
+    shape_obj = get_depend_node(shape)
+    fn = MFnNurbsCurve(shape_obj)
+    points = _build_points(curve)
+    form = _FORMS[int(curve.form)]
+
+    same_topology = (
+        fn.degree == curve.degree
+        and fn.form == form
+        and fn.numCVs == len(points)
+        and list(fn.knots()) == list(curve.knots)
+    )
+    if same_topology:
+        fn.setCVPositions(points, MSpace.kObject)
+        fn.updateCurve()
+        return
+
+    data_obj = MFnNurbsCurveData().create()
+    MFnNurbsCurve().create(
+        points,
+        MDoubleArray(curve.knots),
+        int(curve.degree),
+        form,
+        False,
+        True,
+        data_obj,
+    )
+    MFnDependencyNode(shape_obj).findPlug("create", False).setMObject(data_obj)
+
+
 def apply_control_shape_data(control: str, data: ControlShapeData) -> None:
-    old_control_shapes = get_shapes(control)
-    # Just pick one shape that'll be the source for shape state
-    primary_shape = old_control_shapes[0]
-    shape_state = NurbsCurveShapeState.from_nurbs_curve_shape(primary_shape)
-    # Rename the old shapes so that there aren't name conflicts. We can't delete yet as Maya might delete connected nodes.
-    old_control_shapes = [
-        cmds.rename(control_shape, f"{control_shape}_old") for control_shape in old_control_shapes
-    ]
+    old_shapes = {s.split("|")[-1]: s for s in get_shapes(control)}
+    shape_state = NurbsCurveShapeState.from_nurbs_curve_shape(next(iter(old_shapes.values())))
+
     for shape_data in data.curves:
-        shape_node = create_shape_from_named_curve_data(shape_data, control)
-        shape_state.apply_to_nurbs_curve_shape(shape_node)
-    cmds.delete(old_control_shapes)  # type: ignore
+        existing = old_shapes.pop(shape_data.name, None)
+        if existing is not None:
+            write_curve_data_to_shape(existing, shape_data.curve)
+        else:
+            # Create it with its final name directly
+            new_shape = create_shape_from_named_curve_data(shape_data, control)
+            shape_state.apply_to_nurbs_curve_shape(new_shape)
+            # Whatever wasn't matched by name no longer exists in the data
+    if old_shapes:
+        cmds.delete(list(old_shapes.values()))  # type: ignore
 
 
 def compose_control_shapes_files(

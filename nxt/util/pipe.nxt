@@ -1,0 +1,197 @@
+{
+    "version": "1.17",
+    "alias": "pipe",
+    "color": "#3599a2",
+    "mute": false,
+    "solo": false,
+    "meta_data": {
+        "positions": {
+            "/ingest_model": [
+                280,
+                20
+            ]
+        }
+    },
+    "nodes": {
+        "/": {
+            "attrs": {
+                "asset_name": {}
+            }
+        },
+        "/tools_window/tools/pipe": {
+            "instance": "/panel",
+            "child_order": [
+                "ingest_model"
+            ],
+            "attrs": {
+                "text": {
+                    "value": "Pipe"
+                }
+            }
+        },
+        "/tools_window/tools/pipe/ingest_model": {
+            "instance": "/button",
+            "child_order": [
+                "new_scene",
+                "import_usd",
+                "group_model",
+                "rename_transforms",
+                "merge_groups",
+                "freeze_transforms",
+                "bake_tweaks",
+                "bake_face_colors"
+            ],
+            "attrs": {
+                "model_group": {
+                    "type": "raw",
+                    "value": "${/setup/root/model.model_group}"
+                },
+                "model_usd_filepath": {
+                    "type": "raw",
+                    "value": "${model::${asset_name}:${source_variant}}"
+                },
+                "source_variant": {
+                    "type": "raw",
+                    "value": "main"
+                },
+                "text": {
+                    "type": "raw",
+                    "value": "Ingest Model from Pipe"
+                }
+            }
+        },
+        "/tools_window/tools/pipe/ingest_model/bake_face_colors": {
+            "code": [
+                "from yrig.color.bake import face_color_from_texture",
+                "",
+                "root = \"${model_group}\"",
+                "",
+                "transforms = cmds.listRelatives(",
+                "    root, allDescendents=True, type=\"transform\", fullPath=True",
+                ") or []",
+                "",
+                "with yrig.progress.progress_step(\"Bake Face Colors\", total=len(transforms)):",
+                "    for object in transforms:",
+                "        try:",
+                "            with yrig.progress.progress_step(object):",
+                "                face_color_from_texture(object)",
+                "        except Exception as e:",
+                "            log = yrig.build.nxt_api.get_node_logger(\"${_nxtpath}\")",
+                "            log.warning(f\"Couldn't bake face colors for {object}, {e}\")"
+            ]
+        },
+        "/tools_window/tools/pipe/ingest_model/bake_tweaks": {
+            "code": [
+                "model_group = \"${model_group}\"",
+                "",
+                "meshes = cmds.listRelatives(",
+                "    model_group,",
+                "    allDescendents=True,",
+                "    type=\"mesh\",",
+                "    fullPath=True,",
+                ") or []",
+                "",
+                "for shape in meshes:",
+                "    if cmds.polyCollapseTweaks(",
+                "        shape,",
+                "        query=True,",
+                "        hasVertexTweaks=True,",
+                "    ):",
+                "        cmds.polyCollapseTweaks(shape)",
+                "        ",
+                "cmds.select(\"${model_group}\", replace=True)"
+            ]
+        },
+        "/tools_window/tools/pipe/ingest_model/freeze_transforms": {
+            "attrs": {
+                "freeze_rotate": {
+                    "type": "bool",
+                    "value": "True"
+                },
+                "freeze_scale": {
+                    "type": "bool",
+                    "value": "True"
+                },
+                "freeze_translate": {
+                    "type": "bool",
+                    "value": "True"
+                }
+            },
+            "code": [
+                "model_group = \"${model_group}\"",
+                "",
+                "cmds.makeIdentity(    ",
+                "    model_group,",
+                "    apply=True,",
+                "    translate=${freeze_translate},",
+                "    rotate=${freeze_rotate},",
+                "    scale=${freeze_scale},",
+                ")",
+                ""
+            ]
+        },
+        "/tools_window/tools/pipe/ingest_model/group_model": {
+            "attrs": {
+                "nodes_to_group": {
+                    "type": "raw",
+                    "value": "${../import_usd.imported_top_level_prims}"
+                }
+            },
+            "code": [
+                "yrig.model.group_top_level_nodes(group_name=\"${model_group}\", nodes=${nodes_to_group})"
+            ]
+        },
+        "/tools_window/tools/pipe/ingest_model/import_usd": {
+            "attrs": {
+                "imported_top_level_prims": {
+                    "type": "list",
+                    "value": "[]"
+                }
+            },
+            "code": [
+                "filepath = Path(\"${model_usd_filepath}\")",
+                "",
+                "self.imported_top_level_prims = yrig.io.import_model_usd(filepath, instances=False)",
+                "cmds.refresh()"
+            ]
+        },
+        "/tools_window/tools/pipe/ingest_model/merge_groups": {
+            "attrs": {
+                "groups_to_merge": {
+                    "type": "list",
+                    "value": "[]"
+                }
+            },
+            "code": [
+                "groups_to_merge = ${groups_to_merge}",
+                "",
+                "for group in groups_to_merge:",
+                "    yrig.model.merge_group(group)"
+            ]
+        },
+        "/tools_window/tools/pipe/ingest_model/new_scene": {
+            "code": [
+                "cmds.file(new=True, force=True)"
+            ]
+        },
+        "/tools_window/tools/pipe/ingest_model/rename_transforms": {
+            "code": [
+                "root = \"${model_group}\"",
+                "",
+                "transforms = cmds.listRelatives(",
+                "    root, allDescendents=True, type=\"transform\", fullPath=True",
+                ") or []",
+                "",
+                "# Rename deepest transforms first so parent renames don't invalidate paths.",
+                "transforms.sort(key=lambda node: node.count(\"|\"), reverse=True)",
+                "",
+                "for transform in transforms:",
+                "    short_name = transform.rsplit(\"|\", 1)[-1]",
+                "    normalized_name = yrig.model.normalize_model_name(short_name)",
+                "    final_name = yrig.model.add_model_suffix(normalized_name)",
+                "    if final_name != short_name:",
+                "        cmds.rename(transform, final_name)"
+            ]
+        }
+    }
+}

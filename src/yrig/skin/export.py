@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from yrig.io import promt_user_for_directory
 from yrig.shape import get_shape
-from yrig.skin.ng import write_ng_skin_data
+from yrig.skin.ng import has_ng_layer_data, write_ng_skin_data
 from yrig.skin.serialize import export_skin_data
 
 if TYPE_CHECKING:
@@ -29,10 +29,12 @@ def _resolve_export_directory(directory: Path | None = None) -> Path:
 def _export_skin_data_for_shape(
     shape: str, directory: Path, filename: str, use_ng: bool, force: bool
 ) -> Path | None:
-    extension = ".json" if use_ng else ".yskin"
+    use_ng_data = use_ng and has_ng_layer_data(shape)
+
+    extension = ".json" if use_ng_data else ".yskin"
     filepath = directory / f"{filename}{extension}"
 
-    if use_ng:
+    if use_ng_data:
         result = write_ng_skin_data(filepath=filepath, geometry=shape, force=force)
     else:
         result = export_skin_data(filepath=filepath, geometry=shape, force=force)

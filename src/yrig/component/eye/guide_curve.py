@@ -48,6 +48,7 @@ class GuideCurve:
         output_names: list[str] | None = None,
         ignore_handles: bool = True,
         align_normals: bool = False,
+        mirror: bool = False,
     ):
 
         self.input_curve = curve
@@ -55,6 +56,7 @@ class GuideCurve:
         self.output_names = output_names or []
         self.ignore_handles = ignore_handles
         self.align_normals = align_normals
+        self.mirror = mirror
 
         self.locator_list: list[GuideLocator] = []
 
@@ -68,11 +70,142 @@ class GuideCurve:
     # BUILD
     # =========================================================
 
+    def refresh_locator_data(self) -> None:
+        """
+        Update stored locator positions, rotations,
+        and world matrices after mirroring.
+        """
+
+        for locator in self.locator_list:
+            locator.pos = tuple(
+                cmds.xform(
+                    locator.name,
+                    query=True,
+                    worldSpace=True,
+                    translation=True,
+                )  # type:ignore
+            )
+
+            locator.rot = tuple(
+                cmds.xform(
+                    locator.name,
+                    query=True,
+                    worldSpace=True,
+                    rotation=True,
+                )  # type:ignore
+            )
+
+            matrix = cmds.xform(
+                locator.name,
+                query=True,
+                worldSpace=True,
+                matrix=True,
+            )
+
+            if not isinstance(matrix, (list, tuple)):
+                raise TypeError(f"Expected matrix, got {type(matrix).__name__}")
+
+            locator.matrix = [float(value) for value in matrix]
+
+    def mirror_curve_for_build(self) -> None:
+        """
+        Reflect the duplicated curve across world X = 0
+        before creating guides.
+        """
+
+        mirror_grp = cmds.group(
+            empty=True,
+            name=f"{self.input_curve}_tempMirror_grp",
+        )
+
+        cmds.parent(
+            self.curve,
+            mirror_grp,
+        )
+
+        cmds.setAttr(
+            f"{mirror_grp}.scaleX",
+            -1,  # type:ignore
+        )
+
+        cmds.parent(
+            self.curve,
+            world=True,
+        )
+
+        cmds.delete(mirror_grp)
+
+    def mirror_guide_group(self) -> None:
+        """
+        Mirror the completed guide group back across X.
+
+        The negative scale is retained on the group so
+        its children inherit the reflected transform.
+        """
+
+        cmds.setAttr(
+            f"{self.group}.scaleX",
+            -1,  # type:ignore
+        )
+
+    def enforce_curve_direction(self) -> bool:
+        """
+        Ensure the curve starts closest to the world X center
+        and progresses outward.
+
+        Works for both positive and negative X.
+
+        Returns:
+            bool: True if the curve was reversed.
+        """
+
+        cvs = cmds.ls(
+            f"{self.curve}.cv[*]",
+            flatten=True,
+        )
+
+        if len(cvs) < 2:
+            return False
+
+        start_pos = cmds.pointPosition(
+            cvs[0],
+            world=True,
+        )
+
+        end_pos = cmds.pointPosition(
+            cvs[-1],
+            world=True,
+        )
+
+        start_distance = abs(start_pos[0])
+        end_distance = abs(end_pos[0])
+
+        if start_distance > end_distance:
+            cmds.reverseCurve(
+                self.curve,
+                constructionHistory=False,
+                replaceOriginal=True,
+            )
+
+            return True
+
+        return False
+
     def build(self) -> None:
 
         self.duplicate_and_resample_curve()
+
+        if self.mirror:
+            self.mirror_curve_for_build()
+
+        self.enforce_curve_direction()
+
         self.create_group()
         self.create_locators()
+
+        if self.mirror:
+            self.mirror_guide_group()
+            self.refresh_locator_data()
 
         self.count = len(self.locator_list)
 

@@ -121,7 +121,7 @@ def get_mesh_spline_weights(
 
     # iterate over the points and get the closest parameter
     parameters: list[float] = []
-    for _i, point in enumerate(mesh_points):  # type: ignore
+    for point in mesh_points:
         parameter: float = fn_curve.closestPoint(point, space=om2.MSpace.kObject)[1]
         parameters.append(parameter)
 
@@ -169,7 +169,7 @@ def get_mesh_surface_weights(
 
     # iterate over the points and get the closest parameter
     parameters: list[float] = []
-    for _i, point in enumerate(mesh_points):  # type: ignore
+    for point in mesh_points:
         uv: tuple[float, float] = fn_surface.getParamAtPoint(point, space=om2.MSpace.kWorld)
         parameter = uv[1]
         new_parameter = remap(

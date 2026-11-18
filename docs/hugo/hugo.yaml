@@ -1,0 +1,76 @@
+baseURL: "https://michaelharmonart.github.io/y-rig/"
+languageCode: en-us
+title: y-rig Docs
+
+enableGitInfo: true
+
+module:
+  imports:
+    - path: github.com/imfing/hextra
+
+markup:
+  goldmark:
+    renderer:
+      unsafe: true
+
+menu:
+  main:
+    - name: GitHub
+      url: https://github.com/michaelharmonart/y-rig
+      weight: 1
+      params:
+        icon: github
+    - name: Search
+      weight: 2
+      params:
+        type: search
+
+params:
+  navbar:
+    displayTitle: true
+    displayLogo: true
+    logo:
+      path: images/y-rig_logo.svg
+      width: 40
+      height: 20
+
+  theme:
+    default: system
+    displayToggle: true
+
+  displayUpdatedDate: true
+  dateFormat: "January 2, 2006"
+  # Display the author of the last modification
+  displayUpdatedAuthor: true
+
+  page:
+    width: wide
+    displayPagination: true
+    contextMenu:
+      enable: true
+
+  search:
+    enable: true
+    type: flexsearch
+    flexsearch:
+      index: content
+      tokenize: forward
+
+  editURL:
+    enable: true
+    base: "https://github.com/michaelharmonart/y-rig/edit/main/docs/hugo/content"
+
+  imageZoom:
+    enable: true
+
+outputs:
+  home:
+    - html
+    - llms
+  page:
+    - html
+    - markdown
+  section:
+    - html
+    - rss
+    - markdown

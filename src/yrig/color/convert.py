@@ -201,8 +201,7 @@ def hex_to_byte_color(hex: str) -> tuple[int, int, int]:
 
 def byte_color_to_hex(color: tuple[int, int, int]) -> str:
     r, g, b = color
-    hex_value = ("{:02X}" * 3).format(r, g, b)
-    return f"#{hex_value}"
+    return f"#{r:02X}{g:02X}{b:02X}"
 
 
 def rgb_to_byte_color(color: tuple[float, float, float]) -> tuple[int, int, int]:

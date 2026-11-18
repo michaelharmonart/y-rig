@@ -17,6 +17,30 @@
         }
     },
     "nodes": {
+        "/build/middle/face/teeth/build": {
+            "attrs": {
+                "big_teeth": {
+                    "comment": "if Ture connects us big teeth",
+                    "type": "bool",
+                    "value": "True"
+                }
+            },
+            "code": [
+                "from yrig.component.teeth.teeth import Teeth",
+                "",
+                "teeth = Teeth(",
+                "    part=\"${name}\",",
+                "    side=\"${side}\",",
+                "    parent=\"${component_group}\",",
+                "    control_parent=\"${control_group}\",",
+                "    parent_jnt=\"${joint_parent}\",",
+                "    control_size=1,",
+                "    big_teeth=\"${big_teeth}\",",
+                ")",
+                "",
+                "teeth.build()"
+            ]
+        },
         "/teeth_component": {
             "instance": "/component",
             "child_order": [

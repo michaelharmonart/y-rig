@@ -109,20 +109,31 @@ class Component(component.Main):
                     tp=self.root,
                 )
 
-                # connect roll control to roll offsets
+                # Connect roll control to finger offsets.
+                is_thumb = self.settings.get("is_thumb", False)
+
                 for i, roll_group in enumerate(self.roll_offsets):
+                    # For thumbs, leave the final (top) joint unaffected.
+                    if is_thumb and i == len(self.roll_offsets) - 1:
+                        continue
+
                     if i == 0:
-                        pm.connectAttr(  # type: ignore
+                        pm.connectAttr(  # ty: ignore[unresolved-attribute]
                             roll_ctl.attr("rotate"),
                             roll_group.attr("rotate"),
                             force=True,
                         )
                     else:
-                        pm.connectAttr(  # type: ignore
+                        pm.connectAttr(  # ty: ignore[unresolved-attribute]
                             roll_ctl.attr("rotateZ"),
                             roll_group.attr("rotateZ"),
                             force=True,
                         )
+                if is_thumb:
+                    first_thumb = self.roll_offsets[0]
+                    pm.disconnectAttr(f"{first_thumb}.rotate")
+                    last_thumb = self.roll_offsets[2]
+                    pm.connectAttr(roll_ctl.attr("rotateZ"), f"{last_thumb}.rotateZ")  # ty: ignore[unresolved-attribute]
 
                 # pm.orientConstraint(roll_ctl, base_ctl, maintainOffset=False)
 

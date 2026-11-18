@@ -61,6 +61,9 @@ class Guide(guide.ComponentGuide):
         self.pIkRefArray = self.addParam("ikrefarray", "string", "")
         self.pUseIndex = self.addParam("useIndex", "bool", False)
         self.pParentJointIndex = self.addParam("parentJointIndex", "long", -1, None, None)
+        self.pNeutralPose = self.addParam("neutralpose", "bool", True)
+        self.pIsThumb = self.addParam("is_thumb", "bool", False)
+        self.pIkRefArray = self.addParam("ikrefarray", "string", "")
 
 
 ##########################################################
@@ -115,10 +118,22 @@ class componentSettings(MayaQWidgetDockableMixin, guide.componentMainSettings): 
         for item in ikRefArrayItems:
             self.settingsTab.ikRefArray_listWidget.addItem(item)
 
+        if self.root.attr("is_thumb").get():
+            self.settingsTab.isThumb_checkBox.setCheckState(QtCore.Qt.Checked)
+        else:
+            self.settingsTab.isThumb_checkBox.setCheckState(QtCore.Qt.Unchecked)
+
     def create_componentLayout(self):
         self.settings_layout = QtWidgets.QVBoxLayout()
         self.settings_layout.addWidget(self.tabs)
         self.settings_layout.addWidget(self.close_button)
+        self.settingsTab.isThumb_checkBox.stateChanged.connect(
+            partial(
+                self.updateCheck,
+                self.settingsTab.isThumb_checkBox,
+                "is_thumb",
+            )
+        )
 
         self.setLayout(self.settings_layout)
 

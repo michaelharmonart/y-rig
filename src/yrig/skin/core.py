@@ -1,4 +1,4 @@
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 
 from maya import cmds
 from maya.api.OpenMaya import (
@@ -11,6 +11,7 @@ from maya.api.OpenMaya import (
     MFnMesh,
     MFnSingleIndexedComponent,
     MIntArray,
+    MMatrix,
     MObject,
     MPlug,
     MPointArray,
@@ -19,15 +20,17 @@ from maya.api.OpenMaya import (
 )
 from maya.api.OpenMayaAnim import MFnSkinCluster
 
+from yrig.maya_api.attribute import MatrixAttribute
 from yrig.maya_api.enum import (
     SkinClusterNormalizeWeights,
     SkinClusterRelativeSpaceMode,
     SkinClusterWeightDistribution,
 )
-from yrig.maya_api.node import SkinCluster
+from yrig.maya_api.node import SkinClusterNode
 from yrig.maya_api.utils import get_dag_path, get_depend_node
 from yrig.name import natural_sort_key
 from yrig.shape import get_components_of_shape, get_shape
+from yrig.transform import get_transform
 
 ZERO_TOLERANCE = 1e-7
 
@@ -48,7 +51,7 @@ def get_skin_clusters(geometry: str) -> list[str] | None:
     """
     history = cmds.listHistory(geometry, pruneDagObjects=True) or []
     skin_clusters = cmds.ls(history, type="skinCluster")  # type: ignore
-    return skin_clusters if skin_clusters else None
+    return skin_clusters or None
 
 
 def get_skin_cluster(geometry: str) -> str | None:
@@ -69,14 +72,14 @@ def get_skin_cluster(geometry: str) -> str | None:
     return skin_clusters[0] if skin_clusters else None
 
 
-def _resolve_skin_cluster(node: str) -> SkinCluster | None:
+def _resolve_skin_cluster(node: str) -> SkinClusterNode | None:
     if cmds.nodeType(node) == "skinCluster":
-        return SkinCluster.from_existing(node)
+        return SkinClusterNode.from_existing(node)
     skin_cluster = get_skin_cluster(node)
-    return SkinCluster.from_existing(skin_cluster) if skin_cluster is not None else None
+    return SkinClusterNode.from_existing(skin_cluster) if skin_cluster is not None else None
 
 
-def get_skin_cluster_influences(skin_cluster: str | SkinCluster) -> list[str]:
+def get_skin_cluster_influences(skin_cluster: str | SkinClusterNode) -> list[str]:
     """Return the influence joints bound to a skinCluster.
 
     Args:
@@ -97,12 +100,13 @@ def skin_geometry(
     dual_quaternion: bool = False,
     weight_blend: bool = False,
     support_non_rigid: bool = True,
-    relative_space_mode: SkinClusterRelativeSpaceMode = SkinClusterRelativeSpaceMode.WORLD,
+    relative_space_mode: SkinClusterRelativeSpaceMode = SkinClusterRelativeSpaceMode.CUSTOM,
+    relative_space_matrix: MatrixAttribute | str | MMatrix | None = None,
     normalize_weights: SkinClusterNormalizeWeights = SkinClusterNormalizeWeights.INTERACTIVE,
     weight_distribution: SkinClusterWeightDistribution = SkinClusterWeightDistribution.DISTANCE,
     max_influences: int = 6,
     maintain_max_influences: bool = False,
-) -> SkinCluster:
+) -> SkinClusterNode:
     """
     Create a skin cluster on the given geometry using the specified bind joints.
 
@@ -118,6 +122,9 @@ def skin_geometry(
         support_non_rigid: Whether to enable support for non-rigid
             transformations when dual quaternion skinning is enabled.
         relative_space_mode: Space mode used by the skin cluster.
+        relative_space_matrix: The matrix that will be used for relative space.
+            When None this will be the world matrix of the geometry.
+            We use this as the default instead of `local` space because DQ skinning scale breaks otherwise.
         normalize_weights: Weight normalization mode used by the skin cluster.
         weight_distribution: Method used to distribute weights when binding.
         max_influences: Maximum number of influences allowed per vertex.
@@ -129,17 +136,24 @@ def skin_geometry(
     if not name:
         name = f"{geometry}_SC"
 
+    transform = get_transform(geometry)
     shape = get_shape(geometry)
 
     if shape is None:
         raise RuntimeError(
             f"{geometry} is not a shape node! This function expects a transform with a shape or a shape."
         )
-    if not bind_joints:
+    if isinstance(bind_joints, str):
+        raise TypeError(
+            f"bind_joints must be an iterable of joint names, not a single string: {bind_joints!r}"
+        )
+
+    bind_joints_resolved = tuple(bind_joints)
+    if not bind_joints_resolved:
         raise ValueError("The provided bind_joints list was empty")
     mode = (2 if weight_blend else 1) if dual_quaternion else 0
     skin_cluster: str = cmds.skinCluster(  # type: ignore
-        *bind_joints,
+        *bind_joints_resolved,
         shape,
         toSelectedBones=True,
         skinMethod=mode,
@@ -149,27 +163,37 @@ def skin_geometry(
         maximumInfluences=max_influences,
         obeyMaxInfluences=maintain_max_influences,
     )[0]
-    skin_cluster_node = SkinCluster.from_existing(skin_cluster)
+    skin_cluster_node = SkinClusterNode.from_existing(skin_cluster)
     skin_cluster_node.dqs_support_non_rigid.set(support_non_rigid)
     skin_cluster_node.relative_space_mode.set(relative_space_mode)
+    if relative_space_matrix is None:
+        skin_cluster_node.relative_space_matrix.connect_from(f"{transform}.worldMatrix[0]")
+    elif isinstance(relative_space_matrix, (str, MatrixAttribute)):
+        skin_cluster_node.relative_space_matrix.connect_from(relative_space_matrix)
+    elif isinstance(relative_space_matrix, MMatrix):
+        skin_cluster_node.relative_space_matrix.set(relative_space_matrix)
+    else:
+        raise ValueError(
+            f"Relative space matrix {relative_space_matrix} is not a valid matrix type or attirbute."
+        )
+
     return skin_cluster_node
 
 
-def remove_unused_influences(geometry: str, skin_cluster: str | None = None) -> list[str]:
+def remove_unused_influences(object: str) -> list[str]:
     """
     Removes unused joints from a skinCluster and returns the removed influences.
     Args:
-        geometry: Mesh transform or shape that contains the skinCluster.
-        skin_cluster: Optional explicit skinCluster node name. When
-            ``None``, the first skinCluster in the shape's history is used.
-
+        object: skinCluster or geometry with a skinCluster.
     Returns:
         List of influence names that were removed from the skinCluster.
     """
-    if not skin_cluster:
-        skin_cluster: str | None = get_skin_cluster(geometry)
+    if cmds.objectType(object, isAType="skinCluster"):
+        skin_cluster = object
+    else:
+        skin_cluster: str | None = get_skin_cluster(object)
         if not skin_cluster:
-            raise RuntimeError(f"No skinCluster on {geometry}")
+            raise RuntimeError(f"No skinCluster on {object}")
     original_influences: set[str] = cmds.skinCluster(skin_cluster, query=True, influence=True) or []  # type: ignore
     cmds.skinCluster(skin_cluster, edit=True, removeUnusedInfluence=True)
     new_influences: set[str] = set(cmds.skinCluster(skin_cluster, query=True, influence=True) or [])  # type: ignore
@@ -342,8 +366,10 @@ def _add_missing_influences(
 def set_skin_weights(
     shape: str,
     weights: dict[int, dict[str, float]],
+    *,
     skin_cluster: str | None = None,
     normalize: bool = True,
+    influence_map: Callable[[str], str] | None = None,
 ) -> str:
     """
     Sets skinCluster weights for all vertices of the given mesh shape.
@@ -364,9 +390,24 @@ def set_skin_weights(
     else:
         resolved_skin_cluster = skin_cluster
 
+    if influence_map is None:
+        resolved_weights = weights
+    else:
+        remapped_weights: dict[int, dict[str, float]] = {}
+        for point_id, point_weights in weights.items():
+            remapped_point: dict[str, float] = {}
+            for old_name, weight in point_weights.items():
+                new_name = influence_map(old_name)
+                # add in case multiple influences map to the same influence
+                remapped_point[new_name] = remapped_point.get(new_name, 0.0) + weight
+            remapped_weights[point_id] = remapped_point
+        resolved_weights = remapped_weights
+
     # Ensure all influences in new_weights exist on the skinCluster
     all_influences_in_data: set[str] = {
-        influence_name for point_weights in weights.values() for influence_name in point_weights
+        influence_name
+        for point_weights in resolved_weights.values()
+        for influence_name in point_weights
     }
     existing_influences = set(
         cmds.skinCluster(resolved_skin_cluster, query=True, influence=True) or []  # type: ignore
@@ -412,7 +453,7 @@ def set_skin_weights(
     weights_flat: list[float] = [0.0] * (num_components * num_influences)
 
     # Fill weights list from new_weights dict
-    for point_id, point_weights in weights.items():
+    for point_id, point_weights in resolved_weights.items():
         base_index = point_id * num_influences
         for influence_name, weight in point_weights.items():
             influence_index = influence_indices[influence_name]

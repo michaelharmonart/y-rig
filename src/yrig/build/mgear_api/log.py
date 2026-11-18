@@ -1,11 +1,11 @@
 import logging
-from collections.abc import Callable, Generator, Iterator, Sequence
+from collections.abc import Callable, Generator, Sequence
 from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from io import TextIOBase
 from typing import TYPE_CHECKING
 
 from yrig.build.mgear_api.step import BuildStep
-from yrig.build.progress import ProgressStep, _current_progress
+from yrig.progress import ProgressStep, _current_progress
 
 if TYPE_CHECKING:
     from contextvars import Token
@@ -102,7 +102,9 @@ def _capture_mgear_output(target_logger: logging.Logger) -> Generator[None, None
 
 
 @contextmanager
-def _temporary_log_handler(logger: logging.Logger, handler: logging.Handler) -> Iterator[None]:
+def _temporary_log_handler(
+    logger: logging.Logger, handler: logging.Handler
+) -> Generator[None, None, None]:
     logger.addHandler(handler)
     try:
         yield

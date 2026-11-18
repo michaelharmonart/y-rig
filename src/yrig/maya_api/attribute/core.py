@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from enum import IntEnum
 from typing import (
     TYPE_CHECKING,
@@ -69,13 +69,18 @@ class Attribute(Generic[T]):
         """Set the value of this attribute."""
         self.set(val)
 
-    def get_input(self) -> Attribute | None:
+    def is_settable(self) -> bool:
+        """True if this attribute is settable."""
+        return cmds.getAttr(self.attr_path, settable=True)
+
+    def get_input(self, skip_conversion_nodes: bool = False) -> Attribute | None:
         """Return the source attribute connected to this attribute."""
         connections = cmds.listConnections(
             self.attr_path,
             source=True,
             destination=False,
             plugs=True,
+            skipConversionNodes=skip_conversion_nodes,
         )
         return Attribute(connections[0]) if connections else None
 
@@ -85,7 +90,7 @@ class Attribute(Generic[T]):
 
         return self.get_input()
 
-    def get_outputs(self) -> list[Attribute]:
+    def get_outputs(self, skip_conversion_nodes: bool = False) -> list[Attribute]:
         """Return the destination attributes connected to this attribute."""
         connections = (
             cmds.listConnections(
@@ -93,6 +98,7 @@ class Attribute(Generic[T]):
                 source=False,
                 destination=True,
                 plugs=True,
+                skipConversionNodes=skip_conversion_nodes,
             )
             or []
         )
@@ -103,23 +109,37 @@ class Attribute(Generic[T]):
         """The destination attributes connected to this attribute."""
         return self.get_outputs()
 
-    def connect_from(self, source_attr: str | Attribute) -> None:
+    def connect_from(self, source_attr: str | Attribute, force: bool = False) -> None:
         """Connect another attribute to this one."""
         source = str(source_attr)  # Works with both strings and Attribute objects
-        cmds.connectAttr(source, self.attr_path)
+        cmds.connectAttr(source, self.attr_path, force=force)
 
     def disconnect_from(self, source_attr: str | Attribute) -> None:
         """Disconnect this attribute from another attribute."""
         cmds.disconnectAttr(str(source_attr), self.attr_path)
 
-    def connect_to(self, dest_attr: str | Attribute) -> None:
+    def connect_to(self, dest_attr: str | Attribute, force: bool = False) -> None:
         """Connect this attribute to another one."""
         dest = str(dest_attr)
-        cmds.connectAttr(self.attr_path, dest)
+        cmds.connectAttr(self.attr_path, dest, force=force)
 
     def disconnect_to(self, dest_attr: str | Attribute) -> None:
         """Disconnect this attribute from another attribute."""
         cmds.disconnectAttr(self.attr_path, str(dest_attr))
+
+    def disconnect_input(self) -> bool:
+        input = self.get_input()
+        if input is not None:
+            self.disconnect_from(input)
+            return True
+        return False
+
+    def disconnect_outputs(self) -> bool:
+        outputs = self.get_outputs()
+        for output in outputs:
+            self.disconnect_to(output)
+            return True
+        return False
 
     def exists(self) -> bool:
         """Check if this attribute exists."""
@@ -137,8 +157,8 @@ class Attribute(Generic[T]):
         """Control whether this attribute is displayed in the channel box."""
         cmds.setAttr(self.attr_path, channelBox=enabled)
 
-    def get_alias(self) -> str:
-        return cmds.aliasAttr(self.attr_path, query=True)  # type: ignore
+    def get_alias(self) -> str | None:
+        return cmds.aliasAttr(self.attr_path, query=True) or None  # type: ignore
 
     def set_alias(self, alias: str) -> None:
         cmds.aliasAttr(alias, self.attr_path)
@@ -153,7 +173,7 @@ class ArrayAttribute(Attribute, Iterable[AttributeType], Generic[AttributeType])
     def __init__(
         self,
         attr_path: str,
-        attribute_type: type[AttributeType],
+        attribute_type: Callable[[str], AttributeType],
     ) -> None:
         super().__init__(attr_path)
         self.attribute_type = attribute_type
@@ -185,10 +205,10 @@ class ArrayAttribute(Attribute, Iterable[AttributeType], Generic[AttributeType])
         for index in self.get_indices():
             yield self[index]
 
-    def clear(self) -> None:
+    def clear(self, break_connections: bool = True) -> None:
         """Remove all existing elements from this array."""
         for index in self.get_indices():
-            cmds.removeMultiInstance(f"{self.attr_path}[{index}]", b=True)
+            cmds.removeMultiInstance(f"{self.attr_path}[{index}]", b=break_connections)
 
 
 class ValueArrayAttribute(Attribute[Sequence[T]], Generic[T]):
@@ -369,6 +389,14 @@ class DoubleAngleAttribute(DoubleAttribute):
     """Single scalar (doubleAngle) Maya attribute."""
 
 
+class DoubleLinearAttribute(ScalarAttribute):
+    """Single scalar (doubleLinear) Maya attribute."""
+
+
+class TimeAttribute(ScalarAttribute):
+    """Single scalar (time) Maya attribute."""
+
+
 class IntegerAttribute(NumericAttribute[int]):
     """Single integer Maya attribute."""
 
@@ -452,7 +480,7 @@ class Vector2Attribute(Attribute[tuple[float, float]]):
 
 
 class Vector3Attribute(Attribute[tuple[float, float, float]]):
-    """A Maya attribute of the type double3 (XYZ)"""
+    """A Maya attribute with three values (XYZ)"""
 
     def __init__(self, attr_path: str) -> None:
         super().__init__(attr_path)
@@ -490,10 +518,10 @@ class QuatAttribute(Attribute[tuple[float, float, float, float]]):
     def __init__(self, attr_path: str) -> None:
         super().__init__(attr_path)
 
-        self.x = ScalarAttribute(f"{attr_path}X")
-        self.y = ScalarAttribute(f"{attr_path}Y")
-        self.z = ScalarAttribute(f"{attr_path}Z")
-        self.w = ScalarAttribute(f"{attr_path}W")
+        self.x = DoubleAttribute(f"{attr_path}X")
+        self.y = DoubleAttribute(f"{attr_path}Y")
+        self.z = DoubleAttribute(f"{attr_path}Z")
+        self.w = DoubleAttribute(f"{attr_path}W")
 
 
 class Long3Attribute(Attribute[tuple[int, int, int]]):
@@ -536,6 +564,9 @@ class EulerRotationAttribute(Attribute[tuple[float, float, float]]):
     def set(self, value: tuple[float, float, float]) -> None:
         """Set the value of this attribute."""
         cmds.setAttr(self.attr_path, *value)  # type: ignore
+
+
+class FunctionAttribute(Attribute): ...
 
 
 class GenericAttribute(Attribute): ...

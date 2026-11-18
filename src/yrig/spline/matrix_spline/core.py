@@ -56,7 +56,7 @@ class MatrixSpline:
 
         cv_matrices: list[str] = []
         cv_position_attrs: list[tuple[str, str, str]] = []
-        for _index, cv_transform in enumerate(cv_transforms):
+        for cv_transform in cv_transforms:
             # Remove scale and shear from matrix since they will interfere with the
             # linear interpolation of the basis vectors (causing flipping)
             pick_matrix = node.PickMatrixNode.create(name=f"{cv_transform}_pick_matrix")

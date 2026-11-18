@@ -10,18 +10,5 @@ def get_tagged_controls(side: str | None = None) -> list[str]:
     Returns:
         list: A list of transform node names that are tagged as controllers.
     """
-    controller_nodes: list[str] = cmds.ls(type="controller")
-    tagged_controls: list[str] = []
-    for control_node in controller_nodes:
-        connected: list[str] = cmds.listConnections(
-            f"{control_node}.controllerObject", source=True, destination=False
-        )
-        if connected:
-            control = connected[0]
-            if side:
-                if get_side(control_node) == side:
-                    tagged_controls.append(control)
-            else:
-                tagged_controls.append(control)
-
-    return tagged_controls
+    controls = cmds.controller(query=True, allControllers=True) or []
+    return [c for c in controls if get_side(c) == side] if side else controls  # type: ignore

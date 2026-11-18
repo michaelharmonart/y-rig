@@ -22,7 +22,7 @@ from yrig.maya_api.enum import (
 from .geometry_filter import WeightGeometryFilter
 
 
-class SkinCluster(WeightGeometryFilter):
+class SkinClusterNode(WeightGeometryFilter):
     """Maya skinCluster node with enhanced interface."""
 
     node_type = "skinCluster"

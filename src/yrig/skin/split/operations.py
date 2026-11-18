@@ -1,7 +1,7 @@
 import logging
 from collections.abc import Iterable
 
-from yrig.build.progress import progress_step, progress_update
+from yrig.progress import progress_step
 from yrig.skin.core import (
     get_shape,
     get_skin_cluster,
@@ -147,15 +147,15 @@ def auto_split_weights(meshes: Iterable[str] | str) -> None:
         meshes: A single mesh name or an iterable of mesh names to process.
     """
     meshes_to_split = (meshes,) if isinstance(meshes, str) else tuple(meshes)
-    with progress_step("Auto Split Weights"):
-        total = len(meshes_to_split)
-        for i, mesh in enumerate(meshes_to_split):
+    total = len(meshes_to_split)
+    with progress_step("Auto Split Weights", total=total):
+        for mesh in meshes_to_split:
             skin_clusters: list[str] | None = get_skin_clusters(mesh)
             if skin_clusters is None:
                 continue
             for skin_cluster in skin_clusters:
-                split_weights(
-                    mesh,
-                    skin_cluster=skin_cluster,
-                )
-            progress_update(i / total)
+                with progress_step(mesh):
+                    split_weights(
+                        mesh,
+                        skin_cluster=skin_cluster,
+                    )

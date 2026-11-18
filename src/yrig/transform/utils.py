@@ -50,11 +50,10 @@ def create_transform(
     Returns:
         The created transform name.
     """
-    created_transform: str
     if parent:
-        created_transform = cmds.group(empty=True, name=name, parent=parent)
+        created_transform = cmds.createNode("transform", name=name, parent=parent, skipSelect=True)
     else:
-        created_transform = cmds.group(empty=True, name=name, world=True)
+        created_transform = cmds.createNode("transform", name=name, skipSelect=True)
     if transform is None:
         pass
     elif isinstance(transform, str):
@@ -68,7 +67,7 @@ def create_transform(
 
 def get_transform(node: str) -> str:
     """Return the transform associated with a DAG node."""
-    if cmds.nodeType(node) == "transform":
+    if cmds.objectType(node, isAType="transform"):
         return node
 
     transform = cmds.listRelatives(node, parent=True, type="transform")
@@ -233,15 +232,26 @@ def connect_transform(
     scale: bool = True,
     shear: bool = False,
 ) -> None:
+    # Connect each channel individually as if they are connected from the parent compound attr certain things break,
+    # such as pose interpolator goToPose command. Native Maya constraints also connect this way.
     if translate:
-        cmds.connectAttr(f"{source}.translate", f"{driven}.translate")
+        cmds.connectAttr(f"{source}.translateX", f"{driven}.translateX")
+        cmds.connectAttr(f"{source}.translateY", f"{driven}.translateY")
+        cmds.connectAttr(f"{source}.translateZ", f"{driven}.translateZ")
     if rotate:
-        cmds.connectAttr(f"{source}.rotate", f"{driven}.rotate")
+        cmds.connectAttr(f"{source}.rotateX", f"{driven}.rotateX")
+        cmds.connectAttr(f"{source}.rotateY", f"{driven}.rotateY")
+        cmds.connectAttr(f"{source}.rotateZ", f"{driven}.rotateZ")
+
         cmds.connectAttr(f"{source}.rotateOrder", f"{driven}.rotateOrder")
     if scale:
-        cmds.connectAttr(f"{source}.scale", f"{driven}.scale")
+        cmds.connectAttr(f"{source}.scaleX", f"{driven}.scaleX")
+        cmds.connectAttr(f"{source}.scaleY", f"{driven}.scaleY")
+        cmds.connectAttr(f"{source}.scaleZ", f"{driven}.scaleZ")
     if shear:
-        cmds.connectAttr(f"{source}.shear", f"{driven}.shear")
+        cmds.connectAttr(f"{source}.shearXY", f"{driven}.shearXZ")
+        cmds.connectAttr(f"{source}.shearXZ", f"{driven}.shearXZ")
+        cmds.connectAttr(f"{source}.shearYZ", f"{driven}.shearYZ")
 
 
 def distance_reader(

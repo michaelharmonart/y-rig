@@ -1,13 +1,16 @@
 """
-Maya API abstraction layer.
+Agnostic wrapper around Maya's Python APIs.
 
-Provides Pythonic wrappers around Maya's dependency-graph nodes and their
-attributes so that node creation, attribute access, and connection wiring
-can be expressed with clean, type-safe Python instead of raw ``cmds`` calls.
+This package provides an abstraction layer over Maya's APIs so that y-rig code
+can interact with Maya through nice typesafe Python interfaces rather
+than depending directly on schnasty ``maya.cmds`` calls.
 
-Submodules:
-    attribute: Typed attribute descriptors (scalar, matrix, vector, etc.).
-    node: Convenience classes for common Maya DG/DAG node types.
+The goal is for this package to remain agnostic of higher-level rigging
+workflows and external build systems. It is intended to eventually become its
+own standalone library that can be used independently of y-rig.
+
+Higher-level rigging helpers and general-purpose workflow logic belong in
+:mod:`yrig`.
 """
 
 from . import attribute as attribute

@@ -4,95 +4,98 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = [ "msgspec>=0.21.1", "nxt-core>=0.18.1" ]
+dependencies = ["msgspec>=0.21.1", "nxt-core>=0.18.1"]
 
 [dependency-groups]
 lint = [
-  "ty>=0.0.14",
-  "ruff>=0.14.14",
-  "maya-stubs>=0.4.2",
-  "numpy>=2.4.1",
-  "qt-py>=2.0.2"
+    "ty>=0.0.14",
+    "ruff>=0.14.14",
+    "maya-stubs>=0.4.2",
+    "numpy>=2.4.1",
+    "qt-py>=2.0.2",
+    "types-usd>=24.5.2",
 ]
-debug = [ "debugpy>=1.8.19" ]
+debug = ["debugpy>=1.8.19"]
 
-  [[dependency-groups.dev]]
-  include-group = "lint"
+[[dependency-groups.dev]]
+include-group = "lint"
 
-  [[dependency-groups.dev]]
-  include-group = "debug"
+[[dependency-groups.dev]]
+include-group = "debug"
 
-  [[dependency-groups.maya]]
-  include-group = "debug"
+[[dependency-groups.maya]]
+include-group = "debug"
 
 [tool.ruff]
 line-length = 100
 exclude = [
-  "third_party",
-  "maya-setup.py",
-  "shifter/components/**/settingsUI.py"
+    "README.md",
+    "docs",
+    "third_party",
+    "maya-setup.py",
+    "shifter/components/**/settingsUI.py",
 ]
 
-  [tool.ruff.lint]
-  preview = true
-  extend-select = [
-  "ANN",
-  "B",
-  "E",
-  "FA",
-  "I",
-  "INP",
-  "N",
-  "PTH",
-  "SIM",
-  "T20",
-  "TID",
-  "UP",
-  "F",
-  "RUF"
+[tool.ruff.lint]
+preview = true
+extend-select = [
+    "ANN",
+    "B",
+    "E",
+    "FA",
+    "I",
+    "INP",
+    "N",
+    "PTH",
+    "SIM",
+    "T20",
+    "TID",
+    "UP",
+    "F",
+    "RUF",
 ]
-  ignore = [
-  "missing-return-type-special-method",
-  "missing-type-args",
-  "missing-type-kwargs",
-  "unused-variable",
-  "if-else-block-instead-of-if-exp",
-  "camelcase-imported-as-lowercase",
-  "line-too-long",
-  "ambiguous-unicode-character-docstring",
-  "noqa-comments",
-  "blind-except"
+ignore = [
+    "missing-return-type-special-method",
+    "missing-type-args",
+    "missing-type-kwargs",
+    "unused-variable",
+    "if-else-block-instead-of-if-exp",
+    "camelcase-imported-as-lowercase",
+    "line-too-long",
+    "ambiguous-unicode-character-docstring",
+    "noqa-comments",
+    "blind-except",
+    "repeated-append",
 ]
 
-    [tool.ruff.lint.per-file-ignores]
-    "shifter/*" = [ "ANN" ]
-    "shifter/components/*" = [ "N", "TID", "non-empty-init-module", "collection-literal-concatenation"]
+[tool.ruff.lint.per-file-ignores]
+"shifter/*" = ["ANN"]
+"shifter/components/*" = [
+    "N",
+    "TID",
+    "non-empty-init-module",
+    "collection-literal-concatenation",
+]
 
-    [tool.ruff.lint.flake8-tidy-imports]
-    banned-module-level-imports = [ "ng" ]
+[tool.ruff.lint.flake8-tidy-imports]
+banned-module-level-imports = ["ng"]
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api.json]
 msg = "The built in json module is slow and doesn't have features we use in yrig. Use yrig.io.json instead."
 
-[tool.pyright]
-extraPaths = [
-  "/usr/autodesk/ApplicationPlugins/ngskintools2/Contents/scripts",
-  "third_party/mgear/release/scripts/",
-  "src"
-]
-ignore = [ "third_party", "shifter/components/**/settingsUI.py" ]
-typeCheckingMode = "standard"
-reportMissingModuleSource = "information"
+[tool.ruff.lint.flake8-tidy-imports.banned-api.components]
+msg = "yrig library code should not have a dependency on mgear shifter components"
 
 [tool.ty.environment]
+root = ["./src"]
 extra-paths = [
-  "/usr/autodesk/ApplicationPlugins/ngskintools2/Contents/scripts",
-  "third_party/mgear/release/scripts/",
-  "src"
+    "./shifter",
+    "/usr/autodesk/ApplicationPlugins/ngskintools2/Contents/scripts",
+    "./third_party/mgear/release/scripts/",
 ]
 
 [tool.ty.src]
-exclude = [ "third_party", "shifter/components/**/settingsUI.py" ]
+exclude = ["./third_party", "./shifter/**/settingsUI.py"]
 
 [tool.ty.analysis]
-allowed-unresolved-imports = [ "ngSkinTools2.**" ]
+allowed-unresolved-imports = ["ngSkinTools2.**"]

@@ -1,3 +1,4 @@
+import io
 from pathlib import Path
 from typing import Any, BinaryIO, TypeVar
 
@@ -81,6 +82,46 @@ def _write_compact_pretty(
         buffer.write(_msgspec_encoder.encode(obj))
 
 
+def _encode_json(obj: Any, pretty: bool = True, compact: bool = True) -> bytes:  # noqa: ANN401
+    """Encode an object to JSON bytes using the selected formatting scheme."""
+    if not pretty:
+        return _msgspec_encoder.encode(obj)
+
+    if compact:
+        buffer = io.BytesIO()
+        _write_compact_pretty(msgspec.to_builtins(obj), buffer)
+        return buffer.getvalue()
+
+    return msgspec.json.format(_msgspec_encoder.encode(obj), indent=2)
+
+
+def loads_json(data: str | bytes, type: type[T]) -> T:
+    """Decode a JSON string (or bytes) into the specified type.
+
+    Args:
+        data: JSON text to decode.
+        type: Type to decode the JSON data into.
+
+    Returns:
+        The decoded object.
+    """
+    return msgspec.json.decode(data, type=type)
+
+
+def dumps_json(obj: Any, pretty: bool = False, compact: bool = False) -> str:  # noqa: ANN401
+    """Encode an object as a JSON string.
+
+    Args:
+        obj: Object to encode as JSON.
+        pretty: Whether to use the pretty formatting scheme.
+        compact: When True use the compact formatting scheme (only does anything if ``pretty`` is also True).
+
+    Returns:
+        The encoded JSON as a string.
+    """
+    return _encode_json(obj, pretty=pretty, compact=compact).decode()
+
+
 def load_json(filepath: Path, type: type[T]) -> T:
     """Load and decode a JSON file into the specified type.
 
@@ -110,11 +151,4 @@ def export_json(filepath: Path, obj: Any, pretty: bool = True, compact: bool = T
         compact: When True use the compact formatting scheme (only does anything if ``pretty`` is also True).
     """
     filepath.parent.mkdir(parents=True, exist_ok=True)
-    with Path(filepath).open("wb") as file:
-        if pretty:
-            if compact:
-                _write_compact_pretty(msgspec.to_builtins(obj), file)
-            else:
-                file.write(msgspec.json.format(_msgspec_encoder.encode(obj), indent=2))
-        else:
-            file.write(_msgspec_encoder.encode(obj))
+    filepath.write_bytes(_encode_json(obj, pretty=pretty, compact=compact))

@@ -75,7 +75,7 @@ class Node(ABC):
         """Create a new node of this type."""
         resolved_type = cls._resolve_node_type()
         cls._ensure_plugin()
-        created_name = cmds.createNode(resolved_type, name=name or cls.node_type)
+        created_name = cmds.createNode(resolved_type, name=name or cls.node_type, skipSelect=True)
         return cls(created_name)
 
     @classmethod

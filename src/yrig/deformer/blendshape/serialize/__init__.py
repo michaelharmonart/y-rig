@@ -27,15 +27,22 @@ serialized structure corresponds directly to the underlying attributes.
 
 from . import apply, data, directory, get, io
 from .get import get_blendshape_data
-from .io import export_blendshape, import_blendshape
+from .io import (
+    batch_export_blendshapes,
+    export_blendshape,
+    import_blendshape,
+    import_blendshapes_from_directories,
+)
 
 __all__ = [
     "apply",
+    "batch_export_blendshapes",
     "data",
     "directory",
     "export_blendshape",
     "get",
     "get_blendshape_data",
     "import_blendshape",
+    "import_blendshapes_from_directories",
     "io",
 ]

@@ -5,6 +5,7 @@ from yrig.maya_api.attribute import (
     EnumAttribute,
     GeometryAttribute,
     MatrixAttribute,
+    NearestPointOnCurveResultAttribute,
     NurbsCurveAttribute,
     NurbsSurfaceAttribute,
     ScalarAttribute,
@@ -90,6 +91,21 @@ class MotionPathNode(Node):
         self.all_coordinates = Vector3Attribute(f"{self.name}.allCoordinates")
         self.orient_matrix = MatrixAttribute(f"{self.name}.orientMatrix")
         self.rotate = Vector3Attribute(f"{self.name}.rotate")
+
+
+class NearestPointOnCurveNode(Node):
+    """Maya nearestPointOnCurve node with enhanced interface."""
+
+    node_type = "nearestPointOnCurve"
+
+    def __init__(self, name: str = "nearestPointOnCurve") -> None:
+        super().__init__(name)
+
+    def _setup_attributes(self) -> None:
+
+        self.input_curve = NurbsCurveAttribute(f"{self.name}.inputCurve")
+        self.in_position = Vector3Attribute(f"{self.name}.inPosition")
+        self.result = NearestPointOnCurveResultAttribute(f"{self.name}.result")
 
 
 class UvPinNode(Node):

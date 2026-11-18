@@ -228,9 +228,7 @@ def uv_pin_multi(
     uv_pin_node.original_geometry.connect_from(f"{original_shape}.{shape_output}")
     uv_pin_node.deformed_geometry.connect_from(f"{primary_shape}.{shape_output}")
 
-    for object_to_pin, uv in zip_longest(
-        objects_to_pin, uv_coords if uv_coords else (), fillvalue=None
-    ):
+    for object_to_pin, uv in zip_longest(objects_to_pin, uv_coords or (), fillvalue=None):
         if object_to_pin is None:
             raise ValueError("More uv_coordinates than objects_to_pin. Unable to pin.")
         uv_pin(

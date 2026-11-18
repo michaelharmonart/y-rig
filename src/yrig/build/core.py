@@ -3,10 +3,10 @@ from collections.abc import Callable, Iterable, Sequence
 from itertools import chain
 from pathlib import Path
 
-from yrig.build.nxt_api import YRIG_NXT_DIR, execute_nxt_graph, nxt_file_roots
-from yrig.build.progress import ProgressStep, bind_progress_step
+from yrig.build.nxt_api import YRIG_NXT_DIR, execute_nxt_graph, nxt_file_roots, open_nxt_editor
 from yrig.build.scope import BuildScope
 from yrig.build.setup import setup_rig_build_file
+from yrig.progress import ProgressStep, report_progress
 
 build_logger = logging.getLogger("yrig.build")
 
@@ -44,25 +44,23 @@ def open_rig_in_editor(root_paths: Sequence[Path], rig_path: Path | None) -> Non
         rig_path: Path to the rig's build directory relative to the root. If
             ``None``, opens the NXT editor without a specific rig.
     """
-    from maya import cmds
-
     resolved_root_paths = list(resolve_root_paths(root_paths))
     with nxt_file_roots(resolved_root_paths):
         if rig_path is None:
-            cmds.nxt_ui()  # type: ignore
+            open_nxt_editor()
             return
         else:
             build_path = resolve_build_path(rig_path)
             for root_path in resolved_root_paths:
                 if (root_path / build_path).exists():
-                    cmds.nxt_ui(path=str(build_path))  # type: ignore
+                    open_nxt_editor(build_path)
                     return
             filepath = resolved_root_paths[0] / build_path
             setup = setup_rig_build_file(filepath, rig_path)
             if setup:
-                cmds.nxt_ui(path=str(filepath))  # type: ignore
+                open_nxt_editor(filepath)
             else:
-                cmds.nxt_ui()  # type: ignore
+                open_nxt_editor()
 
 
 def build_rig(
@@ -89,7 +87,7 @@ def build_rig(
     build_path = resolve_build_path(rig_path)
     resolved_scope = resolve_build_scope(build_scope)
     build_step = ProgressStep("Rig Build", callback=progress_callback)
-    with nxt_file_roots(extended_root_paths), bind_progress_step(build_step):
+    with nxt_file_roots(extended_root_paths), report_progress(build_step):
         try:
             execute_nxt_graph(
                 build_path,

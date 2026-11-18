@@ -125,8 +125,7 @@
                 "        primary_axis=(1,0,0),",
                 "        secondary_axis=(0,0,1),",
                 "        joint_config = joint_config,",
-                "    )",
-                "STAGE.control_list.extend(component_controls)"
+                "    )"
             ]
         }
     }

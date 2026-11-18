@@ -48,8 +48,7 @@
                 "        joint_parent=\"${joint_parent}\", ",
                 "        control_size=${control_size}",
                 "    )",
-                "    ",
-                "STAGE.control_list.extend(component_controls)"
+                "    "
             ]
         }
     }

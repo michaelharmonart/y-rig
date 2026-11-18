@@ -1,7 +1,10 @@
+import hashlib
+
 from maya import cmds
 from maya.api.OpenMaya import (
     MDagPath,
     MFn,
+    MFnComponent,
     MFnDoubleIndexedComponent,
     MFnMesh,
     MFnNurbsCurve,
@@ -10,6 +13,8 @@ from maya.api.OpenMaya import (
     MObject,
 )
 
+from yrig.io.json import dumps_json
+from yrig.maya_api.utils import get_dag_path
 from yrig.select import maintain_selection
 
 
@@ -29,7 +34,7 @@ def get_shape(object: str) -> str | None:
         The name of the associated shape node, or ``None`` if no shape exists.
     """
     shape: str
-    if cmds.nodeType(object) == "transform":
+    if cmds.objectType(object, isAType="transform"):
         shape_list: list[str] = cmds.listRelatives(
             object, shapes=True, noIntermediate=True, children=True
         )
@@ -44,6 +49,19 @@ def get_shape(object: str) -> str | None:
         return shape
     else:
         return None
+
+
+def get_component_mfn_and_type_of_shape(shape_dag_path: MDagPath) -> tuple[type[MFnComponent], int]:
+    if shape_dag_path.hasFn(MFn.kMesh):
+        return MFnSingleIndexedComponent, MFn.kMeshVertComponent
+
+    if shape_dag_path.hasFn(MFn.kNurbsCurve):
+        return MFnSingleIndexedComponent, MFn.kCurveCVComponent
+
+    if shape_dag_path.hasFn(MFn.kNurbsSurface):
+        return MFnDoubleIndexedComponent, MFn.kSurfaceCVComponent
+    else:
+        raise TypeError(f"Unsupported shape type: {shape_dag_path.node().apiTypeStr}")
 
 
 def get_components_of_shape(shape_dag_path: MDagPath) -> MObject:
@@ -74,6 +92,59 @@ def get_components_of_shape(shape_dag_path: MDagPath) -> MObject:
         raise TypeError(f"Unsupported shape type: {shape_dag_path.node().apiTypeStr}")
 
 
+def shape_topology_signature(shape: str) -> tuple:
+    """Return a hashable signature describing a shape's topology."""
+    shape = get_shape(shape) or shape
+    dag_path = get_dag_path(shape)
+
+    if dag_path.hasFn(MFn.kMesh):
+        fn = MFnMesh(dag_path)
+        polygon_counts, polygon_connects = fn.getVertices()
+
+        return (
+            "mesh",
+            fn.numVertices,
+            fn.numPolygons,
+            tuple(polygon_counts),
+            tuple(polygon_connects),
+        )
+
+    if dag_path.hasFn(MFn.kNurbsCurve):
+        fn: MFnNurbsCurve = MFnNurbsCurve(dag_path)
+
+        return (
+            "nurbsCurve",
+            fn.numCVs,
+            fn.degree,
+            fn.form,
+            fn.numSpans,
+        )
+
+    if dag_path.hasFn(MFn.kNurbsSurface):
+        fn: MFnNurbsSurface = MFnNurbsSurface(dag_path)
+
+        return (
+            "nurbsSurface",
+            fn.numCVsInU,
+            fn.numCVsInV,
+            fn.degreeInU,
+            fn.degreeInV,
+            fn.formInU,
+            fn.formInV,
+            fn.numSpansInU,
+            fn.numSpansInV,
+        )
+
+    raise TypeError(f"Unsupported shape type: {dag_path.node().apiTypeStr}")
+
+
+def shape_topology_hash(shape: str) -> str:
+    """Return a SHA-256 hash of a shape's topology."""
+    signature = shape_topology_signature(shape)
+    signature_json = dumps_json(signature, pretty=False)
+    return hashlib.sha256(signature_json.encode()).hexdigest()
+
+
 def bake_shape(transform: str, zero_pivot: bool = True) -> None:
     cmds.makeIdentity(transform, apply=True)
     if zero_pivot:
@@ -84,6 +155,13 @@ def set_smooth_preview(geometry: str, enable: bool = True) -> None:
     with maintain_selection(maintain_empty=True):
         cmds.select(geometry, replace=True)
         if enable:
-            cmds.displaySmoothness(polygonObject=3)
+            cmds.displaySmoothness(polygonObject=3, pointsWire=16)
         else:
-            cmds.displaySmoothness(polygonObject=0)
+            cmds.displaySmoothness(polygonObject=0, pointsWire=8)
+
+
+def get_shape_output(shape: str, local: bool = True) -> str:
+    shape_output: str = cmds.deformableShape(
+        shape, worldShapeOutAttr=not local, localShapeOutAttr=local
+    )[0]  # type: ignore
+    return f"{shape}.{shape_output}"

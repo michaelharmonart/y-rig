@@ -1,3 +1,4 @@
+from .anim_curve import AnimCurveKeyTimeValueAttribute
 from .blendshape import (
     BlendShapeInbetweenInfoAttribute,
     BlendShapeInbetweenInfoGroupAttribute,
@@ -7,11 +8,13 @@ from .blendshape import (
     BlendShapeNormalizationGroupAttribute,
     BlendShapeSculptTargetTweaksAttribute,
     BlendShapeTargetDirectoryAttribute,
+    ShapeEditorManagerDirectoryAttribute,
 )
 from .compound import (
     AimMatrixAxisAttribute,
     BlendMatrixTargetAttribute,
     ClosestPointOnSurfaceResultAttribute,
+    NearestPointOnCurveResultAttribute,
     UvPinCoordinateAttribute,
     WtMatrixAttribute,
 )
@@ -24,9 +27,11 @@ from .core import (
     DoubleAngleAttribute,
     DoubleArrayAttribute,
     DoubleAttribute,
+    DoubleLinearAttribute,
     EnumAttribute,
     EulerRotationAttribute,
     FloatAttribute,
+    FunctionAttribute,
     GeometryAttribute,
     Int32ArrayAttribute,
     IntegerAttribute,
@@ -42,6 +47,7 @@ from .core import (
     QuatAttribute,
     ScalarAttribute,
     StringAttribute,
+    TimeAttribute,
     UInt64ArrayAttribute,
     Vector2Attribute,
     Vector3Attribute,
@@ -61,6 +67,7 @@ from .skincluster import SkinClusterInfluenceColor
 
 __all__ = [
     "AimMatrixAxisAttribute",
+    "AnimCurveKeyTimeValueAttribute",
     "ArrayAttribute",
     "Attribute",
     "BlendMatrixTargetAttribute",
@@ -79,9 +86,11 @@ __all__ = [
     "DoubleAngleAttribute",
     "DoubleArrayAttribute",
     "DoubleAttribute",
+    "DoubleLinearAttribute",
     "EnumAttribute",
     "EulerRotationAttribute",
     "FloatAttribute",
+    "FunctionAttribute",
     "GeometryAttribute",
     "GeometryFilterInputAttribute",
     "GeometryFilterWeightFunctionDataAttribute",
@@ -92,6 +101,7 @@ __all__ = [
     "MatrixArrayAttribute",
     "MatrixAttribute",
     "MessageAttribute",
+    "NearestPointOnCurveResultAttribute",
     "NumericAttribute",
     "NurbsCurveAttribute",
     "NurbsSurfaceAttribute",
@@ -101,8 +111,10 @@ __all__ = [
     "PoseInterpolatorPoseAttribute",
     "QuatAttribute",
     "ScalarAttribute",
+    "ShapeEditorManagerDirectoryAttribute",
     "SkinClusterInfluenceColor",
     "StringAttribute",
+    "TimeAttribute",
     "UInt64ArrayAttribute",
     "UvPinCoordinateAttribute",
     "Vector2Attribute",

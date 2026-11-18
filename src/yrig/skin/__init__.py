@@ -14,7 +14,7 @@ from .apply import (
     skin_and_apply_weights,
     skin_and_apply_weights_from_directories,
 )
-from .core import skin_geometry
+from .core import remove_unused_influences, skin_geometry
 from .export import (
     batch_export_skin_data,
 )
@@ -32,6 +32,7 @@ __all__ = [
     "export_skin_weights",
     "import_skin_weights",
     "ng",
+    "remove_unused_influences",
     "serialize",
     "skin_and_apply_ng_weights",
     "skin_and_apply_weights",

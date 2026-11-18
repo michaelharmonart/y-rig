@@ -3,8 +3,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar
 
-import mgear.pymaya as pm
-from mgear.core import attribute, primitive, transform
+from mgear.core import attribute
 
 if TYPE_CHECKING:
     from ..y_limb_01 import (
@@ -41,7 +40,7 @@ class Component(LimbComponent):
             if len(ref_names) > 1:
                 self.ikref_att = self.addAnimEnumParam("ikref", "Ik Ref", 0, ref_names)
 
-        ref_names = ["Auto", "ikFoot", "World_ctl"]
+        ref_names = ["Auto", "ikFoot", "Swing", "World_ctl"]
         if self.settings["upvrefarray"]:
             ref_names += self.get_valid_alias_list(self.settings["upvrefarray"].split(","))
         if len(ref_names) > 1:
@@ -78,31 +77,6 @@ class Component(LimbComponent):
 
         """
         super().addOperators()
-
-    def _setup_ik_upv(self) -> None:
-        # 1 bone chain Upv ref ==============================
-        self.ikHandleUpvRef = primitive.addIkHandle(
-            self.root,
-            self.getName("ikHandleLimbChainUpvRef"),
-            self.limbChainUpvRef,
-            "ikSCsolver",
-        )
-        pm.pointConstraint(self.ik_ctl, self.ikHandleUpvRef)
-        # handle special case for full mirror behaviour negating
-        # scaleY axis to -1
-        if self.upv_cns.sy.get() < 0:
-            references = []
-            for x in [self.limbChainUpvRef[0], self.ik_ctl]:
-                ref_trans_name = self.upv_cns.getName() + "_" + x.getName() + "_space_ref"
-                ref_trans = primitive.addTransform(
-                    x,
-                    ref_trans_name,
-                )
-                transform.matchWorldTransform(self.upv_cns, ref_trans)
-                references.append(ref_trans)
-            pm.parentConstraint(references[0], references[1], self.upv_cns, mo=True)
-        else:
-            pm.parentConstraint(self.limbChainUpvRef[0], self.ik_ctl, self.upv_cns, mo=True)
 
     # =====================================================
     # CONNECTOR

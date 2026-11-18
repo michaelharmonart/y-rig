@@ -37,6 +37,10 @@
         },
         "/component": {
             "attrs": {
+                "component_data": {
+                    "type": "raw",
+                    "value": "${rig_path}/data/component/${name}"
+                },
                 "component_group": {
                     "comment": "Name of the group created to house this components internal logic nodes,",
                     "type": "raw",
@@ -67,7 +71,7 @@
                 "socket": {
                     "comment": "The transform to physically attach this component to",
                     "type": "raw",
-                    "value": "${pareent}"
+                    "value": "${parent}"
                 }
             },
             "code": [
@@ -76,7 +80,10 @@
                 "self.control_group = yrig.transform.create_transform(name=\"${control_group}\", parent=\"${control_parent}\")",
                 "cmds.setAttr(f\"{self.control_group}.overrideEnabled\", True)",
                 "cmds.setAttr(f\"{self.control_group}.drawOverride.overrideRGBColors\", True)",
-                "cmds.connectAttr(\"${control_layer}.controlColor\", f\"{self.control_group}.drawOverride.overrideColorRGB\")"
+                "if \"${control_layer}\":",
+                "    cmds.connectAttr(\"${control_layer}.controlColor\", f\"{self.control_group}.drawOverride.overrideColorRGB\")",
+                "",
+                "cmds.refresh()"
             ]
         },
         "/side": {
