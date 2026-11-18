@@ -7,6 +7,8 @@ def create_proximity_wrap(
     driver: str | Sequence[str],
     driven: str | Sequence[str],
     name: str | None = None,
+    *,
+    falloff_scale: int = 5,
 ) -> str:
 
     resolved_name = name or f"{driven if isinstance(driven, str) else '_'.join(driven)}_wrap"
@@ -17,5 +19,5 @@ def create_proximity_wrap(
         addDrivers=driver,  # type: ignore
         applyUserDefaults=False,
     )
-
+    cmds.setAttr(f"{wrap_node}.falloffScale", falloff_scale)  # type: ignore
     return wrap_node

@@ -159,8 +159,10 @@
             "/build/base_controls": true,
             "/build/base_controls/local": false,
             "/finalize/hide_joints": true,
+            "/finalize/lock_attrs": false,
             "/finalize/metadata": true,
             "/finalize/metadata/build_commit": true,
+            "/finalize/prune": false,
             "/finalize/prune/blendshapes": true,
             "/io_pair": true,
             "/psd_import": true,
@@ -678,7 +680,8 @@
         "/finalize/prune": {
             "child_order": [
                 "skin_tools_data",
-                "blendshapes"
+                "blendshapes",
+                "unused_influences"
             ]
         },
         "/finalize/prune/blendshapes": {
@@ -701,6 +704,19 @@
             "code": [
                 "if not ${dev_build}:",
                 "    yrig.skin.ng.cleanup_ng_data_nodes()"
+            ]
+        },
+        "/finalize/prune/unused_influences": {
+            "code": [
+                "log = yrig.build.nxt_api.get_node_logger(\"${_nxtpath}\")",
+                "if not ${dev_build}:",
+                "    skin_clusters = cmds.ls(type=\"skinCluster\")",
+                "    pruned: list[str] = []",
+                "    for skin_cluster in skin_clusters:",
+                "        removed = yrig.skin.remove_unused_influences(skin_cluster)",
+                "        if removed:",
+                "            pruned.append(skin_cluster)",
+                "    log.info(f\"Removed unused influences on {len(pruned)} skinCluster(s): {pruned}\")"
             ]
         },
         "/psd_import": {
@@ -1123,7 +1139,7 @@
                 },
                 "model_group_parent": {
                     "type": "raw",
-                    "value": "${rig_root}"
+                    "value": "${../trs.trs_group}"
                 },
                 "model_set": {
                     "comment": "All imported model geometry is added to this set.",
@@ -1550,6 +1566,10 @@
         },
         "/wrap": {
             "attrs": {
+                "falloff_scale": {
+                    "type": "int",
+                    "value": "5"
+                },
                 "wrap_mapping": {
                     "type": "dict",
                     "value": "{}"
@@ -1558,7 +1578,7 @@
             "code": [
                 "wrap_mapping = ${wrap_mapping}",
                 "for source, target in wrap_mapping.items():",
-                "    yrig.deformer.proximity_wrap.create_proximity_wrap(source, target)"
+                "    yrig.deformer.proximity_wrap.create_proximity_wrap(source, target, falloff_scale=${falloff_scale})"
             ]
         }
     }

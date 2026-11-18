@@ -180,21 +180,20 @@ def skin_geometry(
     return skin_cluster_node
 
 
-def remove_unused_influences(geometry: str, skin_cluster: str | None = None) -> list[str]:
+def remove_unused_influences(object: str) -> list[str]:
     """
     Removes unused joints from a skinCluster and returns the removed influences.
     Args:
-        geometry: Mesh transform or shape that contains the skinCluster.
-        skin_cluster: Optional explicit skinCluster node name. When
-            ``None``, the first skinCluster in the shape's history is used.
-
+        object: skinCluster or geometry with a skinCluster.
     Returns:
         List of influence names that were removed from the skinCluster.
     """
-    if not skin_cluster:
-        skin_cluster: str | None = get_skin_cluster(geometry)
+    if cmds.objectType(object, isAType="skinCluster"):
+        skin_cluster = object
+    else:
+        skin_cluster: str | None = get_skin_cluster(object)
         if not skin_cluster:
-            raise RuntimeError(f"No skinCluster on {geometry}")
+            raise RuntimeError(f"No skinCluster on {object}")
     original_influences: set[str] = cmds.skinCluster(skin_cluster, query=True, influence=True) or []  # type: ignore
     cmds.skinCluster(skin_cluster, edit=True, removeUnusedInfluence=True)
     new_influences: set[str] = set(cmds.skinCluster(skin_cluster, query=True, influence=True) or [])  # type: ignore
