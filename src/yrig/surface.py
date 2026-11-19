@@ -9,7 +9,7 @@ from yrig.maya_api.attribute import (
     ClosestPointOnSurfaceResultAttribute,
     MatrixAttribute,
 )
-from yrig.maya_api.enum import Axis
+from yrig.maya_api.enum import Axis, UvPinRelativeSpaceMode
 from yrig.maya_api.node import (
     ClosestPointOnSurfaceNode,
     MultiplyPointByMatrixNode,
@@ -73,7 +73,7 @@ def surface_uv_domain(surface: str) -> tuple[tuple[float, float], tuple[float, f
     return (fn_surface.knotDomainInU, fn_surface.knotDomainInV)
 
 
-def get_surface_shapes(surface: str) -> tuple[str, str, str]:
+def get_surface_shapes(surface: str, *, world_shape: bool = False) -> tuple[str, str, str]:
     """Return (primary_shape, original_shape, shape_output_attr)."""
     shapes: list[str] = cmds.listRelatives(surface, shapes=True, noIntermediate=True) or []
     if not shapes:
@@ -84,7 +84,9 @@ def get_surface_shapes(surface: str) -> tuple[str, str, str]:
         original_shape_geo = cmds.deformableShape(primary_shape, createOriginalGeometry=True)[0]  # type: ignore
     # the return from deformableShape is in the form ["shapeName.local"] so we pull the node name with a split
     original_shape: str = original_shape_geo.split(".", 1)[0]
-    shape_output: str = cmds.deformableShape(primary_shape, worldShapeOutAttr=True)[0]  # type: ignore
+    shape_output: str = cmds.deformableShape(
+        primary_shape, worldShapeOutAttr=world_shape, localShapeOutAttr=not world_shape
+    )[0]  # type: ignore
 
     return primary_shape, original_shape, shape_output
 
@@ -119,6 +121,7 @@ def uv_pin(
     keep_offset: bool = False,
     drive_rotate: bool = True,
     drive_translate: bool = True,
+    relative_to_shape: bool = True,
 ) -> tuple[UvPinNode, int]:
     """
     Create a uvPin node that pins an object to a given surface at specified UV coordinates.
@@ -139,7 +142,9 @@ def uv_pin(
         The created UVPin node.
     """
 
-    primary_shape, original_shape, shape_output = get_surface_shapes(surface)
+    primary_shape, original_shape, shape_output = get_surface_shapes(
+        surface, world_shape=not relative_to_shape
+    )
     pin_name = f"{get_short_name(object_to_pin)}_uvPin"
 
     if uv_pin_node is None:
@@ -147,6 +152,11 @@ def uv_pin(
         uv_pin_node = UvPinNode.create(pin_name)
         uv_pin_node.original_geometry.connect_from(f"{original_shape}.{shape_output}")
         uv_pin_node.deformed_geometry.connect_from(f"{primary_shape}.{shape_output}")
+        uv_pin_node.relative_space_mode.set(
+            UvPinRelativeSpaceMode.CUSTOM if relative_to_shape else UvPinRelativeSpaceMode.WORLD
+        )
+        if relative_to_shape:
+            uv_pin_node.relative_space_matrix.connect_from(f"{primary_shape}.worldInverseMatrix[0]")
         index = 0
     else:
         pin_indices = uv_pin_node.coordinate.get_indices()
