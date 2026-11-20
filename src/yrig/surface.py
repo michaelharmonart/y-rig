@@ -207,6 +207,7 @@ def uv_pin_multi(
     normal_axis: Axis = Axis.Z,
     tangent_axis: Axis = Axis.X,
     keep_offset: bool = False,
+    relative_to_shape: bool = True,
 ) -> UvPinNode:
     """
     Pin multiple objects to a surface using a single shared uvPin node.
@@ -237,6 +238,11 @@ def uv_pin_multi(
     uv_pin_node = UvPinNode.create(name)
     uv_pin_node.original_geometry.connect_from(f"{original_shape}.{shape_output}")
     uv_pin_node.deformed_geometry.connect_from(f"{primary_shape}.{shape_output}")
+    uv_pin_node.relative_space_mode.set(
+        UvPinRelativeSpaceMode.CUSTOM if relative_to_shape else UvPinRelativeSpaceMode.WORLD
+    )
+    if relative_to_shape:
+        uv_pin_node.relative_space_matrix.connect_from(f"{primary_shape}.worldInverseMatrix[0]")
 
     for object_to_pin, uv in zip_longest(objects_to_pin, uv_coords or (), fillvalue=None):
         if object_to_pin is None:
