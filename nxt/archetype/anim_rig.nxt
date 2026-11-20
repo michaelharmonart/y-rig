@@ -434,7 +434,7 @@
                 }
             },
             "code": [
-                "yrig.transform.matrix_constraint(\"${control}\", \"${trs_group}\", shear=False, keep_offset=False)"
+                "yrig.transform.matrix_constraint(\"${control}\", \"${trs_group}\", shear=False, keep_offset=True)"
             ]
         },
         "/build/base_controls/shot": {
