@@ -186,7 +186,7 @@ def export_fbx_file(
     cameras: bool = False,
     lights: bool = False,
     embedded_textures: bool = False,
-    input_connections: bool = True,
+    input_connections: bool = False,
     include_children: bool = True,
     instances: bool = False,
     up_axis: str = "y",
