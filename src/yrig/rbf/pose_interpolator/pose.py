@@ -4,15 +4,14 @@ from maya.api.OpenMaya import MFnTransform, MQuaternion, MSpace, MVector
 from yrig.maya_api.node import PoseInterpolatorNode
 from yrig.maya_api.utils import get_dag_path
 
-from .core import force_pose_interpolator_update, resolve_pose_interpolator_shape
+from .core import (
+    force_pose_interpolator_update,
+    resolve_pose_interpolator_node,
+)
 
 
 def update_pose(pose_interpolator: PoseInterpolatorNode | str, pose_index: int) -> None:
-    pose_interpolator_node = (
-        pose_interpolator
-        if isinstance(pose_interpolator, PoseInterpolatorNode)
-        else PoseInterpolatorNode.from_existing(resolve_pose_interpolator_shape(pose_interpolator))
-    )
+    pose_interpolator_node = resolve_pose_interpolator_node(pose_interpolator)
     pose_attr = pose_interpolator_node.pose[pose_index]
     for driver_index in pose_interpolator_node.driver.get_indices():
         driver_attr = pose_interpolator_node.driver[driver_index]

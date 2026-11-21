@@ -8,7 +8,11 @@ from maya import cmds
 from yrig.maya_api.attribute import Attribute
 from yrig.maya_api.node import PoseInterpolatorManagerNode, PoseInterpolatorNode
 from yrig.name import get_short_name
-from yrig.rbf.pose_interpolator.core import resolve_pose_interpolator_shape
+from yrig.rbf.pose_interpolator.core import (
+    create_pose_interpolator,
+    resolve_pose_interpolator_node,
+    resolve_pose_interpolator_shape,
+)
 from yrig.rbf.pose_interpolator.serialize.directory import (
     filter_pose_interpolator_directory_data,
     find_child_directory_index,
@@ -50,11 +54,7 @@ def apply_pose_interpolator_data(
     pose_interpolator: str | PoseInterpolatorNode,
     data: PoseInterpolatorData,
 ) -> None:
-    node = (
-        pose_interpolator
-        if isinstance(pose_interpolator, PoseInterpolatorNode)
-        else PoseInterpolatorNode.from_existing(pose_interpolator)
-    )
+    node = resolve_pose_interpolator_node(pose_interpolator)
 
     node.allow_negative_weights.set(data.allow_negative_weights)
     node.enable_rotation.set(data.enable_rotation)
@@ -157,17 +157,9 @@ def add_pose_interpolator(
     parent_directory_index: int = 0,
 ) -> tuple[str, PoseInterpolatorNode]:
     """Add poseInterpolator to manager and apply data. Returns the transform and shape node of the created poseInterpolator."""
-    pose_interpolator = PoseInterpolatorNode().create(name=data.name)
-    pose_interpolator_transform = get_transform(str(pose_interpolator))
-    pose_interpolator_transform = cmds.rename(
-        pose_interpolator_transform, data.name.removesuffix("Shape"), ignoreShape=True
+    pose_interpolator_transform, pose_interpolator = create_pose_interpolator(
+        manager, data.name, parent, parent_directory_index
     )
-    if parent is not None:
-        cmds.parent(pose_interpolator_transform, parent)
-    target_index = manager.pose_interpolator_parent.next_available_index()
-    pose_interpolator.mid_layer_id.set(value=target_index)
-    pose_interpolator.mid_layer_parent.set(parent_directory_index)
-    pose_interpolator.mid_layer_parent.connect_to(manager.pose_interpolator_parent[target_index])
     apply_pose_interpolator_data(pose_interpolator, data)
     return pose_interpolator_transform, pose_interpolator
 

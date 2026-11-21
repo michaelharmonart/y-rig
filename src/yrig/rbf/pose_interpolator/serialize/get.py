@@ -1,6 +1,7 @@
 from collections.abc import Iterable
 
 from yrig.maya_api.node import PoseInterpolatorManagerNode, PoseInterpolatorNode
+from yrig.rbf.pose_interpolator.core import resolve_pose_interpolator_node
 from yrig.rbf.pose_interpolator.serialize.directory import (
     get_directory_indices,
     get_pose_interpolator_indices,
@@ -23,11 +24,7 @@ def _str_or_none(value: object | None) -> str | None:
 def get_pose_interpolator_data(
     pose_interpolator: str | PoseInterpolatorNode,
 ) -> PoseInterpolatorData:
-    node = (
-        pose_interpolator
-        if isinstance(pose_interpolator, PoseInterpolatorNode)
-        else PoseInterpolatorNode.from_existing(pose_interpolator)
-    )
+    node = resolve_pose_interpolator_node(pose_interpolator)
     enable_rotation = node.enable_rotation.get()
     enable_translation = node.enable_translation.get()
 

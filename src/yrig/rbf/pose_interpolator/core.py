@@ -5,7 +5,7 @@ from maya import cmds
 
 from yrig.maya_api.attribute import IntegerAttribute
 from yrig.maya_api.node import PoseInterpolatorManagerNode, PoseInterpolatorNode
-from yrig.transform import create_transform
+from yrig.transform import create_transform, get_transform
 
 log = logging.getLogger(__name__)
 
@@ -21,6 +21,40 @@ def resolve_pose_interpolator_shape(pose_interpolator: str) -> str:
     if not shapes:
         raise RuntimeError(f"Couldn't find a shape for {pose_interpolator}")
     return shapes[0]
+
+
+def resolve_pose_interpolator_node(
+    pose_interpolator: PoseInterpolatorNode | str,
+) -> PoseInterpolatorNode:
+    pose_interpolator_node = (
+        pose_interpolator
+        if isinstance(pose_interpolator, PoseInterpolatorNode)
+        else PoseInterpolatorNode.from_existing(
+            name=resolve_pose_interpolator_shape(pose_interpolator)
+        )
+    )
+    return pose_interpolator_node
+
+
+def create_pose_interpolator(
+    manager: PoseInterpolatorManagerNode,
+    shape_name: str,
+    parent: str | None = None,
+    parent_directory_index: int = 0,
+) -> tuple[str, PoseInterpolatorNode]:
+    """Add poseInterpolator to manager and apply data. Returns the transform and shape node of the created poseInterpolator."""
+    pose_interpolator = PoseInterpolatorNode().create(name=shape_name)
+    pose_interpolator_transform = get_transform(str(pose_interpolator))
+    pose_interpolator_transform = cmds.rename(
+        pose_interpolator_transform, shape_name.removesuffix("Shape"), ignoreShape=True
+    )
+    if parent is not None:
+        cmds.parent(pose_interpolator_transform, parent)
+    target_index = manager.pose_interpolator_parent.next_available_index()
+    pose_interpolator.mid_layer_id.set(value=target_index)
+    pose_interpolator.mid_layer_parent.set(parent_directory_index)
+    pose_interpolator.mid_layer_parent.connect_to(manager.pose_interpolator_parent[target_index])
+    return pose_interpolator_transform, pose_interpolator
 
 
 def get_pose_index(pose_interpolator_shape: str, pose_name: str) -> int:

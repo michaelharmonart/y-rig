@@ -19,3 +19,8 @@ def get_selected_poses() -> list[PoseInterpolatorPose]:
         index = int(index)
         pose_objects.append(PoseInterpolatorPose(interpolator, index))
     return pose_objects
+
+
+def get_selected_pose_interpolators() -> list[str]:
+    """Get the selected poseInterpolators in Maya's Pose Editor."""
+    return mel.eval("getPoseEditorTreeviewSelection(1)") or []

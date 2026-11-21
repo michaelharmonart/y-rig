@@ -53,6 +53,10 @@
                 -2424.3160276274657,
                 -1400.7276109526683
             ],
+            "/update_pose": [
+                280,
+                20
+            ],
             "/window": [
                 -3388.9871246465736,
                 -1399.0039277514006
@@ -312,7 +316,21 @@
         "/tools_window/tools/pose/layout": {
             "instance": "/gridLayout",
             "child_order": [
+                "mirror_pose_interpolator",
                 "update_pose"
+            ]
+        },
+        "/tools_window/tools/pose/layout/mirror_pose_interpolator": {
+            "instance": "/button",
+            "attrs": {
+                "text": {
+                    "type": "raw",
+                    "value": "Mirror Pose Interpolator"
+                }
+            },
+            "code": [
+                "selected_pose_interpolators = yrig.rbf.pose_interpolator.pose_editor.get_selected_pose_interpolators()",
+                "yrig.rbf.pose_interpolator.mirror.mirror_pose_interpolators(selected_pose_interpolators)"
             ]
         },
         "/tools_window/tools/pose/layout/update_pose": {
