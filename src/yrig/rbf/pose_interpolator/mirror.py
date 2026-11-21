@@ -128,6 +128,9 @@ def mirror_pose_interpolators(
             if map_mirror is None
             else map_mirror(pose_interpolator_string)
         )
+        if pose_interpolator_string == mirrored_pose_interpolator:
+            # TODO: Make this mirror the poses and names within the pose interpolator. For things like the neck.
+            continue
         if cmds.objExists(mirrored_pose_interpolator):
             mirrored_pose_interpolator_node = resolve_pose_interpolator_node(
                 mirrored_pose_interpolator
