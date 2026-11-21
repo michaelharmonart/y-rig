@@ -110,26 +110,24 @@
       "static_jnt": 1.0
     },
     "30": {
-      "lo_lip_round_L_jnt": 0.2,
-      "static_jnt": 0.8
+      "static_jnt": 1.0
     },
     "31": {
-      "lo_lip_round_L_jnt": 0.2,
-      "static_jnt": 0.8
+      "static_jnt": 1.0
     },
     "32": {
-      "lo_lip_round_L_jnt": 1.0
+      "lo_lip_round_L_jnt": 0.5,
+      "static_jnt": 0.5
     },
     "33": {
-      "lo_lip_round_L_jnt": 1.0
+      "lo_lip_round_L_jnt": 0.5,
+      "static_jnt": 0.5
     },
     "34": {
-      "lo_lip_round_L_jnt": 0.8,
-      "static_jnt": 0.19999999999999996
+      "lo_lip_round_L_jnt": 1.0
     },
     "35": {
-      "lo_lip_round_L_jnt": 0.8,
-      "static_jnt": 0.19999999999999996
+      "lo_lip_round_L_jnt": 1.0
     },
     "36": {
       "lo_lip_round_L_jnt": 0.4,
@@ -146,34 +144,32 @@
       "static_jnt": 1.0
     },
     "40": {
-      "up_lip_round_L_jnt": 0.4,
-      "static_jnt": 0.6
+      "up_lip_round_L_jnt": 0.6,
+      "static_jnt": 0.4
     },
     "41": {
-      "up_lip_round_L_jnt": 0.4,
-      "static_jnt": 0.6
+      "up_lip_round_L_jnt": 0.6,
+      "static_jnt": 0.4
     },
     "42": {
-      "up_lip_round_L_jnt": 0.8,
-      "static_jnt": 0.19999999999999996
+      "up_lip_round_L_jnt": 1.0
     },
     "43": {
-      "up_lip_round_L_jnt": 0.8,
-      "static_jnt": 0.19999999999999996
+      "up_lip_round_L_jnt": 1.0
     },
     "44": {
-      "up_lip_round_L_jnt": 1.0
+      "up_lip_round_L_jnt": 0.5,
+      "static_jnt": 0.5
     },
     "45": {
-      "up_lip_round_L_jnt": 1.0
+      "up_lip_round_L_jnt": 0.5,
+      "static_jnt": 0.5
     },
     "46": {
-      "up_lip_round_L_jnt": 0.2,
-      "static_jnt": 0.8
+      "static_jnt": 1.0
     },
     "47": {
-      "up_lip_round_L_jnt": 0.2,
-      "static_jnt": 0.8
+      "static_jnt": 1.0
     }
   }
 }

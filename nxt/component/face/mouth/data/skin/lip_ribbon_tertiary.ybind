@@ -8,7 +8,6 @@
     "static_jnt"
   ],
   "skinning_method": 0,
-  "relative_space_mode": 0,
   "support_non_rigid": false,
   "normalize_weights": 1,
   "weight_distribution": 0,
