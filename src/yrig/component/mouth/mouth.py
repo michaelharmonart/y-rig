@@ -6,8 +6,11 @@ from pathlib import Path
 from maya import cmds
 
 from yrig.control import Control, ControlShape, create_control
-from yrig.deformer.blendshape import create_blendshape, import_blendshape
-from yrig.deformer.blendshape.core import add_blendshape_target_from_geometry
+from yrig.deformer.blendshape import (
+    add_blendshape_target_from_geometry,
+    create_blendshape,
+    import_blendshape,
+)
 from yrig.name import Side
 from yrig.skin import skin_and_apply_weights
 from yrig.surface import setup_uv_pin_node, surface_slide_constraint
