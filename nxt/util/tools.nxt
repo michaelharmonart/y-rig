@@ -144,7 +144,8 @@
             "child_order": [
                 "geometry",
                 "skin",
-                "blendshape"
+                "blendshape",
+                "pose"
             ],
             "attrs": {
                 "text": {
@@ -295,6 +296,39 @@
                 "        except Exception as e:",
                 "            log = yrig.build.nxt_api.get_node_logger(\"${_nxtpath}\")",
                 "            log.warning(f\"Couldn't bake face colors for {object}, {e}\")"
+            ]
+        },
+        "/tools_window/tools/pose": {
+            "instance": "/panel",
+            "child_order": [
+                "layout"
+            ],
+            "attrs": {
+                "text": {
+                    "value": "Pose"
+                }
+            }
+        },
+        "/tools_window/tools/pose/layout": {
+            "instance": "/gridLayout",
+            "child_order": [
+                "update_pose"
+            ]
+        },
+        "/tools_window/tools/pose/layout/update_pose": {
+            "instance": "/button",
+            "attrs": {
+                "text": {
+                    "value": "Update Pose"
+                }
+            },
+            "code": [
+                "selected_poses = yrig.rbf.pose_interpolator.pose_editor.get_selected_poses()",
+                "if len(selected_poses) != 1:",
+                "    raise RuntimeError(\"Select exactly one pose in the pose editor.\")",
+                "pose = selected_poses[0]",
+                "",
+                "yrig.rbf.pose_interpolator.pose.update_pose(pose.pose_interpolator, pose.pose_index)"
             ]
         },
         "/tools_window/tools/skin": {

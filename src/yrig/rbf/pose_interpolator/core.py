@@ -4,7 +4,7 @@ from collections.abc import Callable, Iterable
 from maya import cmds
 
 from yrig.maya_api.attribute import IntegerAttribute
-from yrig.maya_api.node import PoseInterpolatorManagerNode
+from yrig.maya_api.node import PoseInterpolatorManagerNode, PoseInterpolatorNode
 from yrig.transform import create_transform
 
 log = logging.getLogger(__name__)
@@ -123,6 +123,13 @@ def group_pose_interpolators_by_directory(
             cmds.parent(transform, group_parent, relative=True)
 
     return created_groups
+
+
+def force_pose_interpolator_update(pose_interpolator: str | PoseInterpolatorNode) -> None:
+    # This is a hack to get the pose interpolator to update its internal state and use our newly injected data.
+    # If you find out a better way to do this, great!
+    attr = f"{pose_interpolator}.regularization"
+    cmds.setAttr(attr, cmds.getAttr(attr))
 
 
 def _validate_pose_interpolators(

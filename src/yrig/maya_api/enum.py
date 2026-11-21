@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from enum import IntEnum
 
+from maya.api.OpenMaya import MTransformationMatrix
 from maya.api.OpenMayaAnim import MFnAnimCurve
 
 
@@ -110,6 +111,22 @@ class RotateOrder(IntEnum):
 
     def __str__(self) -> str:
         return self.name
+
+    @property
+    def ktype(self) -> int:
+        match self:
+            case self.XYZ:
+                return MTransformationMatrix.kXYZ
+            case self.YZX:
+                return MTransformationMatrix.kYZX
+            case self.ZXY:
+                return MTransformationMatrix.kZXY
+            case self.XZY:
+                return MTransformationMatrix.kXZY
+            case self.YXZ:
+                return MTransformationMatrix.kYXZ
+            case self.ZYX:
+                return MTransformationMatrix.kZYX
 
 
 class MotionPathWorldUpType(IntEnum):
