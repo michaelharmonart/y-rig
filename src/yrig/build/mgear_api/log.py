@@ -151,7 +151,7 @@ class ProgressLogHandler(logging.Handler):
         self.pre_step_names: list[str] = [step.name for step in self.pre_steps]
         self.post_step_names: list[str] = [step.name for step in self.post_steps]
 
-        self.root_step = ProgressStep("Rig Build", callback=progress_callback)
+        self.root_step = ProgressStep("Shifter Build", callback=progress_callback)
         self.pre_build = ProgressStep("Pre Build", len(pre_steps) * 0.1)
         self.pre_step_map: dict[str, ProgressStep] = {}
         self.root_step.add_child_step(self.pre_build)
