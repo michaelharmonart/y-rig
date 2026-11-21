@@ -55,17 +55,18 @@ def mirror_pose_interpolator(
 
     mirrored_poses = []
     for source_pose in source_data.poses:
+        mirrored_pose_name = mirror_func(source_pose.name)
         mirrored_controller_data_dict = {}
         for index, source_controller_data in source_pose.controller_data.items():
             mirrored_controller_data_item_dict = {}
             for item_index, source_item in source_controller_data.items.items():
-                mirrored_name = mirror_func(source_item.name)
-                if not cmds.objExists(mirrored_name):
+                mirrored_item_name = mirror_func(source_item.name)
+                if not cmds.objExists(mirrored_item_name):
                     raise RuntimeError(
-                        f"The mirrored control attribute {mirrored_name} doesn't exist!"
+                        f"The mirrored control attribute {mirrored_item_name} doesn't exist!"
                     )
                 mirrored_controller_data_item_dict[item_index] = PoseInterpolatorControllerDataItem(
-                    name=mirrored_name, type=source_item.type, value=source_item.value
+                    name=mirrored_item_name, type=source_item.type, value=source_item.value
                 )
             mirrored_controller_data = PoseInterpolatorPoseControllerData(
                 mirrored_controller_data_item_dict
@@ -73,7 +74,7 @@ def mirror_pose_interpolator(
             mirrored_controller_data_dict[index] = mirrored_controller_data
 
         mirrored_pose = PoseInterpolatorPoseData(
-            name=source_pose.name,
+            name=mirrored_pose_name,
             rotations=source_pose.rotations,
             translations=source_pose.translations,
             independent=source_pose.independent,
