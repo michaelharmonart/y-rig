@@ -7,6 +7,7 @@ operations belong in `yrig`, not in this package.
 """
 
 from . import metadata, mgear_api, nxt_api, setup
+from .compat import build_from_path as build_from_path
 from .core import build_rig, open_rig_in_editor
 from .scope import BuildScope
 
