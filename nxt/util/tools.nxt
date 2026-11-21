@@ -241,9 +241,11 @@
                 "",
                 "for node in selection:",
                 "    blendshape = yrig.deformer.blendshape.resolve_blendshape(node)",
-                "    if node is not None:",
-                "        yrig.deformer.blendshape.mirror_all_blendshape_targets(blendshape)",
-                "        log.info(f\"Mirrored all blendShape targets on {blendshape}\")"
+                "    if blendshape is None:",
+                "        log.warning(f\"No blendShape found for {node}; skipping mirror.\")",
+                "        continue",
+                "    yrig.deformer.blendshape.mirror_all_blendshape_targets(blendshape)",
+                "    log.info(f\"Mirrored all blendShape targets on {blendshape}\")"
             ]
         },
         "/tools_window/tools/blendshape/layout/reset_target_delta": {

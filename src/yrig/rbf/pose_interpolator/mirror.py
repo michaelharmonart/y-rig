@@ -118,8 +118,8 @@ def mirror_pose_interpolator(
 def mirror_pose_interpolators(
     pose_interpolators: Iterable[PoseInterpolatorNode | str],
     map_mirror: Callable[[str], str] | None = None,
-) -> list[PoseInterpolatorNode]:
-    mirrored = []
+) -> dict[PoseInterpolatorNode, PoseInterpolatorNode]:
+    mirrored = {}
     for pose_interpolator in pose_interpolators:
         pose_interpolator_node = resolve_pose_interpolator_node(pose_interpolator)
         pose_interpolator_string = str(pose_interpolator_node)
@@ -145,5 +145,5 @@ def mirror_pose_interpolators(
         mirror_pose_interpolator(
             pose_interpolator_node, mirrored_pose_interpolator_node, map_mirror
         )
-        mirrored.append(mirrored_pose_interpolator_node)
+        mirrored[pose_interpolator_node] = mirrored_pose_interpolator_node
     return mirrored

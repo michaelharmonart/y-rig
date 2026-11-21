@@ -114,3 +114,23 @@ def connect_to_psd_network(
                 weight_attr.connect_from(network_alias_attr)
                 connected.append(network_alias_attr)
     return resolved_psd_network, connected
+
+
+def add_blendshape_target(
+    blendshape: str | BlendShapeNode,
+    name: str,
+    parent_directory_index: int = 0,
+) -> int:
+    blendshape_node = (
+        blendshape
+        if isinstance(blendshape, BlendShapeNode)
+        else BlendShapeNode.from_existing(blendshape)
+    )
+    parent_directory = blendshape_node.target_directory[parent_directory_index]
+    original_child_indices = parent_directory.child_indices.get()
+    target_group_index = blendshape_node.weight.next_available_index()
+    target_attr = blendshape_node.weight[target_group_index]
+    target_attr.set_alias(name)
+    target_attr.set(1)
+    parent_directory.child_indices.set([*original_child_indices, target_group_index])
+    return target_group_index

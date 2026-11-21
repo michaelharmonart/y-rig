@@ -15,6 +15,7 @@ from yrig.mirror import (
 from yrig.name import Side, filter_side, flip_side
 
 from .core import (
+    add_blendshape_target,
     get_blendshape_input_shape,
 )
 from .serialize.apply import apply_blendshape_target_group_data
@@ -171,11 +172,12 @@ def mirror_blendshape_targets(
                 # TODO: Make this mirror the target itself (for things like jaw_open, that should be self symmetrical)
                 continue
             original_target_index = name_to_index_map[original_target]
-            if mirrored_target not in name_to_index_map:
-                raise NotImplementedError(
-                    "This should create a mirror target if it doesn't already exist. Ideally it would even put it in the right directory."
-                )
-            mirrored_target_index = name_to_index_map[mirrored_target]
+            if mirrored_target in name_to_index_map:
+                mirrored_target_index = name_to_index_map[mirrored_target]
+            else:
+                # TODO: Make this put the target into the correct directory.
+                mirrored_target_index = add_blendshape_target(blendshape_node, mirrored_target)
+
             input_target = blendshape_node.input_target[input_index]
             input_shape: str = input_shape_map[input_index]
             input_geometry_path = get_dag_path(input_shape)
