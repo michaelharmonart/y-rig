@@ -177,6 +177,7 @@ def mirror_blendshape_targets(
             else:
                 # TODO: Make this put the target into the correct directory.
                 mirrored_target_index = add_blendshape_target(blendshape_node, mirrored_target)
+                name_to_index_map[mirrored_target] = mirrored_target_index
 
             input_target = blendshape_node.input_target[input_index]
             input_shape: str = input_shape_map[input_index]
