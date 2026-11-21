@@ -911,13 +911,22 @@
                 "psd_path": {
                     "type": "raw",
                     "value": "${rig_path}/data/psd"
+                },
+                "true_front": {
+                    "type": "bool",
+                    "value": "False"
                 }
             },
             "code": [
                 "psd_layer = \"${psd_layer}\"",
                 "",
                 "for geo in ${geometry}:",
-                "    yrig.deformer.blendshape.create_blendshape(geometry=geo, name=f\"{geo}_{psd_layer}\", parent_directory=\"${blendshape_directory}\")"
+                "    yrig.deformer.blendshape.create_blendshape(",
+                "        geometry=geo, ",
+                "        name=f\"{geo}_{psd_layer}\", ",
+                "        parent_directory=\"${blendshape_directory}\",",
+                "        true_front=${true_front},",
+                "    )"
             ]
         },
         "/rbf_io": {

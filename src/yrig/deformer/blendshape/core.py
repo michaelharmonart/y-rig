@@ -28,9 +28,21 @@ def create_blendshape(
     name: str | None = None,
     *,
     front_of_chain: bool = True,
+    true_front: bool = False,
     parent_directory: PurePosixPath | str = "/",
 ) -> BlendShapeNode:
     resolved_name = name or f"{geometry}_BS"
+
+    if true_front:
+        front_of_chain_attr: str = cmds.deformableShape(geometry, frontOfChain=True)[0]  # type: ignore
+        front_of_chain_node = front_of_chain_attr.split(".", 1)[0]
+        geo_type: str = cmds.objectType(front_of_chain_node)  # type: ignore
+        future: list[str] = cmds.listHistory(front_of_chain_node, future=True)[:-1]  # type: ignore
+        resolved_geometry = next(
+            reversed([item for item in future if cmds.nodeType(item) == geo_type])
+        )
+    else:
+        resolved_geometry = geometry
 
     parent_directory_path = PurePosixPath(parent_directory)
     parent_directories = tuple(
@@ -39,7 +51,7 @@ def create_blendshape(
     shape_editor_manager = ShapeEditorManagerNode.from_existing("shapeEditorManager")
     with preserve_shape_editor_root_directory(shape_editor_manager):
         maya_result: list[str] = cmds.blendShape(
-            geometry, name=resolved_name, frontOfChain=front_of_chain
+            resolved_geometry, name=resolved_name, frontOfChain=front_of_chain
         )  # type: ignore
     if not maya_result:
         raise RuntimeError(f"Failed to create blendShape: {resolved_name}")
