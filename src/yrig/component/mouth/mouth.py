@@ -11,6 +11,7 @@ from yrig.deformer.blendshape import (
     create_blendshape,
     import_blendshape,
 )
+from yrig.maya_api.node.blendshape import BlendShapeNode
 from yrig.name import Side
 from yrig.skin import skin_and_apply_weights
 from yrig.surface import setup_uv_pin_node, surface_slide_constraint
@@ -134,26 +135,37 @@ class Mouth:
             cmds.parent(ribbon, parent)
             return ribbon
 
-        def _build_layer(mesh: str, *, skin: Path | None = None, below: str | None = None) -> None:
+        def _build_layer(
+            geometry: str,
+            *,
+            skin: Path | None = None,
+            blendshape: Path | None = None,
+            below: str | None = None,
+        ) -> None:
             """Blendshape from the layer below (if any), then skin on top."""
             if below is not None:
-                bs = create_blendshape(mesh, parent_directory=blendshape_directory)
+                bs = create_blendshape(geometry, parent_directory=blendshape_directory)
                 add_blendshape_target_from_geometry(bs, below, below)
             if skin is not None:
-                skin_and_apply_weights(skin, mesh)
+                skin_and_apply_weights(skin, geometry)
+            if blendshape is not None:
+                main_blendshape = create_blendshape(
+                    geometry, parent_directory=blendshape_directory, name=f"{geometry}_main_psd"
+                )
+                import_blendshape(blendshape, main_blendshape, psd_network=psd_network)
 
         self.lip_ribbon_primary = _dup_ribbon("lip_ribbon_primary")
         self.lip_ribbon_secondary = _dup_ribbon("lip_ribbon_secondary")
         self.lip_ribbon_tertiary = _dup_ribbon("lip_ribbon_tertiary")
 
-        self.lip_ribbon_primary_only = _dup_ribbon("lip_ribbon_primary_only")
-
-        self.lip_ribbon_psd = create_blendshape(
+        self.lip_ribbon_psd: BlendShapeNode = create_blendshape(
             self.lip_ribbon_primary,
             parent_directory=blendshape_directory,
             name=f"{self.lip_ribbon_primary}_main_psd",
         )
         import_blendshape(blendshape_path, self.lip_ribbon_psd, psd_network=psd_network)
+
+        self.lip_ribbon_primary_only = _dup_ribbon("lip_ribbon_primary_only")
 
         self.lip_ribbon_def = _dup_ribbon("lip_ribbon_def")
         self.lip_ribbon_def_uv_pin = setup_uv_pin_node("lip_def_uvPin", self.lip_ribbon_def)
@@ -248,9 +260,9 @@ class Mouth:
         _build_layer(self.lip_ribbon_primary, skin=primary_skin, below=self.lip_ribbon_secondary)
         _build_layer(self.lip_ribbon_def, below=self.lip_ribbon_primary)
 
-        _build_layer(self.lip_ribbon_primary_only, skin=primary_skin)
+        _build_layer(self.lip_ribbon_primary_only, skin=primary_skin, blendshape=blendshape_path)
 
-        _build_layer(self.lip_ribbon_primary_attach, skin=primary_skin)
+        _build_layer(self.lip_ribbon_primary_attach, skin=primary_skin, blendshape=blendshape_path)
         skin_and_apply_weights(body_skin, self.lip_ribbon_primary_attach)
 
         _build_layer(
