@@ -369,6 +369,9 @@
         },
         "/tools_window/tools/skin/layout/split_skin_weights": {
             "instance": "/button",
+            "child_order": [
+                "split_ng_layer_weights"
+            ],
             "attrs": {
                 "text": {
                     "value": "Split Skin Weights"
@@ -377,6 +380,21 @@
             "code": [
                 "selection = yrig.select.get_selection()",
                 "yrig.skin.split.auto_split_weights(selection)"
+            ]
+        },
+        "/tools_window/tools/skin/layout/split_skin_weights/split_ng_layer_weights": {
+            "instance": "/menuItem",
+            "attrs": {
+                "text": {
+                    "type": "raw",
+                    "value": "Split Ng Layer Weights"
+                }
+            },
+            "code": [
+                "selection = yrig.select.get_selection()",
+                "if len(selection) != 1:",
+                "    raise RuntimeError(\"Select exactly one geometry with ng skin data.\")",
+                "yrig.skin.split.ng.split_ng_layer_weights(selection[0])"
             ]
         },
         "/tools_window/tools/skin/layout/transfer_skin": {
