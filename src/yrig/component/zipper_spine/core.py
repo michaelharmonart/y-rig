@@ -110,6 +110,25 @@ class Spine:
         self.switch_joints = []
         drivers = {}
 
+        if self.root_hook:
+            self.cog = self.root_hook[0]
+            self.hip = self.root_hook[1]
+        else:
+            self.cog = create_control(
+                name=f"{self.cog_des}_{self.side}",
+                parent=self.control_grp,
+                transform=self.guides.lower.name,
+                size=self.rig_size * self.cog_control_size,
+                direction="y",
+            )
+            self.hip = create_control(
+                name=f"{self.hip_des}_{self.side}",
+                parent=self.cog.transform,
+                transform=self.guides.lower.name,
+                size=self.rig_size * self.hip_control_size,
+                direction="y",
+            )
+
         if not self.hybrid and not self.simple_fk and not self.simple_ik:
             self.hybrid = True
 
@@ -138,8 +157,6 @@ class Spine:
                 transform=guide.name,
                 parent=jnt_par,
                 connect=False,
-                bind_set=False,  # type:ignore
-                ue_set=False,  # type:ignore
             )
             self.switch_joints.append(jnt)
             jnt_par = jnt
@@ -149,8 +166,6 @@ class Spine:
             transform=self.curve.locator_list[-1].name,
             parent=jnt_par,
             connect=False,
-            bind_set=False,  # type:ignore
-            ue_set=False,  # type:ignore
         )
         self.switch_joints.append(self.chestswitch_joint)
 
@@ -159,7 +174,7 @@ class Spine:
             if guide == self.curve.locator_list[-1]:
                 break
             jnt = create_joint(
-                name=f"def_{guide.descriptor}", transform=guide.name, parent=jnt_par, connect=False
+                name=f"{guide.descriptor}", transform=guide.name, parent=jnt_par, connect=False
             )
             self.bind_joints.append(jnt)
             split_joints.append(jnt)
@@ -172,7 +187,7 @@ class Spine:
         )
 
         self.chest_joint = create_joint(
-            name=f"def_{self.chest_des}_{self.side}",
+            name=f"{self.chest_des}_{self.side}",
             transform=self.curve.locator_list[-1].name,
             parent=jnt_par,
             connect=False,
@@ -197,41 +212,18 @@ class Spine:
             parent=self.control_grp,
             transform=chest_matrix,
             size=self.rig_size * self.chest_control_size,
-            control_shape=self.chest_shape,
             direction="y",
         )
         for attrs in ["X", "Y", "Z"]:
             cmds.setAttr(f"{self.chest.offset}.rotate{attrs}", 0)  # type:ignore
-        module_space(control=self.chest, space_list=self.control_space)
+        module_space(control=self.chest, space_list=[self.cog.transform])
         self.chest_off = create_control(
             name=f"{self.chest_des}_off_{self.side}",
             parent=self.chest.transform,
             transform=self.guides.upper.name,
             size=self.rig_size * self.chest_off_control_size,
-            control_shape=self.chest_off_shape,
             direction="y",
         )
-
-        if self.root_hook:
-            self.cog = self.root_hook[0]
-            self.hip = self.root_hook[1]
-        else:
-            self.cog = create_control(
-                name=f"{self.cog_des}_{self.side}",
-                parent=self.control_grp,
-                transform=self.guides.lower.name,
-                size=self.rig_size * self.cog_control_size,
-                control_shape=self.hip_shape,
-                direction="y",
-            )
-            self.hip = create_control(
-                name=f"{self.hip_des}_{self.side}",
-                parent=self.cog.transform,
-                transform=self.guides.lower.name,
-                size=self.rig_size * self.hip_control_size,
-                control_shape=self.hip_shape,
-                direction="y",
-            )
 
         if self.hybrid:
             hyrbid = build_hybrid(

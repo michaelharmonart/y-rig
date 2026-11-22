@@ -9,8 +9,6 @@ from yrig.joint import create_joint
 from yrig.transform.matrix import set_local_matrix
 from yrig.transform.utils import create_transform, match_transform
 
-from .curve import create_line_curve, curve_cvs, style_curve
-
 GUIDE_TAG = "isGuide_TAG"
 
 
@@ -135,7 +133,6 @@ def create_guide_from_position(
         name=f"{guide_name}_guide",
         connect=False,
         parent=parent,
-        suffix=False,  # type:ignore
     )
 
     if isinstance(pos, str):
@@ -333,6 +330,8 @@ def create_spline_guide(
     side: str = "M",
     position: list | None = None,
 ) -> SplineGuideInfo:
+    from .curve import create_line_curve, curve_cvs, style_curve
+
     if position:
         upper_pos = position[0]
         lower_pos = position[1]
