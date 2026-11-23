@@ -261,10 +261,10 @@ class Spine:
                 "joints": hyrbid.joints,
                 "visibility": [hyrbid.grp],
             }
-        zipper_grp = create_transform(name=f"{self.part}_zipper_grp")
+        # zipper_grp = create_transform(name=f"{self.part}_zipper_grp")
 
         for zipper in self.zipper_guides:
-            build_zipper(guide_curve=zipper, spine_drivers=hyrbid.drivers, parent=zipper_grp)
+            pass  # build_zipper(guide_curve=zipper, spine_drivers=hyrbid.drivers, parent=zipper_grp)
 
         self.spine_switch = create_module_switch(
             driven=self.switch_joints,

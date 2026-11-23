@@ -30,6 +30,7 @@ def module_prep(
     control_grp = create_transform(name=f"{part}_CTRLS_{side}", parent=main_grp)
     if gut:
         guts = create_transform(name=f"{part}_GUTS_{side}", parent=main_grp)
+        cmds.hide(guts)
     else:
         guts = ""
     if fkik:
