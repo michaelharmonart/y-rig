@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from maya import cmds
 
+from yrig.control import set_override_color
 from yrig.control.core import Control, create_control
 from yrig.joint import create_joint
 from yrig.spline.matrix_spline.build import matrix_spline_from_transforms
@@ -17,6 +18,7 @@ class HybridInfo:
     sub: list
     joints: list
     grp: str
+    drivers: list
 
 
 def build_hybrid(
@@ -63,7 +65,9 @@ def build_hybrid(
     )
 
     lower_driver = create_transform(
-        name=f"{part}_lower_driver", parent=cv_transforms[0], transform=lower_matrix
+        name=f"{part}_self.zipper_guideslower_driver",
+        parent=cv_transforms[0],
+        transform=lower_matrix,
     )
     upper_driver = create_transform(
         name=f"{part}_upper_driver", parent=cv_transforms[-1], transform=upper_matrix
@@ -90,6 +94,9 @@ def build_hybrid(
             control_shape="circle",
             direction="z",
         )
+
+        set_override_color(control=ctrl, color=(0.718, 0.518, 0.655))
+
         jnt = create_joint(
             name=f"Hybrid_{g.descriptor}",
             transform=ctrl.transform,
@@ -108,4 +115,6 @@ def build_hybrid(
         degree=2,
     )
 
-    return HybridInfo(mid=mid, sub=spine_off_ctrls, joints=jnts, grp=hybrid_grp)
+    return HybridInfo(
+        mid=mid, sub=spine_off_ctrls, joints=jnts, grp=hybrid_grp, drivers=cv_transforms
+    )

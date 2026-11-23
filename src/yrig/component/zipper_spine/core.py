@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from maya import cmds
 
-from yrig.control import create_control
+from yrig.control import create_control, set_override_color
 from yrig.control.core import Control
 from yrig.joint import create_joint
 from yrig.skin.split.tag import tag_for_weight_split
@@ -12,6 +12,7 @@ from .guide.curve import GuideCurve, get_curve_point_matrix
 from .hybrid import build_hybrid
 from .module_utils import create_module_switch, module_prep, module_space
 from .utils import align_guides, get_distance_between
+from .zipper import build_zipper
 
 
 @dataclass
@@ -25,6 +26,7 @@ class ModuleInfo:
 class Spine:
     def __init__(
         self,
+        zipper_guides: list,
         guides: SplineGuideInfo,
         control_space: list,
         part: str = "spine",
@@ -93,6 +95,7 @@ class Spine:
         self.hybrid_sub_size = hybrid_sub_size
         self.hybrid_sub_offset = hybrid_sub_offset
         self.chest_control_curve_position = chest_control_curve_position
+        self.zipper_guides = zipper_guides
 
     def build(self) -> ModuleInfo:
 
@@ -121,6 +124,9 @@ class Spine:
                 size=self.rig_size * self.cog_control_size,
                 direction="y",
             )
+
+            set_override_color(control=self.cog, color=(0.957, 0.725, 0.259))
+
             self.hip = create_control(
                 name=f"{self.hip_des}_{self.side}",
                 parent=self.cog.transform,
@@ -128,6 +134,8 @@ class Spine:
                 size=self.rig_size * self.hip_control_size,
                 direction="y",
             )
+
+            set_override_color(control=self.hip, color=(0.957, 0.725, 0.259))
 
         if not self.hybrid and not self.simple_fk and not self.simple_ik:
             self.hybrid = True
@@ -214,6 +222,7 @@ class Spine:
             size=self.rig_size * self.chest_control_size,
             direction="y",
         )
+        set_override_color(control=self.chest, color=(0.957, 0.725, 0.259))
         for attrs in ["X", "Y", "Z"]:
             cmds.setAttr(f"{self.chest.offset}.rotate{attrs}", 0)  # type:ignore
         module_space(control=self.chest, space_list=[self.cog.transform])
@@ -224,6 +233,7 @@ class Spine:
             size=self.rig_size * self.chest_off_control_size,
             direction="y",
         )
+        set_override_color(control=self.chest_off, color=(0.957, 0.725, 0.259))
 
         if self.hybrid:
             hyrbid = build_hybrid(
@@ -250,6 +260,9 @@ class Spine:
                 "joints": hyrbid.joints,
                 "visibility": [hyrbid.grp],
             }
+
+        for zipper in self.zipper_guides:
+            build_zipper(guide_curve=zipper, spine_drivers=hyrbid.drivers)
 
         self.spine_switch = create_module_switch(
             driven=self.switch_joints,
