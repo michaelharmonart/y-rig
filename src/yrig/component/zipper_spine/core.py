@@ -6,6 +6,7 @@ from yrig.control import create_control, set_override_color
 from yrig.control.core import Control
 from yrig.joint import create_joint
 from yrig.skin.split.tag import tag_for_weight_split
+from yrig.transform import create_transform
 
 from .guide.core import SplineGuideInfo
 from .guide.curve import GuideCurve, get_curve_point_matrix
@@ -260,9 +261,10 @@ class Spine:
                 "joints": hyrbid.joints,
                 "visibility": [hyrbid.grp],
             }
+        zipper_grp = create_transform(name=f"{self.part}_zipper_grp")
 
         for zipper in self.zipper_guides:
-            build_zipper(guide_curve=zipper, spine_drivers=hyrbid.drivers)
+            build_zipper(guide_curve=zipper, spine_drivers=hyrbid.drivers, parent=zipper_grp)
 
         self.spine_switch = create_module_switch(
             driven=self.switch_joints,

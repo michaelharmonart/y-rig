@@ -50,6 +50,7 @@ def get_closest_curve_matrix(
     curve: str,
     transform: str,
 ) -> list[float]:
+    info = []
     selection = om.MSelectionList()
     selection.add(curve)
 
@@ -65,12 +66,13 @@ def get_closest_curve_matrix(
         translation=True,
     )
 
-    point = om.MPoint(*position)
+    point = om.MPoint(*position)  # type:ignore
 
     closest_point, parameter = curve_fn.closestPoint(
         point,
         space=om.MSpace.kWorld,
     )
+    info.append(parameter)
 
     # Preserve the original transform's world orientation.
     matrix = cmds.xform(
@@ -80,10 +82,10 @@ def get_closest_curve_matrix(
         matrix=True,
     )
 
-    matrix[12:15] = [
+    matrix[12:15] = [  # type:ignore
         closest_point.x,
         closest_point.y,
         closest_point.z,
     ]
 
-    return matrix
+    return matrix  # type:ignore
