@@ -1,8 +1,24 @@
-from maya.api.OpenMaya import MFloatArray, MObject
+from maya import cmds
+from maya.api.OpenMaya import (
+    MFloatArray,
+    MFn,
+    MObject,
+    MPlug,
+)
 from maya.api.OpenMayaAnim import MFnWeightGeometryFilter
 
-from yrig.maya_api.utils import get_dag_path, get_depend_node
+from yrig.maya_api.attribute import Attribute
+from yrig.maya_api.utils import get_dag_path, get_depend_node, get_plug
 from yrig.shape import get_components_of_shape, get_shape
+
+
+def previous_deformer_output(attr: Attribute | str) -> MPlug | None:
+    chain = cmds.geometryAttrInfo(str(attr), outputPlugChain=True) or []
+    for name in reversed(chain):
+        plug = get_plug(name)
+        if plug.node().hasFn(MFn.kGeometryFilt):
+            return plug
+    return None
 
 
 def get_weights(deformer: str, geometry: str, components: MObject | None) -> MFloatArray:
