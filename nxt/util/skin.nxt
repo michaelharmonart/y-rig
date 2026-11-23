@@ -29,6 +29,11 @@
                     "type": "bool",
                     "value": "False"
                 },
+                "bypass_shapes": {
+                    "comment": "When True, the skin cluster will be connected directly to the last deformer in the chain and bypass any shapes inbetween. This makes sculpting PSDs with multiple layers of deformation possible.",
+                    "type": "bool",
+                    "value": "True"
+                },
                 "def_set": {
                     "comment": "The joints in this set will be what are used for fallback/default skinning.",
                     "type": "raw",
@@ -87,9 +92,10 @@
                 "geo_list = ${geo_list}",
                 "geo_to_skin = geo_list if geo_list else  yrig.sets.get_set_members(\"${geo_set}\", flatten=True)",
                 "",
-                "def _fallback_skin(geometry: str):",
-                "    skin_geometry(def_joints, geometry, dual_quaternion=${dual_quaternion})",
+                "def _fallback_skin(geometry: str) -> str:",
+                "    skin_cluster = skin_geometry(def_joints, geometry, dual_quaternion=${dual_quaternion})",
                 "    log.info(f\"Default skinned {geometry}\")",
+                "    return str(skin_cluster)",
                 "",
                 "strip_suffix = \"${strip_suffix}\"",
                 "def _geo_to_filename(geometry: str):",
@@ -97,13 +103,20 @@
                 "",
                 "",
                 "skin_directories = [Path(dir) for dir in ${resolved_skin_directories}]",
-                "skin_and_apply_weights_from_directories(",
+                "geo_to_skin_cluster = skin_and_apply_weights_from_directories(",
                 "    skin_directories, ",
                 "    geo_to_skin, ",
                 "    fallback_skinning=_fallback_skin if ${fallback_skinning} else None, ",
                 "    geo_to_filename=_geo_to_filename if strip_suffix else None,",
                 "    error_on_topology_change=not ${allow_topology_change},",
-                "    )"
+                "    )",
+                "    ",
+                "if ${bypass_shapes}:",
+                "    for skin_cluster in geo_to_skin_cluster.values():",
+                "        sc_input_attr = f\"{skin_cluster}.input[0].inputGeometry\"",
+                "        previous_deformer_output = yrig.deformer.previous_deformer_output(sc_input_attr)",
+                "        if previous_deformer_output is not None:",
+                "            cmds.connectAttr(str(previous_deformer_output), sc_input_attr, force=True)"
             ]
         },
         "/split_skin_weights": {

@@ -1,7 +1,6 @@
 import logging
 from collections.abc import Callable, Sequence
 from pathlib import Path
-from typing import Any
 
 from yrig.maya_api.node import SkinClusterNode
 from yrig.name import format_item_count, get_short_name
@@ -212,10 +211,10 @@ def skin_and_apply_weights_from_directories(
     geometry: Sequence[str],
     *,
     skip_skinned_geometry: bool = True,
-    fallback_skinning: Callable[[str], Any] | None = None,
+    fallback_skinning: Callable[[str], str] | None = None,
     geo_to_filename: Callable[[str], str] | None = None,
     error_on_topology_change: bool = True,
-) -> dict[str, Path | None]:
+) -> dict[str, SkinClusterNode]:
     """
     Skin geometry and apply saved weights from one or more directories.
     For each geometry, searches the directories for a matching ``.json`` or ``.yskin`` weight file.
@@ -225,14 +224,15 @@ def skin_and_apply_weights_from_directories(
         directories: Directories to search for weight files, in search order.
         geometry: Geometry to skin and apply weights to.
         skip_skinned_geometry: Whether to skip geometry that already has a skin cluster.
-        fallback_skinning: Optional function called for geometry with no saved weight file.
+        fallback_skinning: Optional function called for geometry with no saved weight file,
+            should return the name of the created skin cluster.
         geo_to_file: Optional function that maps a geometry name to the corresponding weight file name.
 
     Returns:
         Returns:
-            Dictionary mapping geometry that was skinned -> the skin weight file applied or None if default skinning.
+            Dictionary mapping geometry that was skinned -> the skin cluster node.
     """
-    geo_applied_weight_files: dict[str, Path | None] = {}
+    geo_skin_clusters: dict[str, SkinClusterNode] = {}
     with progress_step("Skin Models", total=len(geometry)) as progress:
         for geo in geometry:
             with progress_step(geo):
@@ -244,25 +244,25 @@ def skin_and_apply_weights_from_directories(
                     ng_skin_filepath: Path = directory / f"{geo_mapped_file}.json"
                     yskin_filepath: Path = directory / f"{geo_mapped_file}.yskin"
                     if ng_skin_filepath.exists():
-                        skin_and_apply_ng_weights(
+                        skin_cluster = skin_and_apply_ng_weights(
                             ng_skin_filepath, geo, error_on_topology_change=error_on_topology_change
                         )
-                        geo_applied_weight_files[geo] = ng_skin_filepath
+                        geo_skin_clusters[geo] = skin_cluster
                         skinned = True
                         break
                     elif yskin_filepath.exists():
-                        skin_and_apply_weights(
+                        skin_cluster = skin_and_apply_weights(
                             yskin_filepath, geo, error_on_topology_change=error_on_topology_change
                         )
-                        geo_applied_weight_files[geo] = yskin_filepath
+                        geo_skin_clusters[geo] = skin_cluster
                         skinned = True
                         break
                 if not skinned:
                     if fallback_skinning is not None:
-                        fallback_skinning(geo)
-                        geo_applied_weight_files[geo] = None
+                        skin_cluster = fallback_skinning(geo)
+                        geo_skin_clusters[geo] = SkinClusterNode(skin_cluster)
                     else:
                         log.warning(
                             f"Couldn't find a skin file named '{geo_mapped_file}' for {geometry} in any of the checked directories: {directories}"
                         )
-    return geo_applied_weight_files
+    return geo_skin_clusters
