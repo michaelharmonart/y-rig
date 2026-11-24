@@ -1,8 +1,7 @@
+import re
 from pathlib import Path
 
 from maya import cmds
-
-import re
 
 from yrig.io.fbx import export_fbx_file, import_fbx_file
 
