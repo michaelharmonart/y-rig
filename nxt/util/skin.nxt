@@ -115,8 +115,21 @@
                 "    for skin_cluster in geo_to_skin_cluster.values():",
                 "        sc_input_attr = f\"{skin_cluster}.input[0].inputGeometry\"",
                 "        previous_deformer_output = yrig.deformer.previous_deformer_output(sc_input_attr)",
+                "        ",
+                "        chain = cmds.geometryAttrInfo(sc_input_attr, outputPlugChain=True) or []",
+                "        bypassed_shapes = {",
+                "            attr.split(\".\", 1)[0]",
+                "            for attr in chain",
+                "            if cmds.objectType(attr.split(\".\", 1)[0], isAType=\"shape\")",
+                "        }",
+                "        ",
                 "        if previous_deformer_output is not None:",
-                "            cmds.connectAttr(str(previous_deformer_output), sc_input_attr, force=True)"
+                "            cmds.connectAttr(str(previous_deformer_output), sc_input_attr, force=True)",
+                "            for shape in bypassed_shapes:",
+                "                if cmds.getAttr(f\"{shape}.intermediateObject\"):",
+                "                    if not cmds.listConnections(shape, source=False, destination=True):",
+                "                        cmds.delete(shape)",
+                ""
             ]
         },
         "/split_skin_weights": {
