@@ -1,3 +1,5 @@
+from maya import cmds
+
 from yrig.control import Control, ControlShape, create_control
 from yrig.joint import create_joint
 from yrig.maya_api.node import UvPinNode
@@ -31,6 +33,7 @@ class MouthCorner:
             direction="z",
             control_shape=ControlShape.TRIANGLE,
         )
+        cmds.setAttr(f"{self.main_control.transform}.translateZ", lock=True)
         self.main_local_npo = create_transform(
             f"mouth_{side}_local_npo", transform=self.main_control.transform, parent=parent
         )
@@ -95,4 +98,15 @@ class MouthCorner:
             normalize=True,
             uv_pin_node=def_ribbon_uv_pin,
             drive_rotate=False,
+        )
+        self.def_sub_joint = create_joint(
+            name=f"lip_corner_def_sub_{side}", parent=joint_parent, connect=False
+        )
+        uv_pin(
+            def_ribbon,
+            self.def_sub_joint,
+            (0.5, 0.75 if side == Side.LEFT else 0.25),
+            normalize=True,
+            uv_pin_node=def_ribbon_uv_pin,
+            drive_rotate=True,
         )

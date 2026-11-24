@@ -128,8 +128,8 @@ class LipSpline:
         def_ribbon: str,
         def_ribbon_uv_pin: UvPinNode,
         uv_range: tuple[float, float] = (-0.25, 0.25),
-        left_corner: MouthCorner,
-        right_corner: MouthCorner,
+        left_corner_joint: str,
+        right_corner_joint: str,
         rotation: bool = False,
     ):
         self.def_joint = create_joint(f"{name}_def", guide, parent=joint_parent, connect=False)
@@ -176,11 +176,11 @@ class LipSpline:
         tag_for_weight_split(
             self.def_joint,
             chain(
-                (right_corner.def_joint,),
+                (right_corner_joint,),
                 reversed(self.right_joints),
                 (self.mid_def_joint,),
                 self.left_joints,
-                (left_corner.def_joint,),
+                (left_corner_joint,),
             ),
         )
 
@@ -324,8 +324,8 @@ class Lip:
             def_ribbon=def_ribbon,
             def_ribbon_uv_pin=def_ribbon_uv_pin,
             uv_range=uv_range,
-            left_corner=left_corner,
-            right_corner=right_corner,
+            left_corner_joint=left_corner.def_joint,
+            right_corner_joint=right_corner.def_joint,
         )
         self.sub_spline = LipSpline(
             name=f"{self.name}_sub",
@@ -334,7 +334,7 @@ class Lip:
             def_ribbon=def_ribbon,
             def_ribbon_uv_pin=def_ribbon_uv_pin,
             uv_range=uv_range,
-            left_corner=left_corner,
-            right_corner=right_corner,
+            left_corner_joint=left_corner.def_sub_joint,
+            right_corner_joint=right_corner.def_sub_joint,
             rotation=True,
         )
