@@ -118,6 +118,73 @@ class LipRound:
         self.joint = create_joint(name, self.local, parent=joint_parent)
 
 
+class LipSpline:
+    def __init__(
+        self,
+        *,
+        name: str,
+        guide: str,
+        joint_parent: str,
+        def_ribbon: str,
+        def_ribbon_uv_pin: UvPinNode,
+        uv_range: tuple[float, float] = (-0.25, 0.25),
+        left_corner: MouthCorner,
+        right_corner: MouthCorner,
+        rotation: bool = False,
+    ):
+        self.def_joint = create_joint(f"{name}_def", guide, parent=joint_parent, connect=False)
+        joints = []
+        uvs = []
+
+        def add_joint(name: str, v: float) -> str:
+            joint = create_joint(name, parent=self.def_joint, connect=False)
+            joints.append(joint)
+            uvs.append((0.5, v % 1.0))
+            return joint
+
+        midpoint_v = remap(0.5, (0, 1), uv_range)
+        self.mid_def_joint = add_joint(f"{name}_def_M", midpoint_v)
+
+        self.left_joints: list[str] = []
+        self.right_joints: list[str] = []
+        # Each section runs from its lip center toward its corner.
+        sections = [
+            ("L", midpoint_v, uv_range[0], self.left_joints),
+            ("R", midpoint_v, uv_range[1], self.right_joints),
+        ]
+
+        per_section = 8
+
+        for side, start, end, side_list in sections:
+            for i in range(1, per_section + 1):
+                t = i / (per_section + 1)
+                v = start + (end - start) * t
+                side_list.append(add_joint(f"{name}_def_{side}_seg_{i:02d}", v))
+
+        for object_to_pin, uv in zip_longest(joints, uvs or (), fillvalue=None):
+            if object_to_pin is None:
+                raise ValueError("More uv_coordinates than objects_to_pin. Unable to pin.")
+            uv_pin(
+                def_ribbon,
+                object_to_pin,
+                uv=uv,
+                normalize=True,
+                uv_pin_node=def_ribbon_uv_pin,
+                drive_rotate=rotation,
+            )
+
+        tag_for_weight_split(
+            self.def_joint,
+            chain(
+                (right_corner.def_joint,),
+                reversed(self.right_joints),
+                (self.mid_def_joint,),
+                self.left_joints,
+                (left_corner.def_joint,),
+            ),
+        )
+
+
 class Lip:
     def __init__(
         self,
@@ -209,9 +276,6 @@ class Lip:
         connect_transform(self.mid_control.transform, self.mid_local)
 
         self.mid_joint = create_joint(f"{self.name}_M", self.mid_local, parent=joint_parent)
-        self.def_joint = create_joint(
-            f"{self.name}_def", self.mid_local, parent=joint_parent, connect=False
-        )
 
         self.left_quad = LipQuad(
             name=f"{self.name}_{Side.LEFT}",
@@ -253,53 +317,24 @@ class Lip:
             follow_ribbon_uv_pin=secondary_follow_ribbon_uv_pin,
         )
 
-        joints = []
-        uvs = []
-
-        def add_joint(name: str, u: float) -> str:
-            joint = create_joint(name, parent=self.def_joint, connect=False)
-            joints.append(joint)
-            uvs.append((u % 1.0, 0.5))
-            return joint
-
-        midpoint_u = remap(0.5, (0, 1), uv_range)
-        self.mid_def_joint = add_joint(f"{self.name}_def_M", midpoint_u)
-
-        self.left_joints: list[str] = []
-        self.right_joints: list[str] = []
-        # Each section runs from its lip center toward its corner.
-        sections = [
-            ("L", midpoint_u, uv_range[0], self.left_joints),
-            ("R", midpoint_u, uv_range[1], self.right_joints),
-        ]
-
-        per_section = 8
-
-        for side, start, end, side_list in sections:
-            for i in range(1, per_section + 1):
-                t = i / (per_section + 1)
-                u = start + (end - start) * t
-                side_list.append(add_joint(f"{self.name}_def_{side}_seg_{i:02d}", u))
-
-        for object_to_pin, uv in zip_longest(joints, uvs or (), fillvalue=None):
-            if object_to_pin is None:
-                raise ValueError("More uv_coordinates than objects_to_pin. Unable to pin.")
-            uv_pin(
-                def_ribbon,
-                object_to_pin,
-                uv=uv,
-                normalize=True,
-                uv_pin_node=def_ribbon_uv_pin,
-                drive_rotate=False,
-            )
-
-        tag_for_weight_split(
-            self.def_joint,
-            chain(
-                (right_corner.def_joint,),
-                reversed(self.right_joints),
-                (self.mid_def_joint,),
-                self.left_joints,
-                (left_corner.def_joint,),
-            ),
+        self.spline = LipSpline(
+            name=self.name,
+            guide=self.mid_local,
+            joint_parent=joint_parent,
+            def_ribbon=def_ribbon,
+            def_ribbon_uv_pin=def_ribbon_uv_pin,
+            uv_range=uv_range,
+            left_corner=left_corner,
+            right_corner=right_corner,
+        )
+        self.sub_spline = LipSpline(
+            name=f"{self.name}_sub",
+            guide=self.mid_local,
+            joint_parent=joint_parent,
+            def_ribbon=def_ribbon,
+            def_ribbon_uv_pin=def_ribbon_uv_pin,
+            uv_range=uv_range,
+            left_corner=left_corner,
+            right_corner=right_corner,
+            rotation=True,
         )

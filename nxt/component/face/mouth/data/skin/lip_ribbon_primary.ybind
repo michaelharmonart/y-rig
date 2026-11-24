@@ -14,5 +14,5 @@
   "max_influences": 5,
   "maintain_max_influences": true,
   "input_geometry": "lip_ribbon_primaryShapeOrig",
-  "topology_hash": "25cfc65a582d63b438d21560edb993f4ab50e788b419df0f0dc796542d699e22"
+  "topology_hash": "70b97a3cb25fbc951dfcf759efd6c10b5f09c536772a2edb531672416b973883"
 }

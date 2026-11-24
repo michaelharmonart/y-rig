@@ -17,43 +17,43 @@
       "static_jnt": 1.0
     },
     "3": {
-      "static_jnt": 1.0
+      "up_lip_round_R_jnt": 0.2,
+      "static_jnt": 0.8
     },
     "4": {
-      "static_jnt": 1.0
+      "up_lip_round_R_jnt": 1.0
     },
     "5": {
-      "static_jnt": 1.0
+      "up_lip_round_R_jnt": 0.8,
+      "static_jnt": 0.19999999999999996
     },
     "6": {
-      "up_lip_round_R_jnt": 0.2,
-      "static_jnt": 0.8
+      "up_lip_round_R_jnt": 0.4,
+      "static_jnt": 0.6
     },
     "7": {
-      "up_lip_round_R_jnt": 0.2,
-      "static_jnt": 0.8
+      "static_jnt": 1.0
     },
     "8": {
-      "up_lip_round_R_jnt": 1.0
+      "lo_lip_round_R_jnt": 0.4,
+      "static_jnt": 0.6
     },
     "9": {
-      "up_lip_round_R_jnt": 1.0
+      "lo_lip_round_R_jnt": 0.8,
+      "static_jnt": 0.19999999999999996
     },
     "10": {
-      "up_lip_round_R_jnt": 0.8,
-      "static_jnt": 0.19999999999999996
+      "lo_lip_round_R_jnt": 1.0
     },
     "11": {
-      "up_lip_round_R_jnt": 0.8,
-      "static_jnt": 0.19999999999999996
+      "lo_lip_round_R_jnt": 0.2,
+      "static_jnt": 0.8
     },
     "12": {
-      "up_lip_round_R_jnt": 0.4,
-      "static_jnt": 0.6
+      "static_jnt": 1.0
     },
     "13": {
-      "up_lip_round_R_jnt": 0.4,
-      "static_jnt": 0.6
+      "static_jnt": 1.0
     },
     "14": {
       "static_jnt": 1.0
@@ -62,42 +62,31 @@
       "static_jnt": 1.0
     },
     "16": {
-      "lo_lip_round_R_jnt": 0.4,
-      "static_jnt": 0.6
+      "lo_lip_round_L_jnt": 0.5,
+      "static_jnt": 0.5
     },
     "17": {
-      "lo_lip_round_R_jnt": 0.4,
-      "static_jnt": 0.6
+      "lo_lip_round_L_jnt": 1.0
     },
     "18": {
-      "lo_lip_round_R_jnt": 0.8,
-      "static_jnt": 0.19999999999999996
+      "lo_lip_round_L_jnt": 0.4,
+      "static_jnt": 0.6
     },
     "19": {
-      "lo_lip_round_R_jnt": 0.8,
-      "static_jnt": 0.19999999999999996
+      "static_jnt": 1.0
     },
     "20": {
-      "lo_lip_round_R_jnt": 1.0
+      "up_lip_round_L_jnt": 0.6,
+      "static_jnt": 0.4
     },
     "21": {
-      "lo_lip_round_R_jnt": 1.0
+      "up_lip_round_L_jnt": 1.0
     },
     "22": {
-      "lo_lip_round_R_jnt": 0.2,
-      "static_jnt": 0.8
+      "up_lip_round_L_jnt": 0.5,
+      "static_jnt": 0.5
     },
     "23": {
-      "lo_lip_round_R_jnt": 0.2,
-      "static_jnt": 0.8
-    },
-    "24": {
-      "static_jnt": 1.0
-    },
-    "25": {
-      "static_jnt": 1.0
-    },
-    "26": {
       "static_jnt": 1.0
     },
     "27": {
@@ -110,65 +99,76 @@
       "static_jnt": 1.0
     },
     "30": {
-      "static_jnt": 1.0
+      "up_lip_round_R_jnt": 0.2,
+      "static_jnt": 0.8
     },
     "31": {
-      "static_jnt": 1.0
+      "up_lip_round_R_jnt": 1.0
     },
     "32": {
-      "lo_lip_round_L_jnt": 0.5,
-      "static_jnt": 0.5
+      "up_lip_round_R_jnt": 0.8,
+      "static_jnt": 0.19999999999999996
     },
     "33": {
-      "lo_lip_round_L_jnt": 0.5,
-      "static_jnt": 0.5
+      "up_lip_round_R_jnt": 0.4,
+      "static_jnt": 0.6
     },
     "34": {
-      "lo_lip_round_L_jnt": 1.0
+      "static_jnt": 1.0
     },
     "35": {
-      "lo_lip_round_L_jnt": 1.0
+      "lo_lip_round_R_jnt": 0.4,
+      "static_jnt": 0.6
     },
     "36": {
-      "lo_lip_round_L_jnt": 0.4,
-      "static_jnt": 0.6
+      "lo_lip_round_R_jnt": 0.8,
+      "static_jnt": 0.19999999999999996
     },
     "37": {
-      "lo_lip_round_L_jnt": 0.4,
-      "static_jnt": 0.6
+      "lo_lip_round_R_jnt": 1.0
     },
     "38": {
-      "static_jnt": 1.0
+      "lo_lip_round_R_jnt": 0.2,
+      "static_jnt": 0.8
     },
     "39": {
       "static_jnt": 1.0
     },
     "40": {
-      "up_lip_round_L_jnt": 0.6,
-      "static_jnt": 0.4
+      "static_jnt": 1.0
     },
     "41": {
-      "up_lip_round_L_jnt": 0.6,
-      "static_jnt": 0.4
+      "static_jnt": 1.0
     },
     "42": {
-      "up_lip_round_L_jnt": 1.0
+      "static_jnt": 1.0
     },
     "43": {
-      "up_lip_round_L_jnt": 1.0
+      "lo_lip_round_L_jnt": 0.5,
+      "static_jnt": 0.5
     },
     "44": {
-      "up_lip_round_L_jnt": 0.5,
-      "static_jnt": 0.5
+      "lo_lip_round_L_jnt": 1.0
     },
     "45": {
-      "up_lip_round_L_jnt": 0.5,
-      "static_jnt": 0.5
+      "lo_lip_round_L_jnt": 0.4,
+      "static_jnt": 0.6
     },
     "46": {
       "static_jnt": 1.0
     },
     "47": {
+      "up_lip_round_L_jnt": 0.6,
+      "static_jnt": 0.4
+    },
+    "48": {
+      "up_lip_round_L_jnt": 1.0
+    },
+    "49": {
+      "up_lip_round_L_jnt": 0.5,
+      "static_jnt": 0.5
+    },
+    "50": {
       "static_jnt": 1.0
     }
   }

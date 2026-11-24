@@ -91,7 +91,8 @@ class MouthCorner:
         uv_pin(
             def_ribbon,
             self.def_joint,
-            (0.75 if side == Side.LEFT else 0.25, 0.5),
+            (0.5, 0.75 if side == Side.LEFT else 0.25),
+            normalize=True,
             uv_pin_node=def_ribbon_uv_pin,
             drive_rotate=False,
         )
