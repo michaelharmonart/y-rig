@@ -109,36 +109,79 @@ def publish_ue_anim(
     model: str = "geo",
     skel: str = "root_C0_root_jnt",
     export_model: bool = False,
+    export_start: int | None = None,
 ) -> None:
     """
-    Exports the rig, with a clean hierarchy, to a given path
+    Export an animated skeleton to FBX.
 
-    path: the path
-    model: the top model transfrom
-    skel: the top/ root joint
+    export_start:
+        Starting frame of the exported animation.
+        None preserves the original frame range.
     """
 
-    if export_model:
-        # cmds.parent(model, skel, world=True)
-        export_fbx_file(
-            bake_animation=True,
-            filepath=path,
-            nodes=[skel, model],
-            animation=True,
-            bake_start=frame_range[0],
-            bake_end=frame_range[1],
-            bake_step=1,
-        )
+    start, end = frame_range
 
-        # cmds.parent(model, model_parent)
-    else:
-        export_fbx_file(
-            bake_animation=True,
-            filepath=path,
-            nodes=[skel],
-            animation=True,
-            bake_start=frame_range[0],
-            bake_end=frame_range[1],
-            bake_step=1,
-        )
-    # cmds.parent(skel, skel_parent)
+    nodes = [skel]
+    if export_model:
+        nodes.append(model)
+
+    if export_start is not None:
+        frame_offset = export_start - start
+
+        if frame_offset != 0:
+            joints = [skel] + (
+                cmds.listRelatives(
+                    skel,
+                    allDescendents=True,
+                    type="joint",
+                    fullPath=True,
+                )
+                or []
+            )
+
+            # Bake animation onto the export skeleton.
+            cmds.bakeResults(
+                joints,  # type:ignore
+                time=(start, end),
+                simulation=True,
+                sampleBy=1,
+                disableImplicitControl=True,
+                preserveOutsideKeys=False,
+                sparseAnimCurveBake=False,
+                minimizeRotation=True,
+            )
+
+            # Remove constraints from the export skeleton.
+            constraints = (
+                cmds.listRelatives(
+                    joints,  # type:ignore
+                    children=True,
+                    type="constraint",
+                    fullPath=True,
+                )
+                or []
+            )
+
+            if constraints:
+                cmds.delete(constraints)  # type:ignore
+
+            # Shift the baked animation.
+            cmds.keyframe(
+                joints,  # type:ignore
+                animation="objects",
+                relative=True,
+                timeChange=frame_offset,
+            )
+
+            start += frame_offset
+            end += frame_offset
+
+    export_fbx_file(
+        filepath=path,
+        nodes=nodes,
+        animation=True,
+        bake_animation=True,
+        bake_start=start,
+        bake_end=end,
+        bake_step=1,
+    )
