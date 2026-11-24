@@ -6,11 +6,11 @@ from maya.api.OpenMaya import (
     MDagPathArray,
     MDoubleArray,
     MFn,
-    MFnComponent,
     MFnDependencyNode,
     MFnMesh,
     MFnSingleIndexedComponent,
     MIntArray,
+    MItGeometry,
     MMatrix,
     MObject,
     MPlug,
@@ -29,7 +29,7 @@ from yrig.maya_api.enum import (
 from yrig.maya_api.node import SkinClusterNode
 from yrig.maya_api.utils import get_dag_path, get_depend_node
 from yrig.name import natural_sort_key
-from yrig.shape import get_components_of_shape, get_shape
+from yrig.shape import get_shape
 from yrig.transform import get_transform
 
 ZERO_TOLERANCE = 1e-7
@@ -106,6 +106,7 @@ def skin_geometry(
     weight_distribution: SkinClusterWeightDistribution = SkinClusterWeightDistribution.DISTANCE,
     max_influences: int = 6,
     maintain_max_influences: bool = False,
+    multi: bool = True,
 ) -> SkinClusterNode:
     """
     Create a skin cluster on the given geometry using the specified bind joints.
@@ -129,6 +130,7 @@ def skin_geometry(
         weight_distribution: Method used to distribute weights when binding.
         max_influences: Maximum number of influences allowed per vertex.
         maintain_max_influences: Whether to enforce the maximum influence count.
+        multi: If True, multiple skin clusters can be added to one mesh without error.
 
     Returns:
         The created skin cluster.
@@ -162,6 +164,7 @@ def skin_geometry(
         weightDistribution=weight_distribution,
         maximumInfluences=max_influences,
         obeyMaxInfluences=maintain_max_influences,
+        multi=multi,
     )[0]
     skin_cluster_node = SkinClusterNode.from_existing(skin_cluster)
     skin_cluster_node.dqs_support_non_rigid.set(support_non_rigid)
@@ -446,15 +449,23 @@ def set_skin_weights(
     for index in ordered_indices_only:
         influence_indices_array.append(index)
 
-    components = get_components_of_shape(shape_dag)
-    component_fn: MFnComponent = MFnComponent(components)
-    num_components: int = component_fn.elementCount
+    geometry_index = mfn_skin_cluster.indexForOutputShape(shape_dag.node())
+    components = mfn_skin_cluster.getComponentAtIndex(geometry_index)
+    # weightList uses logical indices; setWeights uses component iteration order.
+    # Maya's iterator skips the overlapping CVs of periodic surfaces.
+    iterator = MItGeometry(shape_dag, components)
+    point_indices: dict[int, int] = {}
+    num_components = 0
+    while not iterator.isDone():
+        point_indices[iterator.index()] = num_components
+        num_components += 1
+        iterator.next()
     # Allocate list for weights
     weights_flat: list[float] = [0.0] * (num_components * num_influences)
 
     # Fill weights list from new_weights dict
     for point_id, point_weights in resolved_weights.items():
-        base_index = point_id * num_influences
+        base_index = point_indices[point_id] * num_influences
         for influence_name, weight in point_weights.items():
             influence_index = influence_indices[influence_name]
             weights_flat[base_index + influence_index] = weight
