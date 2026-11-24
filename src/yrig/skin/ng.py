@@ -13,6 +13,7 @@ from yrig.maya_api.utils import get_dag_path
 from yrig.name import format_item_count
 from yrig.shape import get_components_of_shape
 from yrig.skin.core import (
+    _add_missing_influences,
     _resolve_skin_cluster,
     get_influence_index_to_name_map,
     get_influence_name_to_index_map,
@@ -323,6 +324,12 @@ def set_ng_layer_weights(
     number_of_components: int = mfn_component.elementCount
 
     weights_by_influence = organize_weights_by_influence(weights)
+    all_influences_in_data = set(weights_by_influence)
+    existing_influences = set(
+        cmds.skinCluster(resolved_skin_cluster, query=True, influence=True) or []  # type: ignore
+    )
+    _add_missing_influences(existing_influences, all_influences_in_data, resolved_skin_cluster)
+
     influence_map = get_influence_name_to_index_map(resolved_skin_cluster)
     for influence_name, weights_dict in weights_by_influence.items():
         layer.set_weights(
