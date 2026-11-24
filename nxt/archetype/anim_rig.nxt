@@ -507,7 +507,14 @@
                 "model_override",
                 "prune",
                 "metadata",
-                "lock_attrs"
+                "lock_attrs",
+                "reset_viewport"
+            ]
+        },
+        "/finalize/reset_viewport": {
+            "code": [
+                "if not cmds.about(batch=True):",
+                "    cmds.ogs(reset=True)"
             ]
         },
         "/finalize/delete_guides": {
