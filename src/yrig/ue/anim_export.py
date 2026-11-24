@@ -2,6 +2,8 @@ from pathlib import Path
 
 from maya import cmds
 
+import re
+
 from yrig.io.fbx import export_fbx_file, import_fbx_file
 
 
@@ -185,3 +187,28 @@ def publish_ue_anim(
         bake_end=end,
         bake_step=1,
     )
+
+
+def get_namespaces() -> list[str]:
+    """Returns all user-created namespaces in the scene."""
+    namespaces = (
+        cmds.namespaceInfo(
+            ":",
+            listOnlyNamespaces=True,
+            recurse=True,
+        )
+        or []
+    )
+
+    return [namespace for namespace in namespaces if namespace not in {"UI", "shared"}]
+
+
+def get_rig_namespaces(rigs: list[str]) -> list[str]:
+    """Returns namespaces matching rig names, including numbered instances."""
+    namespaces = get_namespaces()
+
+    return [
+        namespace
+        for namespace in namespaces
+        if any(re.fullmatch(rf"{re.escape(rig)}\d*", namespace) for rig in rigs)
+    ]
