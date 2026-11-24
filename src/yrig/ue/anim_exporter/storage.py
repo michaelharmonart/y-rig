@@ -2,7 +2,7 @@ from dataclasses import asdict
 
 from maya import cmds
 
-from yrig.io import json
+from yrig.io.json import dumps_json, loads_json
 
 from .config import ANIMATION_DATA_NODE
 from .models import (
@@ -51,7 +51,7 @@ def save_settings(settings: AnimationSettings) -> None:
 
     cmds.setAttr(
         f"{node}.{DATA_ATTRIBUTE}",
-        json.dumps(data, indent=4),
+        dumps_json(data, pretty=True),
         type="string",
     )
 
@@ -70,7 +70,7 @@ def load_settings() -> AnimationSettings | None:
         return None
 
     try:
-        payload = json.loads(raw_data)
+        payload = loads_json(raw_data, type=dict)
 
         if payload.get("version") != SCHEMA_VERSION:
             raise ValueError("Unsupported animation data version.")
