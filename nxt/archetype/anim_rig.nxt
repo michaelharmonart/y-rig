@@ -511,12 +511,6 @@
                 "reset_viewport"
             ]
         },
-        "/finalize/reset_viewport": {
-            "code": [
-                "if not cmds.about(batch=True):",
-                "    cmds.ogs(reset=True)"
-            ]
-        },
         "/finalize/delete_guides": {
             "attrs": {
                 "guides_group": {
@@ -749,6 +743,13 @@
                 "        if removed:",
                 "            pruned.append(skin_cluster)",
                 "    log.info(f\"Removed unused influences on {len(pruned)} skinCluster(s): {pruned}\")"
+            ]
+        },
+        "/finalize/reset_viewport": {
+            "enabled": true,
+            "code": [
+                "if not cmds.about(batch=True):",
+                "    cmds.ogs(reset=True)"
             ]
         },
         "/psd_import": {
@@ -1209,7 +1210,8 @@
                 "    )",
                 "    yrig.sets.add_to_set(mesh_transforms, \"${model_set}\", parent=\"${rig_set}\")",
                 "    yrig.sets.add_to_set(mesh_transforms, \"${anim_publish_set}\", parent=\"${rig_set}\")",
-                "    cmds.viewFit()",
+                "    if not cmds.about(batch=True):",
+                "        cmds.viewFit()",
                 "    "
             ]
         },
