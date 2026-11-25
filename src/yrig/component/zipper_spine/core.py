@@ -12,7 +12,8 @@ from .guide.core import SplineGuideInfo
 from .guide.curve import GuideCurve, get_curve_point_matrix
 from .hybrid import build_hybrid
 from .module_utils import create_module_switch, module_prep, module_space
-from .utils import align_guides, get_distance_between
+from .stabilization import connect_limited_control, create_limited_control
+from .utils import align_guides
 from .zipper import build_zipper
 
 
@@ -138,7 +139,8 @@ class Spine:
 
             set_override_color(control=self.hip, color=(0.957, 0.725, 0.259))
 
-        if not self.hybrid and not self.simple_fk and not self.simple_ik:
+        if not self.hybrid:
+            # Hybrid is currently the only implemented driver system.
             self.hybrid = True
 
         guide_names = []
@@ -150,11 +152,11 @@ class Spine:
             output_names=guide_names,
             ignore_handles=True,
             align_normals=False,
-            primary_axis="+y",
+            primary_axis="+x",
         )
         for i, guide in enumerate(self.curve.locator_list):
             if guide == self.curve.locator_list[-1]:
-                align_guides(guide_01=guide, guide_02=self.curve.locator_list[i - 1], flip_y=True)
+                align_guides(guide_01=guide, guide_02=self.curve.locator_list[i - 1], flip_x=True)
             else:
                 align_guides(guide_01=guide, guide_02=self.curve.locator_list[i + 1])
         jnt_par = self.guts
@@ -204,16 +206,11 @@ class Spine:
         self.bind_joints.append(self.chest_joint)
         cmds.parentConstraint(self.chestswitch_joint, self.chest_joint)
 
-        chest_offset = get_distance_between(
-            self.guides.lower.name,
-            self.guides.upper.name,
-        ) * (1 - self.chest_control_curve_position)
-
         chest_matrix = get_curve_point_matrix(
             curve=self.guides.curve.name,
             parameter=self.chest_control_curve_position,
             tangent_orient=False,
-            aim_axis="y",
+            aim_axis="x",
         )
 
         self.chest = create_control(
@@ -229,7 +226,7 @@ class Spine:
         module_space(control=self.chest, space_list=[self.cog.transform])
         self.chest_off = create_control(
             name=f"{self.chest_des}_off_{self.side}",
-            parent=self.chest.transform,
+            parent=self.control_grp if self.hybrid else self.chest.transform,
             transform=self.guides.upper.name,
             size=self.rig_size * self.chest_off_control_size,
             direction="y",
@@ -237,7 +234,12 @@ class Spine:
         set_override_color(control=self.chest_off, color=(0.957, 0.725, 0.259))
 
         if self.hybrid:
-            hyrbid = build_hybrid(
+            chest_input = create_limited_control(
+                control=self.chest_off,
+                follow_driver=self.chest.transform,
+                parent=self.control_grp,
+            )
+            hybrid = build_hybrid(
                 part=self.part,
                 guts=self.guts,
                 side=self.side,
@@ -246,25 +248,42 @@ class Spine:
                 guide_list=self.curve.locator_list,
                 cv_transforms=[
                     self.hip.transform,
-                    self.chest_off.transform,
+                    chest_input.raw_driver,
                 ],
                 rig_size=self.rig_size,
                 hip=self.hip,
                 hip_des=self.hip_des,
                 main_color=self.main_control_color,
+                cog=self.cog.transform,
+                chest=self.chest.transform,
                 mid_control_size=self.hyrbid_mid_control_size,
                 sub_spine_control_size=self.hybrid_sub_size,
             )
-            cmds.parent(hyrbid.mid.offset, self.chest.transform)
+            connect_limited_control(
+                control=chest_input,
+                limited_driver=hybrid.chest_driver,
+                name=f"{self.chest_des}_{self.side}",
+            )
+            for attr in ("min_stretch", "max_stretch", "soft_range"):
+                cmds.addAttr(
+                    self.chest.transform,
+                    longName=attr,
+                    proxy=getattr(hybrid, attr),
+                    keyable=True,
+                )
 
             drivers["Hybrid"] = {
-                "joints": hyrbid.joints,
-                "visibility": [hyrbid.grp],
+                "joints": hybrid.joints,
+                "visibility": [hybrid.grp],
             }
-        zipper_grp = create_transform(name=f"{self.part}_zipper_grp")
-
-        for zipper in self.zipper_guides:
-            build_zipper(guide_curve=zipper, spine_drivers=hyrbid.drivers, parent=zipper_grp)
+            if self.zipper_guides:
+                zipper_grp = create_transform(
+                    name=f"{self.part}_{self.side}_zipper_grp", parent=self.control_grp
+                )
+                for zipper in self.zipper_guides:
+                    build_zipper(
+                        guide_curve=zipper, spine_drivers=hybrid.drivers, parent=zipper_grp
+                    )
 
         self.spine_switch = create_module_switch(
             driven=self.switch_joints,
@@ -281,3 +300,4 @@ class Spine:
             chest_off=self.chest_off,
         )
         return spine_info
+
