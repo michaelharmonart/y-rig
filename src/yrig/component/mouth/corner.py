@@ -84,9 +84,6 @@ class MouthCorner:
             self.main_joint,
             False,
             use_joint_orient=True,
-            rotate=False,
-            scale=False,
-            shear=False,
         )
         self.def_joint = create_joint(
             name=f"lip_corner_def_{side}", parent=joint_parent, connect=False
