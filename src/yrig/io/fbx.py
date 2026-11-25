@@ -1,7 +1,9 @@
 import logging
 import re
 from collections.abc import Iterable, Mapping
+from contextlib import contextmanager
 from pathlib import Path
+from types import GeneratorType
 from typing import TypeAlias
 
 from maya import cmds, mel
@@ -21,6 +23,19 @@ _DIRECT_OPTIONS = {
     "FBXImportScaleFactorEnable",
     "FBXImportForcedFileAxis",
 }
+
+
+@contextmanager
+def maintain_fbx_settings() -> GeneratorType:
+    """Preserve the user's FBX import and export settings."""
+    _load_fbx_plugin()
+
+    mel.eval("FBXPushSettings;")
+
+    try:
+        yield
+    finally:
+        mel.eval("FBXPopSettings;")
 
 
 def _load_fbx_plugin() -> None:
@@ -123,8 +138,12 @@ def import_fbx_file(
 
     _load_fbx_plugin()
 
-    if reset_settings:
-        mel.eval("FBXResetImport;")
+    with maintain_fbx_settings():
+        if reset_settings:
+            mel.eval("FBXResetImport;")
+
+        # Configure FBX settings.
+        # Import the FBX file.
 
     settings: dict[str, FBXOption] = {
         "Mode": import_mode,
