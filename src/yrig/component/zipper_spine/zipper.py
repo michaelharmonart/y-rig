@@ -1,7 +1,8 @@
 from yrig.control import create_control
 
-from .guide.core import GuideInfo, create_guide_from_position
+from .guide.core import GuideInfo
 from .utils import get_closest_curve_matrix
+from maya.api.OpenMaya import MMatrix
 
 
 def build_zipper(
@@ -10,7 +11,6 @@ def build_zipper(
     parent: str,
     size: float = 1.0,
 ) -> None:
-    controls = []
 
     curve = guide_curve.name
 
@@ -20,16 +20,10 @@ def build_zipper(
             transform=transform,
         )
 
-        guide = create_guide_from_position(
-            pos=matrix, guide_name=f"zipper_{(i + 2):02d}_M", parent="guides"
-        )
-
-        ctrl = create_control(
-            name=guide.descriptor,
+        create_control(
+            name=f"zipper_{i + 2:02d}_M",
             parent=parent,
-            transform=guide.name,
+            transform=MMatrix(matrix),
             size=size,
             control_shape="sphere",
         )
-
-        controls.append(ctrl)

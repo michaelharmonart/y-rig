@@ -11,25 +11,22 @@ def curve_midpoint(curve: str) -> GuideInfo:
     return create_guide_from_position(guide_name="mid_point", parent="guides", pos=tuple(pos))  # type: ignore
 
 
-def align_guides(guide_01: GuideInfo, guide_02: GuideInfo, flip_x: bool = False) -> None:
-    # Use a common world Z reference for the spine, rather than world Y
-    # (which is nearly parallel to an upright spine).
-    start = get_position(guide_01.name, True)
-    end = get_position(guide_02.name, True)
-    tangent = end - start
-    if tangent.length() < 1e-8:
-        raise ValueError("Cannot align coincident spine guides.")
-    tangent.normalize()
-    up = (0, 0, 1) if abs(tangent.z) < 0.99 else (0, 1, 0)
+def align_guides(
+    guide_01: GuideInfo,
+    guide_02: GuideInfo,
+    flip_x: bool = False,
+) -> None:
+
     aim = cmds.aimConstraint(
         guide_02.name,
         guide_01.name,
-        aimVector=(-1 if flip_x else 1, 0, 0),
+        aimVector=(-1, 0, 0) if flip_x else (1, 0, 0),
         upVector=(0, 0, 1),
         worldUpType="vector",
-        worldUpVector=up,
+        worldUpVector=(0, 0, 1),
         maintainOffset=False,
     )
+
     cmds.delete(aim)  # type: ignore
 
 

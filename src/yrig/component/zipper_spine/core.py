@@ -23,6 +23,7 @@ class ModuleInfo:
     bind_joints: list
     chest_ctrl: Control
     chest_off: Control
+    cog_joint: str
 
 
 class Spine:
@@ -115,29 +116,25 @@ class Spine:
         self.switch_joints = []
         drivers = {}
 
-        if self.root_hook:
-            self.cog = self.root_hook[0]
-            self.hip = self.root_hook[1]
-        else:
-            self.cog = create_control(
-                name=f"{self.cog_des}_{self.side}",
-                parent=self.control_grp,
-                transform=self.guides.lower.name,
-                size=self.rig_size * self.cog_control_size,
-                direction="y",
-            )
+        self.cog = create_control(
+            name=f"{self.cog_des}_{self.side}",
+            parent=self.control_grp,
+            transform=self.guides.lower.name,
+            size=self.rig_size * self.cog_control_size,
+            direction="y",
+        )
 
-            set_override_color(control=self.cog, color=(0.957, 0.725, 0.259))
+        set_override_color(control=self.cog, color=(0.957, 0.725, 0.259))
 
-            self.hip = create_control(
-                name=f"{self.hip_des}_{self.side}",
-                parent=self.cog.transform,
-                transform=self.guides.lower.name,
-                size=self.rig_size * self.hip_control_size,
-                direction="y",
-            )
+        self.hip = create_control(
+            name=f"{self.hip_des}_{self.side}",
+            parent=self.cog.transform,
+            transform=self.guides.lower.name,
+            size=self.rig_size * self.hip_control_size,
+            direction="y",
+        )
 
-            set_override_color(control=self.hip, color=(0.957, 0.725, 0.259))
+        set_override_color(control=self.hip, color=(0.957, 0.725, 0.259))
 
         if not self.hybrid:
             # Hybrid is currently the only implemented driver system.
@@ -180,7 +177,51 @@ class Spine:
         )
         self.switch_joints.append(self.chestswitch_joint)
 
-        jnt_par = self.joint_parent
+        # -----------------------------------
+        # COG joint - X down chain
+        # -----------------------------------
+
+        cog_joint_guide = create_transform(
+            name=f"{self.cog_des}_{self.side}_joint_guide",
+            transform=self.curve.locator_list[0].name,
+            parent=self.guts,
+        )
+
+        cog_position = cmds.xform(
+            self.cog.transform,
+            query=True,
+            worldSpace=True,
+            translation=True,
+        )
+
+        cmds.xform(
+            cog_joint_guide,
+            worldSpace=True,
+            translation=cog_position,  # type:ignore
+        )
+
+        self.cog_joint = create_joint(
+            name=f"{self.cog_des}_{self.side}_jnt",
+            transform=cog_joint_guide,
+            parent=self.joint_parent,
+            connect=False,
+        )
+
+        cmds.parentConstraint(
+            self.cog.transform,
+            self.cog_joint,
+            maintainOffset=True,
+        )
+
+        cmds.scaleConstraint(
+            self.cog.transform,
+            self.cog_joint,
+            maintainOffset=True,
+        )
+
+        cmds.delete(cog_joint_guide)
+
+        jnt_par = self.cog_joint
         for i, guide in enumerate(self.curve.locator_list):
             if guide == self.curve.locator_list[-1]:
                 break
@@ -206,11 +247,15 @@ class Spine:
         self.bind_joints.append(self.chest_joint)
         cmds.parentConstraint(self.chestswitch_joint, self.chest_joint)
 
+        # -----------------------------------
+        # Main chest control - Y up
+        # -----------------------------------
+
         chest_matrix = get_curve_point_matrix(
             curve=self.guides.curve.name,
             parameter=self.chest_control_curve_position,
             tangent_orient=False,
-            aim_axis="x",
+            aim_axis="y",
         )
 
         self.chest = create_control(
@@ -220,18 +265,43 @@ class Spine:
             size=self.rig_size * self.chest_control_size,
             direction="y",
         )
-        set_override_color(control=self.chest, color=(0.957, 0.725, 0.259))
-        for attrs in ["X", "Y", "Z"]:
-            cmds.setAttr(f"{self.chest.offset}.rotate{attrs}", 0)  # type:ignore
-        module_space(control=self.chest, space_list=[self.cog.transform])
+
+        set_override_color(
+            control=self.chest,
+            color=(0.957, 0.725, 0.259),
+        )
+
+        for axis in "XYZ":
+            cmds.setAttr(
+                f"{self.chest.offset}.rotate{axis}",
+                0,  # type:ignore
+            )
+
+        module_space(
+            control=self.chest,
+            space_list=[self.cog.transform],
+        )
+
+        # -----------------------------------
+        # Chest offset control - Y up
+        # -----------------------------------
+
         self.chest_off = create_control(
             name=f"{self.chest_des}_off_{self.side}",
-            parent=self.control_grp if self.hybrid else self.chest.transform,
+            parent=self.control_grp,
             transform=self.guides.upper.name,
             size=self.rig_size * self.chest_off_control_size,
             direction="y",
         )
-        set_override_color(control=self.chest_off, color=(0.957, 0.725, 0.259))
+
+        set_override_color(
+            control=self.chest_off,
+            color=(0.957, 0.725, 0.259),
+        )
+
+        # -----------------------------------
+        # Hybrid spine
+        # -----------------------------------
 
         if self.hybrid:
             chest_input = create_limited_control(
@@ -239,6 +309,7 @@ class Spine:
                 follow_driver=self.chest.transform,
                 parent=self.control_grp,
             )
+
             hybrid = build_hybrid(
                 part=self.part,
                 guts=self.guts,
@@ -259,12 +330,25 @@ class Spine:
                 mid_control_size=self.hyrbid_mid_control_size,
                 sub_spine_control_size=self.hybrid_sub_size,
             )
+
+            # Move the chest offset control to the
+            # final limited chest position.
+
             connect_limited_control(
                 control=chest_input,
                 limited_driver=hybrid.chest_driver,
                 name=f"{self.chest_des}_{self.side}",
             )
-            for attr in ("min_stretch", "max_stretch", "soft_range"):
+
+            # -----------------------------------
+            # Animator squash/stretch attributes
+            # -----------------------------------
+
+            for attr in (
+                "min_stretch",
+                "max_stretch",
+                "soft_range",
+            ):
                 cmds.addAttr(
                     self.chest.transform,
                     longName=attr,
@@ -272,31 +356,56 @@ class Spine:
                     keyable=True,
                 )
 
+            # -----------------------------------
+            # Hybrid switch drivers
+            # -----------------------------------
+
             drivers["Hybrid"] = {
                 "joints": hybrid.joints,
                 "visibility": [hybrid.grp],
             }
+
+            # -----------------------------------
+            # Zipper controls
+            # -----------------------------------
+
             if self.zipper_guides:
                 zipper_grp = create_transform(
-                    name=f"{self.part}_{self.side}_zipper_grp", parent=self.control_grp
+                    name=f"{self.part}_{self.side}_zipper_grp",
+                    parent=self.control_grp,
                 )
+
                 for zipper in self.zipper_guides:
                     build_zipper(
-                        guide_curve=zipper, spine_drivers=hybrid.drivers, parent=zipper_grp
+                        guide_curve=zipper,
+                        spine_drivers=hybrid.drivers,
+                        parent=zipper_grp,
                     )
+
+        # -----------------------------------
+        # Spine switch
+        # -----------------------------------
 
         self.spine_switch = create_module_switch(
             driven=self.switch_joints,
             drivers=drivers,
             node_attr=self.chest.transform,
             descriptor=f"{self.part}_{self.side}",
+            maintain_offset=False,
         )
 
+        # -----------------------------------
+        # Cleanup and module outputs
+        # -----------------------------------
+
         cmds.delete(self.curve.group)
+
         spine_info = ModuleInfo(
             switch_joints=self.switch_joints,
             bind_joints=self.bind_joints,
             chest_ctrl=self.chest,
             chest_off=self.chest_off,
+            cog_joint=self.cog_joint,
         )
+
         return spine_info

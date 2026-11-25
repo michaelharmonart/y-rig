@@ -27,7 +27,7 @@ def get_relative_matrix(
     name: str,
 ) -> str:
 
-    mult = MultMatrixNode(name=f"{name}_relative_MM")
+    mult = MultMatrixNode.create(name=f"{name}_relative_MM")
 
     mult.matrix_in[0].connect_from(f"{driver}.worldMatrix[0]")
 
@@ -48,7 +48,7 @@ def get_relative_position(
         name=name,
     )
 
-    dec = DecomposeMatrixNode(name=f"{name}_relative_DCM")
+    dec = DecomposeMatrixNode.create(name=f"{name}_relative_DCM")
 
     dec.input_matrix.connect_from(matrix)
 
@@ -96,15 +96,19 @@ def get_distance_ratio(
         0.000001,
     )
 
-    ratio = MultiplyDivideNode(name=f"{name}_ratio_MD")
+    ratio = MultiplyDivideNode.create(name=f"{name}_ratio_MD")
 
+    # Initialize all denominator channels.
+    ratio.input2.set((rest_distance, 1.0, 1.0))
+
+    # Connect the current distance.
+    ratio.input1.x.connect_from(distance)
+
+    # Enable division after initializing the inputs.
     cmds.setAttr(
         f"{ratio.name}.operation",
-        2,  # type:ignore
+        2,  # type: ignore
     )
-
-    ratio.input1.x.connect_from(distance)
-    ratio.input2.x.set(rest_distance)
 
     return f"{ratio.name}.outputX", rest_distance
 
@@ -174,7 +178,7 @@ def create_dynamic_soft_weight(
     compression_max: float = 0.75,
 ) -> str:
 
-    remap = RemapValueNode(name=f"{name}_compression_RMV")
+    remap = RemapValueNode.create(name=f"{name}_compression_RMV")
 
     remap.input_min.set(compression_min)
     remap.input_max.set(compression_max)
@@ -190,7 +194,7 @@ def create_dynamic_soft_weight(
         2,  # type:ignore
     )
 
-    mult = MultiplyDivideNode(name=f"{name}_weight_MD")
+    mult = MultiplyDivideNode.create(name=f"{name}_weight_MD")
 
     mult.input1.set(weight)
 
@@ -210,6 +214,12 @@ def limit_soft_offset(
     max_distance: float,
 ) -> str:
 
+    max_distance = max(0.0, max_distance)
+
+    # -----------------------------------
+    # Current offset length
+    # -----------------------------------
+
     distance = cmds.createNode(
         "distanceBetween",
         name=f"{name}_offsetLength_DIST",
@@ -220,13 +230,21 @@ def limit_soft_offset(
         f"{distance}.point2",
     )
 
-    # Avoid division by zero.
+    # -----------------------------------
+    # Safe denominator
+    # -----------------------------------
+
+    minimum_distance = max(max_distance, 0.000001)
+
     safe_distance = cmds.createNode(
         "condition",
         name=f"{name}_safeDistance_COND",
     )
 
-    cmds.setAttr(f"{safe_distance}.operation", 2)  # type:ignore
+    cmds.setAttr(
+        f"{safe_distance}.operation",
+        2,
+    )
 
     cmds.connectAttr(
         f"{distance}.distance",
@@ -235,7 +253,7 @@ def limit_soft_offset(
 
     cmds.setAttr(
         f"{safe_distance}.secondTerm",
-        0.000001,  # type:ignore
+        minimum_distance,  # type:ignore
     )
 
     cmds.connectAttr(
@@ -245,37 +263,45 @@ def limit_soft_offset(
 
     cmds.setAttr(
         f"{safe_distance}.colorIfFalseR",
-        0.000001,  # type:ignore
+        minimum_distance,  # type:ignore
     )
 
-    ratio = MultiplyDivideNode(name=f"{name}_limitRatio_MD")
+    # -----------------------------------
+    # Offset ratio
+    # -----------------------------------
 
-    cmds.setAttr(f"{ratio.name}.operation", 2)  # type:ignore
+    ratio = MultiplyDivideNode.create(
+        name=f"{name}_limitRatio_MD",
+    )
 
     ratio.input1.x.set(max_distance)
 
-    ratio.input2.x.connect_from(f"{safe_distance}.outColorR")
+    ratio.input2.x.set(1.0)
+    ratio.input2.y.set(1.0)
+    ratio.input2.z.set(1.0)
 
-    clamp = cmds.createNode(
-        "clamp",
-        name=f"{name}_limit_CLAMP",
+    ratio.input2.x.connect_from(
+        f"{safe_distance}.outColorR",
     )
 
-    cmds.setAttr(f"{clamp}.minR", 0)  # type:ignore
-    cmds.setAttr(f"{clamp}.maxR", 1)  # type:ignore
+    cmds.setAttr(
+        f"{ratio.name}.operation",
+        2,  # type:ignore
+    )
 
-    ratio.output.x.connect_to(f"{clamp}.inputR")
+    # -----------------------------------
+    # Apply correction
+    # -----------------------------------
 
-    mult = MultiplyDivideNode(name=f"{name}_limitedOffset_MD")
+    mult = MultiplyDivideNode.create(
+        name=f"{name}_limitedOffset_MD",
+    )
 
     mult.input1.connect_from(offset)
 
-    for axis in (
-        mult.input2.x,
-        mult.input2.y,
-        mult.input2.z,
-    ):
-        axis.connect_from(f"{clamp}.outputR")
+    mult.input2.x.connect_from(ratio.output.x)
+    mult.input2.y.connect_from(ratio.output.x)
+    mult.input2.z.connect_from(ratio.output.x)
 
     return f"{mult.name}.output"
 
@@ -291,13 +317,15 @@ def build_stabilized_drivers(
     max_offset_ratio: float = 0.3,
 ) -> list[str]:
 
+    # -----------------------------------
+    # Shared Y-up reference space
+    # -----------------------------------
+
     reference_grp = cmds.createNode(
         "transform",
         name=f"{name}_reference_grp",
         parent=cog,
     )
-
-    cmds.delete(cmds.orientConstraint(drivers[0], reference_grp, maintainOffset=False))  # type:ignore
 
     # -----------------------------------
     # Raw COG-relative positions
@@ -337,15 +365,18 @@ def build_stabilized_drivers(
         segment_ratios.append(ratio)
         rest_distances.append(rest)
 
-    # The reference group is aligned to the rest root's X axis,
-    # independently of the COG control's own axes.
+    # Y is longitudinal.
+    # X and Z are lateral.
+
     weight = (
-        longitudinal_influence,
         soft_influence,
+        longitudinal_influence,
         soft_influence,
     )
 
     stabilized = []
+
+    # KEEP THE REST OF YOUR EXISTING FUNCTION
 
     # -----------------------------------
     # Stabilized driver layer
@@ -374,7 +405,7 @@ def build_stabilized_drivers(
             name=driver_name,
         )
 
-        dec = DecomposeMatrixNode(name=f"{driver_name}_DCM")
+        dec = DecomposeMatrixNode.create(name=f"{driver_name}_DCM")
 
         dec.input_matrix.connect_from(matrix)
 
@@ -420,7 +451,7 @@ def build_stabilized_drivers(
                 name=f"{driver_name}_{index:02d}",
             )
 
-            mult = MultiplyDivideNode(name=f"{driver_name}_{index:02d}_soft_MD")
+            mult = MultiplyDivideNode.create(name=f"{driver_name}_{index:02d}_soft_MD")
 
             mult.input1.connect_from(relative_delta)
 
@@ -514,7 +545,7 @@ def get_chain_length_ratio(
     name: str,
 ) -> str:
 
-    total = SumNode(name=f"{name}_length_SUM")
+    total = SumNode.create(name=f"{name}_length_SUM")
 
     for i in range(len(positions) - 1):
         distance = get_distance(
@@ -530,7 +561,7 @@ def get_chain_length_ratio(
         0.000001,
     )
 
-    ratio = MultiplyDivideNode(name=f"{name}_lengthRatio_MD")
+    ratio = MultiplyDivideNode.create(name=f"{name}_lengthRatio_MD")
 
     cmds.setAttr(
         f"{ratio.name}.operation",
@@ -644,15 +675,22 @@ def create_soft_limit(
         else:
             cmds.setAttr(plug, value)  # type:ignore
 
-    def multiply(suffix: str, a: str | float, b: str | float, divide: bool = False) -> str:
+    def multiply(
+        suffix: str,
+        a: str | float,
+        b: str | float,
+        divide: bool = False,
+    ) -> str:
 
-        node = MultiplyDivideNode(name=f"{name}_{suffix}_MD")
+        node = MultiplyDivideNode.create(name=f"{name}_{suffix}_MD")
 
-        if divide:
-            cmds.setAttr(f"{node.name}.operation", 2)  # type:ignore
+        node.input2.set((1.0, 1.0, 1.0))
 
         connect_or_set(f"{node.name}.input1X", a)
         connect_or_set(f"{node.name}.input2X", b)
+
+        if divide:
+            cmds.setAttr(f"{node.name}.operation", 2)  # type:ignore
 
         return f"{node.name}.outputX"
 
@@ -845,7 +883,7 @@ def limit_spine_length(
 
     reference_grp = cmds.createNode(
         "transform",
-        name=f"{name}_lengthLimit_grp",
+        name=f"{name}_reference_grp",
         parent=cog,
     )
 
@@ -968,7 +1006,7 @@ def limit_spine_length(
     )
 
     # Convert ratio difference to scene units.
-    distance_delta = MultiplyDivideNode(name=f"{name}_distanceDelta_MD")
+    distance_delta = MultiplyDivideNode.create(name=f"{name}_distanceDelta_MD")
 
     distance_delta.input1.x.connect_from(f"{delta}.output1D")
 
@@ -978,7 +1016,7 @@ def limit_spine_length(
     # Full correction vector
     # -----------------------------------
 
-    correction = MultiplyDivideNode(name=f"{name}_correction_MD")
+    correction = MultiplyDivideNode.create(name=f"{name}_correction_MD")
 
     correction.input1.connect_from(f"{safe_direction}.outColor")
 
@@ -1011,7 +1049,7 @@ def limit_spine_length(
             name=driver_name,
         )
 
-        dec = DecomposeMatrixNode(name=f"{driver_name}_DCM")
+        dec = DecomposeMatrixNode.create(name=f"{driver_name}_DCM")
 
         dec.input_matrix.connect_from(matrix)
 
@@ -1026,7 +1064,7 @@ def limit_spine_length(
             )
 
         # Weighted longitudinal correction.
-        mult = MultiplyDivideNode(name=f"{driver_name}_correction_MD")
+        mult = MultiplyDivideNode.create(name=f"{driver_name}_correction_MD")
 
         mult.input1.connect_from(correction.output)
 
@@ -1153,7 +1191,7 @@ def create_limited_control(
     # Read only the LOCAL control matrix.
     # Do not read its world matrix.
 
-    mult = MultMatrixNode(name=f"{name}_rawInput_MM")
+    mult = MultMatrixNode.create(name=f"{name}_rawInput_MM")
 
     mult.matrix_in[0].connect_from(f"{control.transform}.matrix")
 

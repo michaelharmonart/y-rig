@@ -62,6 +62,7 @@ def build_hybrid(
         name=f"{part}_{side}_hybrid_grp",
         parent=control_grp,
     )
+
     stretch_attrs = create_stretch_attributes(
         hybrid_grp=hybrid_grp,
         min_stretch=min_stretch,
@@ -69,36 +70,12 @@ def build_hybrid(
         soft_range=soft_range,
     )
 
-    # -----------------------------------
-    # Mid control
-    # -----------------------------------
-
     if len(cv_transforms) != 2:
         raise ValueError("Expected hip and chest endpoint drivers.")
 
-    # Keep animator control axes intact; align only spline input frames.
-    # The guides are already X-down-chain in core.py.
-    endpoints = []
-    for index, (driver, guide) in enumerate(
-        zip(cv_transforms, (guide_list[0], guide_list[-1]), strict=True)
-    ):
-        aligned = create_transform(
-            name=f"{part}_{side}_endpoint_{index:02d}",
-            parent=driver,
-            transform=guide.name,
-        )
-        # Preserve the endpoint position even if the resampled guide differs.
-        position = cmds.xform(driver, query=True, worldSpace=True, translation=True)
-        cmds.xform(aligned, worldSpace=True, translation=position)  # type: ignore
-        endpoints.append(aligned)
-
-    cv_transforms = endpoints
-    mid_matrix = get_curve_point_matrix(
-        curve=guide_curve.curve,
-        parameter=0.5,
-        tangent_orient=True,
-        aim_axis="x",
-    )
+    # -----------------------------------
+    # Mid control - Y up
+    # -----------------------------------
 
     mid_hip = create_transform(
         name=f"{hip_des}_mid_{side}_grp",
@@ -106,14 +83,41 @@ def build_hybrid(
         transform=hip.transform,
     )
 
+    mid_position = cmds.pointOnCurve(
+        guide_curve.curve,
+        parameter=0.5,
+        turnOnPercentage=True,
+        position=True,
+    )
+
+    mid_guide = create_transform(
+        name=f"{part}_mid_{side}_guide",
+        parent=mid_hip,
+        transform=hip.transform,
+    )
+
+    cmds.xform(
+        mid_guide,
+        worldSpace=True,
+        translation=mid_position,  # type:ignore
+    )
+
     mid = create_control(
         name=f"{part}_mid_{side}",
         parent=mid_hip,
-        transform=mid_matrix,
+        transform=mid_guide,
         size=rig_size * mid_control_size,
         control_shape="circle",
-        direction="x",
+        direction="y",
     )
+
+    cmds.delete(mid_guide)
+
+    set_override_color(
+        control=mid,
+        color=(0.957, 0.725, 0.259),
+    )
+
     mid_input = create_limited_control(
         control=mid,
         follow_driver=chest,
@@ -121,21 +125,21 @@ def build_hybrid(
     )
 
     # -----------------------------------
-    # Lower and upper raw drivers
+    # Lower and upper drivers - Y up
     # -----------------------------------
 
     lower_matrix = get_curve_point_matrix(
         curve=guide_curve.curve,
         parameter=0.15,
         tangent_orient=True,
-        aim_axis="x",
+        aim_axis="y",
     )
 
     upper_matrix = get_curve_point_matrix(
         curve=guide_curve.curve,
         parameter=0.85,
         tangent_orient=True,
-        aim_axis="x",
+        aim_axis="y",
     )
 
     lower_driver = create_transform(
@@ -150,12 +154,9 @@ def build_hybrid(
         transform=upper_matrix,
     )
 
-    for driver in (
-        lower_driver,
-        upper_driver,
-    ):
+    for driver in (lower_driver, upper_driver):
         for axis in "XYZ":
-            cmds.setAttr(f"{driver}.rotate{axis}", 0)  # type:ignore
+            cmds.setAttr(f"{driver}.rotate{axis}", 0)
 
     # -----------------------------------
     # Raw spline drivers
@@ -183,6 +184,11 @@ def build_hybrid(
         compression_max=compression_max,
         max_offset_ratio=max_offset_ratio,
     )
+
+    # -----------------------------------
+    # Squash and stretch limits
+    # -----------------------------------
+
     limited_drivers = limit_spine_length(
         name=f"{part}_{side}_hybrid",
         drivers=stable_drivers,
@@ -200,12 +206,12 @@ def build_hybrid(
     )
 
     # -----------------------------------
-    # Sub spine controls and joints
+    # Sub controls and joints - X down chain
     # -----------------------------------
 
-    spine_off_ctrls = []
-    spine_driven = []
-    jnts = []
+    spine_off_ctrls: list[Control] = []
+    spine_driven: list[str] = []
+    jnts: list[str] = []
 
     jnt_par = guts
 
@@ -216,10 +222,13 @@ def build_hybrid(
             transform=guide.name,
             size=rig_size * sub_spine_control_size,
             control_shape="circle",
-            direction="z",
+            direction="x",
         )
 
-        set_override_color(control=ctrl, color=(0.718, 0.518, 0.655))
+        set_override_color(
+            control=ctrl,
+            color=(0.718, 0.518, 0.655),
+        )
 
         jnt = create_joint(
             name=f"Hybrid_{guide.descriptor}",
@@ -234,7 +243,7 @@ def build_hybrid(
         jnts.append(jnt)
 
     # -----------------------------------
-    # Matrix spline
+    # Matrix spline - X down chain
     # -----------------------------------
 
     matrix_spline_from_transforms(
@@ -243,6 +252,16 @@ def build_hybrid(
         cv_transforms=limited_drivers,
         parent=guts,
         degree=2,
+        # Output orientation
+        primary_axis=(1, 0, 0),
+        secondary_axis=(0, 0, 1),
+        # Orientation behavior
+        align_tangent=True,
+        interpolate_rotation=True,
+        twist=True,
+        # Disable automatic scaling
+        stretch=False,
+        interpolate_scale=False,
     )
 
     # -----------------------------------

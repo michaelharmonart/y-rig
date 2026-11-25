@@ -158,13 +158,13 @@ def create_module_switch(
             driven,
             strict=True,
         ):
-            cmds.parentConstraint(driver, target)
+            cmds.parentConstraint(
+                driver,
+                target,
+                maintainOffset=maintain_offset,
+            )
 
         return None
-
-    # -----------------------------------------
-    # Create or reuse switch attribute
-    # -----------------------------------------
 
     if connect_switch_attr:
         switch_attr = connect_switch_attr
@@ -198,7 +198,7 @@ def create_module_switch(
     # -----------------------------------------
 
     """if mode_count == 2:
-        reverse = ReverseNode(name=f"{descriptor}_switch_rev")
+        reverse = ReverseNode.create(name=f"{descriptor}_switch_rev")
 
         reverse.input.x.connect_from(switch_attr)
 
@@ -244,7 +244,7 @@ def create_module_switch(
         mode_outputs = []
 
         for index, mode_name in enumerate(mode_names):
-            condition = cmds.createNode(
+            condition = cmds.createNode.create(
                 "condition",
                 name=f"{descriptor}_{mode_name}_switch_CND",
             )
