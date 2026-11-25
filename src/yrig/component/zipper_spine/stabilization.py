@@ -243,7 +243,7 @@ def limit_soft_offset(
 
     cmds.setAttr(
         f"{safe_distance}.operation",
-        2,
+        2,  # type:ignore
     )
 
     cmds.connectAttr(

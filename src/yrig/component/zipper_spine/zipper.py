@@ -1,8 +1,9 @@
+from maya.api.OpenMaya import MMatrix
+
 from yrig.control import create_control
 
 from .guide.core import GuideInfo
 from .utils import get_closest_curve_matrix
-from maya.api.OpenMaya import MMatrix
 
 
 def build_zipper(

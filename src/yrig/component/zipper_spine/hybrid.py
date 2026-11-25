@@ -156,7 +156,7 @@ def build_hybrid(
 
     for driver in (lower_driver, upper_driver):
         for axis in "XYZ":
-            cmds.setAttr(f"{driver}.rotate{axis}", 0)
+            cmds.setAttr(f"{driver}.rotate{axis}", 0)  # type:ignore
 
     # -----------------------------------
     # Raw spline drivers
