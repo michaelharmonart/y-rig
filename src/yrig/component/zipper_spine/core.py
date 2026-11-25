@@ -300,4 +300,3 @@ class Spine:
             chest_off=self.chest_off,
         )
         return spine_info
-
