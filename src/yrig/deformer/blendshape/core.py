@@ -51,7 +51,7 @@ def create_blendshape(
     shape_editor_manager = ShapeEditorManagerNode.from_existing("shapeEditorManager")
     with preserve_shape_editor_root_directory(shape_editor_manager):
         maya_result: list[str] = cmds.blendShape(
-            resolved_geometry, name=resolved_name, frontOfChain=front_of_chain
+            resolved_geometry, name=resolved_name, frontOfChain=front_of_chain, suppressDialog=True
         )  # type: ignore
     if not maya_result:
         raise RuntimeError(f"Failed to create blendShape: {resolved_name}")
