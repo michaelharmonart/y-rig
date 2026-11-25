@@ -14,5 +14,5 @@ def create_delta_mush(
         name=resolved_name,
         smoothingIterations=smoothing_iterations,
         smoothingStep=smoothing_step,
-    )
+    )[0]
     return delta_mush
