@@ -44,6 +44,10 @@
                 -840.0,
                 -80.0
             ],
+            "/delta_mush": [
+                260.6551085416038,
+                -458.2829572309345
+            ],
             "/finalize": [
                 600.0,
                 0.0
@@ -63,10 +67,6 @@
             "/middle": [
                 -414.87530251227207,
                 -11.02092554557493
-            ],
-            "/node": [
-                372.3757491458175,
-                382.71951995542355
             ],
             "/psd_import": [
                 120.0,
@@ -498,6 +498,31 @@
                     "value": "-1"
                 }
             }
+        },
+        "/delta_mush": {
+            "attrs": {
+                "geometry": {
+                    "type": "list",
+                    "value": "[]"
+                },
+                "smoothing_iterations": {
+                    "type": "int",
+                    "value": "10"
+                },
+                "smoothing_step": {
+                    "type": "float",
+                    "value": "0.5"
+                }
+            },
+            "code": [
+                "geometry_list = ${geometry}",
+                "for geometry in geometry_list:",
+                "    yrig.deformer.delta_mush.create_delta_mush(",
+                "        geometry, ",
+                "        smoothing_iterations=${smoothing_iterations}, ",
+                "        smoothing_step=${smoothing_step},",
+                "    )"
+            ]
         },
         "/finalize": {
             "execute_in": "/apply",
