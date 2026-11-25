@@ -5,12 +5,14 @@ from yrig.control import create_control
 from .guide.core import GuideInfo
 from .utils import get_closest_curve_matrix
 
+import maya.cmds as cmds
+
 
 def build_zipper(
     guide_curve: GuideInfo,
     spine_drivers: list[str],
     parent: str,
-    size: float = 1.0,
+    size: float = 6.0,
 ) -> None:
 
     curve = guide_curve.name
@@ -21,10 +23,12 @@ def build_zipper(
             transform=transform,
         )
 
-        create_control(
+        ctrl = create_control(
             name=f"zipper_{i + 2:02d}_M",
             parent=parent,
             transform=MMatrix(matrix),
             size=size,
             control_shape="sphere",
         )
+
+        cmds.parentConstraint(transform, ctrl.offset, maintainOffset=True)
